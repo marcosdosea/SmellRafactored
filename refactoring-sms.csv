@@ -47,3 +47,16 @@ com.zegoggles.smssync.service.BackupTask,doInBackground,79f7a970e514aa86bd801a67
 com.zegoggles.smssync.service.RestoreTask,doInBackground,8e14ad79888c53f0cd2b946c81888cf0badebf17,Muitos Desvios,"[A, R, D, X]",EXTRACT_OPERATION,null
 com.zegoggles.smssync.service.RestoreTask,doInBackground,f81a126da93b1bc9de605bc8beb5ada5fb8c4d10,Muitos Desvios,"[A, R, D, X]",EXTRACT_OPERATION,null
 com.zegoggles.smssync.activity.auth.AccountManagerAuthActivity,refreshOAuth2Token,f81a126da93b1bc9de605bc8beb5ada5fb8c4d10,Metodo Longo,[R],MOVE_OPERATION,null
+com.zegoggles.smssync.preferences.Preferences,isAppLogEnabled,6d2cf785b671f2c880862b48914729268dde1dcf,,,RENAME_METHOD,null
+com.zegoggles.smssync.preferences.Preferences,showAboutDialog,79f7a970e514aa86bd801a6733eab5f06a538f21,,,RENAME_METHOD,null
+com.zegoggles.smssync.service.BackupQueryBuilder,buildQueryForDataType,79f7a970e514aa86bd801a6733eab5f06a538f21,,,RENAME_METHOD,null
+com.zegoggles.smssync.contacts.ContactAccessorPost20,getGroupContactIds,3e1035238d03ded0d221494a88be0fd797d45e6b,,,EXTRACT_AND_MOVE_OPERATION,null
+com.zegoggles.smssync.service.BackupQueryBuilder,buildMaxQueryForDataType,79f7a970e514aa86bd801a6733eab5f06a538f21,,,RENAME_METHOD,null
+com.zegoggles.smssync.preferences.Preferences,showUpgradeMessage,79f7a970e514aa86bd801a6733eab5f06a538f21,,,RENAME_METHOD,null
+com.zegoggles.smssync.preferences.Preferences,isValidImapFolder,6d2cf785b671f2c880862b48914729268dde1dcf,,,MOVE_OPERATION,null
+com.zegoggles.smssync.service.BackupQueryBuilder,groupSelection,3e1035238d03ded0d221494a88be0fd797d45e6b,,,EXTRACT_AND_MOVE_OPERATION,null
+com.zegoggles.smssync.preferences.Preferences,prefs,6d2cf785b671f2c880862b48914729268dde1dcf,,,RENAME_METHOD,null
+com.zegoggles.smssync.activity.auth.AccountManagerAuthActivity,invalidateToken,f81a126da93b1bc9de605bc8beb5ada5fb8c4d10,,,MOVE_OPERATION,null
+com.zegoggles.smssync.mail.PersonLookup,getUnknownEmail,4e8bf27ea3931bf3f9d895696d822348b04d7a07,,,MOVE_OPERATION,null
+com.zegoggles.smssync.receiver.SmsBroadcastReceiver,incomingSMS,5411a10c37e59d4f67aa2ad62ae488540ad0126d,,,EXTRACT_OPERATION,null
+com.zegoggles.smssync.activity.MainActivity,updateAutoBackupEnabledSummary,d682b669253e5d0283cfc2d93b528001c95d4536,,,EXTRACT_OPERATION,null
