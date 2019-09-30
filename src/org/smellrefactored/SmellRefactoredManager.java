@@ -155,6 +155,42 @@ public class SmellRefactoredManager {
 		return result;
 
 	}
+	
+	public static void storeResult(SmellRefactoredResult result, String fileName) {
+		logger.info("Número total de refatorações:" + result.getListRefactoring().size());
+		logger.info("Número total de refatorações em Métodos Não Smell: "
+				+ result.getListRefactoringsByMethodSmelly().size());
+		logger.info("Número total de refatorações em Métodos Smell: " + result.getListRefactoringsByMethod().size());
+
+		final PersistenceMechanism pmRef = new CSVFile(fileName);
+		pmRef.write("Class", "Method", "Smell", "Tecnicas", "Commit", "Refactoring", "Left Side", "Right Side");
+
+		for (Map.Entry<String, DadosMetodoSmell> entry : result.getSmellsInitial().getMetodosSmell().entrySet()) {
+			DadosMetodoSmell smell = entry.getValue();
+			String key = smell.getNomeClasse() + smell.getNomeMetodo() + smell.getSmell();
+			List<RefactoringData> lista = result.getListRefactoringsByMethod().get(key);
+			if (lista != null) {
+				for (RefactoringData ref : lista) {
+					pmRef.write(smell.getNomeClasse(), smell.getNomeMetodo(), smell.getSmell(),
+							smell.getListaTecnicas(), ref.getCommit(), ref.getRefactoringType(), ref.getLeftSide(), ref.getRightSide());
+				}
+			} else {
+				pmRef.write(smell.getNomeClasse(), smell.getNomeMetodo(), smell.getSmell(),
+						smell.getListaTecnicas(), "", "", "", "");
+			}
+		}
+
+		for (MethodData metodo : result.getSmellsInitial().getListaMethodsNotSmelly()) {
+			String key = metodo.getNomeClasse() + metodo.getNomeMethod();
+			List<RefactoringData> lista = result.getListRefactoringsByMethodSmelly().get(key);
+			if (lista != null) {
+				for (RefactoringData ref : lista) {
+					pmRef.write(metodo.getNomeClasse(), metodo.getNomeMethod(), "", "", ref.getCommit(), 
+							ref.getRefactoringType(), ref.getLeftSide(), ref.getRightSide());
+				}
+			}
+		}
+	}
 
 	private static RefactoringData getRecordFromLine(String[] line) {
 		RefactoringData result = new RefactoringData();
