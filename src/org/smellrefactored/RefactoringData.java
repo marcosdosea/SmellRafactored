@@ -1,5 +1,7 @@
 package org.smellrefactored;
 
+import java.util.HashSet;
+
 public class RefactoringData {
 
 	public String getRightSide() {
@@ -19,6 +21,88 @@ public class RefactoringData {
 	private String involvedClassesBefore;
 	private String shortMessage;
 	private String fullMessage;
+	
+	private String nomeClasse;
+	private String nomeMetodo;
+	private int linesOfCode;
+	private int complexity;
+	private int numberOfParameters;
+	private int efferent;
+	private HashSet<String> listaTecnicas;
+	private String smell;
+	private String classDesignRole;
+	
+	public String getNomeClasse() {
+		return nomeClasse;
+	}
+
+	public void setNomeClasse(String nomeClasse) {
+		this.nomeClasse = nomeClasse;
+	}
+
+	public String getNomeMetodo() {
+		return nomeMetodo;
+	}
+
+	public void setNomeMetodo(String nomeMetodo) {
+		this.nomeMetodo = nomeMetodo;
+	}
+
+	public int getLinesOfCode() {
+		return linesOfCode;
+	}
+
+	public void setLinesOfCode(int linesOfCode) {
+		this.linesOfCode = linesOfCode;
+	}
+
+	public int getComplexity() {
+		return complexity;
+	}
+
+	public void setComplexity(int complexity) {
+		this.complexity = complexity;
+	}
+
+	public int getNumberOfParameters() {
+		return numberOfParameters;
+	}
+
+	public void setNumberOfParameters(int numberOfParameters) {
+		this.numberOfParameters = numberOfParameters;
+	}
+
+	public int getEfferent() {
+		return efferent;
+	}
+
+	public void setEfferent(int efferent) {
+		this.efferent = efferent;
+	}
+
+	public HashSet<String> getListaTecnicas() {
+		return listaTecnicas;
+	}
+
+	public void setListaTecnicas(HashSet<String> listaTecnicas) {
+		this.listaTecnicas = listaTecnicas;
+	}
+
+	public String getSmell() {
+		return smell;
+	}
+
+	public void setSmell(String smell) {
+		this.smell = smell;
+	}
+
+	public String getClassDesignRole() {
+		return classDesignRole;
+	}
+
+	public void setClassDesignRole(String classDesignRole) {
+		this.classDesignRole = classDesignRole;
+	}
 
 	public String getCommit() {
 		return commit;
