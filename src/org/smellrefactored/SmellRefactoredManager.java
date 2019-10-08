@@ -2,7 +2,6 @@ package org.smellrefactored;
 
 import java.io.FileReader;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -17,8 +16,10 @@ import org.designroleminer.smelldetector.model.LimiarTecnica;
 import org.designroleminer.threshold.DesignRoleTechnique;
 import org.designroleminer.threshold.TechniqueExecutor;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
 import org.refactoringminer.api.GitHistoryRefactoringMiner;
 import org.refactoringminer.api.GitService;
 import org.refactoringminer.api.Refactoring;
@@ -89,44 +90,79 @@ public class SmellRefactoredManager {
 				logger.error(e.getMessage());
 			}
 
-			Iterator<String> it = commitsWithRefactorings.iterator();
+			HashSet<String> commitsWithRefactoringsMergedIntoMaster = new HashSet<String>();
+			for (String commitRefactored : commitsWithRefactorings) {
+				RevWalk revWalk = new RevWalk(repo);
+				RevCommit masterHead = revWalk.parseCommit(repo.resolve("refs/heads/master"));
+				// first a commit that was merged
+				ObjectId id = repo.resolve(commitRefactored);
+				RevCommit otherHead = revWalk.parseCommit(id);
+
+				if (revWalk.isMergedInto(otherHead, masterHead)) {
+					System.out.println("Commit " + otherHead + " is merged into master");
+					commitsWithRefactoringsMergedIntoMaster.add(commitRefactored);
+				} else {
+
+					System.out.println("Commit " + otherHead + " is NOT merged into master");
+				}
+				revWalk.dispose();
+			}
+
+			Iterator<String> itCommitsWithRefactorings = commitsWithRefactoringsMergedIntoMaster.iterator();
 
 			FilterSmellResult smellsCommit;
 			Map<String, List<RefactoringData>> listRefactoringsByMethodNotSmelly = new HashMap<String, List<RefactoringData>>();
 			Map<String, List<RefactoringData>> listRefactoringsByMethodSmelly = new HashMap<String, List<RefactoringData>>();
 
-			
-			gitService.checkout(repo, finalCommit);
-
+			// String treeName = "refs/heads/master"; // tag or branch
 			Git git = new Git(repo);
-			Iterable<RevCommit> log = git.log().call();
-			String previousCommitId = "";
-			
-			ArrayList<String> listCommitId = new ArrayList<String>();
-			for (RevCommit commit : log) {
-				listCommitId.add(commit.getId().getName());
-				String logMessage = commit.getFullMessage();
-				System.out.println("LogMessage: " + logMessage);
-				System.out.println("Date: " + (new Date(commit.getCommitTime() * 1000L)));
-			}
-			git.close();
 
-			while (it.hasNext()) {
-				String commitAnalisar = it.next();
+			while (itCommitsWithRefactorings.hasNext()) {
+				String commitAnalisar = itCommitsWithRefactorings.next();
+				gitService.checkout(repo, finalCommit);
+				// busca previous commit para coletar as métricas
+				String previousCommitId = "";
+				String messageCurrentCommit = "";
+				String treeName = "master";
 
+				Iterable<RevCommit> log = git.log().call();
+				Iterator<RevCommit> logIterator = log.iterator();
+				while (logIterator.hasNext()) {
+					RevCommit currentCommit = logIterator.next();
+
+					messageCurrentCommit = currentCommit.getFullMessage();
+					if (currentCommit.getId().getName().equals(commitAnalisar)) {
+						if (logIterator.hasNext())
+							previousCommitId = (logIterator.next()).getId().getName();
+
+						System.out.println("Full message" + currentCommit.getFullMessage());
+						System.out.println("Short message" + currentCommit.getShortMessage());
+						System.out.println("Type" + currentCommit.getType());
+						System.out.println("Encoding name" + currentCommit.getEncodingName());
+						System.out.println("Name" + currentCommit.getAuthorIdent());
+
+						break;
+
+					}
+					// System.out.println("Date: " + (new Date(commit.getCommitTime() * 1000L)));
+				}
+				// garantir quando nao houver próximos commits
+				if (previousCommitId.equals(""))
+					previousCommitId = commitAnalisar;
 				ArrayList<RefactoringData> listRefactoringCommitAnalisado = new ArrayList<RefactoringData>();
 				for (RefactoringData refactoring : listRefactoring) {
-					if (refactoring.getCommit().equals(commitAnalisar))
+					if (refactoring.getCommit().equals(commitAnalisar)) {
+						refactoring.setFullMessage(messageCurrentCommit);
 						listRefactoringCommitAnalisado.add(refactoring);
+					}
 				}
 
-				
 				gitService.checkout(repo, previousCommitId);
-				logger.info("Iniciando a coleta de métricas do commit " + commitAnalisar + "...");
+				logger.info("Iniciando a coleta de métricas do commit " + previousCommitId + "...");
 				ArrayList<String> projetosAnalisar = new ArrayList<String>();
 				projetosAnalisar.add(localFolder);
 				ArrayList<ClassMetricResult> classesProjetosInicial = executor.getMetricsFromProjects(projetosAnalisar,
-						System.getProperty("user.dir") + "\\metrics-initial\\");
+						System.getProperty("user.dir") + "\\metrics-initial\\", false);
 				logger.info("Gerando smells com a lista de problemas de design encontrados...");
 				smellsCommit = FilterSmells.filtrar(classesProjetosInicial, listaTecnicas, commitAnalisar);
 
@@ -176,6 +212,7 @@ public class SmellRefactoredManager {
 				}
 			}
 
+			git.close();
 			result.setListRefactoring(listRefactoring);
 			result.setListRefactoringsByMethodSmelly(listRefactoringsByMethodSmelly);
 			result.setListRefactoringsByMethodNotSmelly(listRefactoringsByMethodNotSmelly);
