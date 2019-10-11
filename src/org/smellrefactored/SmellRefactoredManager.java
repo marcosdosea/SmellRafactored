@@ -10,7 +10,7 @@ import java.util.Map;
 
 import org.designroleminer.ClassMetricResult;
 import org.designroleminer.smelldetector.FilterSmells;
-import org.designroleminer.smelldetector.model.DadosMetodo;
+import org.designroleminer.smelldetector.model.MethodDataSmelly;
 import org.designroleminer.smelldetector.model.FilterSmellResult;
 import org.designroleminer.smelldetector.model.LimiarTecnica;
 import org.designroleminer.threshold.DesignRoleTechnique;
@@ -90,6 +90,7 @@ public class SmellRefactoredManager {
 				logger.error(e.getMessage());
 			}
 
+			/// busca commits no master ou pull request realizados no master
 			HashSet<String> commitsWithRefactoringsMergedIntoMaster = new HashSet<String>();
 			for (String commitRefactored : commitsWithRefactorings) {
 				RevWalk revWalk = new RevWalk(repo);
@@ -99,32 +100,38 @@ public class SmellRefactoredManager {
 				RevCommit otherHead = revWalk.parseCommit(id);
 
 				if (revWalk.isMergedInto(otherHead, masterHead)) {
-					System.out.println("Commit " + otherHead + " is merged into master");
-					commitsWithRefactoringsMergedIntoMaster.add(commitRefactored);
-				} else {
-
-					System.out.println("Commit " + otherHead + " is NOT merged into master");
+					if ((otherHead.getParentCount() == 1) ||
+							(otherHead.getShortMessage().contains("merge") && otherHead.getShortMessage().contains("pull")) ){ 
+						commitsWithRefactoringsMergedIntoMaster.add(commitRefactored);
+					}
 				}
+				revWalk.close();
 				revWalk.dispose();
 			}
+			gitService.checkout(repo, initialCommit);
+			logger.info("Iniciando a coleta de métricas do commit inicial " + initialCommit + "...");
+			ArrayList<String> projetosAnalisar = new ArrayList<String>();
+			projetosAnalisar.add(localFolder);
+			ArrayList<ClassMetricResult> classesProjetosInicial = executor.getMetricsFromProjects(projetosAnalisar,
+					System.getProperty("user.dir") + "\\metrics-initial\\", false);
+			logger.info("Gerando smells com a lista de problemas de design encontrados...");
+			FilterSmellResult smellsCommitInitial = FilterSmells.filtrar(classesProjetosInicial, listaTecnicas, initialCommit);
 
-			Iterator<String> itCommitsWithRefactorings = commitsWithRefactoringsMergedIntoMaster.iterator();
-
+			HashSet<MethodDataSmelly> metodosSmellyInitialNotRefactored = smellsCommitInitial.getMetodosSmell();
+			Iterator<String> itCommits = commitsWithRefactoringsMergedIntoMaster.iterator();
 			FilterSmellResult smellsCommit;
+			
 			Map<String, List<RefactoringData>> listRefactoringsByMethodNotSmelly = new HashMap<String, List<RefactoringData>>();
 			Map<String, List<RefactoringData>> listRefactoringsByMethodSmelly = new HashMap<String, List<RefactoringData>>();
-
-			// String treeName = "refs/heads/master"; // tag or branch
 			Git git = new Git(repo);
-
-			while (itCommitsWithRefactorings.hasNext()) {
-				String commitAnalisar = itCommitsWithRefactorings.next();
+			while (itCommits.hasNext()) {
+				String commitAnalisar = itCommits.next();
+				
+				// vai para o último commit para pegar o log
 				gitService.checkout(repo, finalCommit);
 				// busca previous commit para coletar as métricas
 				String previousCommitId = "";
 				String messageCurrentCommit = "";
-				String treeName = "master";
-
 				Iterable<RevCommit> log = git.log().call();
 				Iterator<RevCommit> logIterator = log.iterator();
 				while (logIterator.hasNext()) {
@@ -134,17 +141,16 @@ public class SmellRefactoredManager {
 					if (currentCommit.getId().getName().equals(commitAnalisar)) {
 						if (logIterator.hasNext())
 							previousCommitId = (logIterator.next()).getId().getName();
-
-						System.out.println("Full message" + currentCommit.getFullMessage());
-						System.out.println("Short message" + currentCommit.getShortMessage());
-						System.out.println("Type" + currentCommit.getType());
-						System.out.println("Encoding name" + currentCommit.getEncodingName());
-						System.out.println("Name" + currentCommit.getAuthorIdent());
-
+						// System.out.println("Full message" + currentCommit.getFullMessage());
+						// System.out.println("Short message" + currentCommit.getShortMessage());
+						// System.out.println("Type" + currentCommit.getType());
+						// System.out.println("Encoding name" + currentCommit.getEncodingName());
+						// System.out.println("Name" + currentCommit.getAuthorIdent());
+						// System.out.println("Date: " + (new Date(commit.getCommitTime() * 1000L)));
 						break;
 
 					}
-					// System.out.println("Date: " + (new Date(commit.getCommitTime() * 1000L)));
+						
 				}
 				// garantir quando nao houver próximos commits
 				if (previousCommitId.equals(""))
@@ -159,15 +165,17 @@ public class SmellRefactoredManager {
 
 				gitService.checkout(repo, previousCommitId);
 				logger.info("Iniciando a coleta de métricas do commit " + previousCommitId + "...");
-				ArrayList<String> projetosAnalisar = new ArrayList<String>();
-				projetosAnalisar.add(localFolder);
-				ArrayList<ClassMetricResult> classesProjetosInicial = executor.getMetricsFromProjects(projetosAnalisar,
+				//ArrayList<String> projetosAnalisar = new ArrayList<String>();
+				//projetosAnalisar.add(localFolder);
+				ArrayList<ClassMetricResult> classesProjetosAnalisar = executor.getMetricsFromProjects(projetosAnalisar,
 						System.getProperty("user.dir") + "\\metrics-initial\\", false);
 				logger.info("Gerando smells com a lista de problemas de design encontrados...");
-				smellsCommit = FilterSmells.filtrar(classesProjetosInicial, listaTecnicas, commitAnalisar);
+				smellsCommit = FilterSmells.filtrar(classesProjetosAnalisar, listaTecnicas, commitAnalisar);
 
 				logger.info("Gerando lista de métodos smells com refatorações...");
-				for (DadosMetodo methodSmelly : smellsCommit.getMetodosSmell()) {
+				for (MethodDataSmelly methodSmelly : smellsCommit.getMetodosSmell()) {
+					
+					
 					for (RefactoringData refactoring : listRefactoringCommitAnalisado) {
 						boolean isClassInvolved = refactoring.getInvolvedClassesBefore()
 								.contains(methodSmelly.getNomeClasse())
@@ -184,12 +192,13 @@ public class SmellRefactoredManager {
 							RefactoringData refactoringResult = atribuir(methodSmelly, refactoring);
 							listByMethod.add(refactoringResult);
 							listRefactoringsByMethodSmelly.put(key, listByMethod);
+							metodosSmellyInitialNotRefactored.remove(methodSmelly); // ou seja, é smelly e foi refatorado em algum momento da evolução
 						}
 					}
 				}
 
 				logger.info("Gerando lista de métodos not smells com refatorações...");
-				for (DadosMetodo methodNotSmelly : smellsCommit.getMetodosNotSmelly()) {
+				for (MethodDataSmelly methodNotSmelly : smellsCommit.getMetodosNotSmelly()) {
 					for (RefactoringData refactoring : listRefactoringCommitAnalisado) {
 						boolean isClassInvolved = refactoring.getInvolvedClassesBefore()
 								.contains(methodNotSmelly.getNomeClasse())
@@ -216,6 +225,7 @@ public class SmellRefactoredManager {
 			result.setListRefactoring(listRefactoring);
 			result.setListRefactoringsByMethodSmelly(listRefactoringsByMethodSmelly);
 			result.setListRefactoringsByMethodNotSmelly(listRefactoringsByMethodNotSmelly);
+			result.setMethodSmellyInitialNotRefactored(metodosSmellyInitialNotRefactored);
 			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -224,7 +234,7 @@ public class SmellRefactoredManager {
 
 	}
 
-	private static RefactoringData atribuir(DadosMetodo method, RefactoringData refactoring) {
+	private static RefactoringData atribuir(MethodDataSmelly method, RefactoringData refactoring) {
 		RefactoringData refactoringResult = new RefactoringData();
 		refactoringResult.setCommit(method.getCommit());
 		refactoringResult.setFullMessage(refactoring.getFullMessage());
@@ -247,14 +257,14 @@ public class SmellRefactoredManager {
 		return refactoringResult;
 	}
 
-	public static void storeResult(SmellRefactoredResult result, String fileName) {
+	public static void storeResult(SmellRefactoredResult result, String fileName, boolean imprimirMensagemCommit) {
 		logger.info("Número de Métodos Não Smell Refatorados: " + result.getListRefactoringsByMethodNotSmelly().size());
 		logger.info("Número de Métodos Smell Refatorados: " + result.getListRefactoringsByMethodSmelly().size());
 
 		logger.info("Total de refatorações Métodos e Não Métodos:" + result.getListRefactoring().size());
 		final PersistenceMechanism pmRef = new CSVFile(fileName);
 		pmRef.write("Class", "Method", "Smell", "LOC", "CC", "EC", "NOP", "Tecnicas", "Commit", "Refactoring",
-				"Left Side", "Right Side");
+				"Left Side", "Right Side", "Full Message");
 
 		int countRefactoringsSmellyMethod = 0;
 		for (String keyMetodo : result.getListRefactoringsByMethodSmelly().keySet()) {
@@ -264,7 +274,8 @@ public class SmellRefactoredManager {
 				for (RefactoringData ref : lista) {
 					pmRef.write(ref.getNomeClasse(), ref.getNomeMetodo(), ref.getSmell(), ref.getLinesOfCode(),
 							ref.getComplexity(), ref.getEfferent(), ref.getNumberOfParameters(), ref.getListaTecnicas(),
-							ref.getCommit(), ref.getRefactoringType(), ref.getLeftSide(), ref.getRightSide());
+							ref.getCommit(), ref.getRefactoringType(), ref.getLeftSide(), ref.getRightSide(), 
+							imprimirMensagemCommit?ref.getFullMessage():"");
 				}
 			}
 		}
@@ -278,12 +289,26 @@ public class SmellRefactoredManager {
 				for (RefactoringData ref : lista) {
 					pmRef.write(ref.getNomeClasse(), ref.getNomeMetodo(), ref.getSmell(), ref.getLinesOfCode(),
 							ref.getComplexity(), ref.getEfferent(), ref.getNumberOfParameters(), ref.getListaTecnicas(),
-							ref.getCommit(), ref.getRefactoringType(), ref.getLeftSide(), ref.getRightSide());
+							ref.getCommit(), ref.getRefactoringType(), ref.getLeftSide(), ref.getRightSide(), 
+							imprimirMensagemCommit?ref.getFullMessage():"");
 				}
 			}
 		}
 		logger.info("Total de refatorações Métodos Not Smelly: " + countRefactoringsNotSmellyMethod);
 
+		
+		int countMethodNotRefactored = 0;
+		for(MethodDataSmelly methodSmelly: result.getMethodInitialSmellyNotRefactored()) {
+			pmRef.write(methodSmelly.getNomeClasse(), methodSmelly.getNomeMetodo(), methodSmelly.getSmell(), methodSmelly.getLinesOfCode(),
+					methodSmelly.getComplexity(), methodSmelly.getEfferent(), methodSmelly.getNumberOfParameters(), methodSmelly.getListaTecnicas(),
+					methodSmelly.getCommit(), "", "", "", "");
+			countMethodNotRefactored++;
+		}
+		
+		logger.info("Métodos Smelly not refactored: " + countMethodNotRefactored);
+
+		
+		
 	}
 
 	private static RefactoringData getRecordFromLine(String[] line) {

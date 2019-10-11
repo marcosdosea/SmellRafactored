@@ -1,13 +1,25 @@
 package org.smellrefactored;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+
+import org.designroleminer.smelldetector.model.MethodDataSmelly;
 
 public class SmellRefactoredResult {
 	private Map<String, List<RefactoringData>> listRefactoringsByMethodSmelly;
 	private Map<String, List<RefactoringData>> listRefactoringsByMethodNotSmelly;
 	private ArrayList<RefactoringData> listRefactoring;
+	private HashSet<MethodDataSmelly> methodSmellyInitialNotRefactored;
+
+	public HashSet<MethodDataSmelly> getMethodInitialSmellyNotRefactored() {
+		return methodSmellyInitialNotRefactored;
+	}
+
+	public void setMethodSmellyInitialNotRefactored(HashSet<MethodDataSmelly> methodSmellyNotRefactored) {
+		this.methodSmellyInitialNotRefactored = methodSmellyNotRefactored;
+	}
 
 	public ArrayList<RefactoringData> getListRefactoring() {
 		return listRefactoring;
@@ -29,7 +41,8 @@ public class SmellRefactoredResult {
 		return listRefactoringsByMethodNotSmelly;
 	}
 
-	public void setListRefactoringsByMethodNotSmelly(Map<String, List<RefactoringData>> listRefactoringsByMethodNotSmelly) {
+	public void setListRefactoringsByMethodNotSmelly(
+			Map<String, List<RefactoringData>> listRefactoringsByMethodNotSmelly) {
 		this.listRefactoringsByMethodNotSmelly = listRefactoringsByMethodNotSmelly;
 	}
 }
