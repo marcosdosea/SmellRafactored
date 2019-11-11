@@ -2,6 +2,7 @@ package org.smellrefactored;
 
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.lib.Repository;
 import org.junit.Assert;
 import org.junit.Test;
@@ -16,6 +17,12 @@ public class SmellRefactoredManagerTest {
 
 	@Test
 	public void testExecute() {
+		
+		
+		String dir = System.getProperty("java.io.tmpdir");
+
+		String directory = FileUtils.getTempDirectoryPath();
+		
 		GitService gitService = new GitServiceImpl();
 		GitHistoryRefactoringMiner miner = new GitHistoryRefactoringMinerImpl();
 		try {

@@ -1,5 +1,6 @@
 package org.smellrefactored;
 
+import java.util.Date;
 import java.util.HashSet;
 
 public class RefactoringData {
@@ -21,6 +22,11 @@ public class RefactoringData {
 	private String involvedClassesBefore;
 	private String shortMessage;
 	private String fullMessage;
+	private int numberOfClasses;
+	private int numberOfMethods;
+	private int systemLOC;
+	private Date commitDate;
+	
 	
 	private String nomeClasse;
 	private String nomeMetodo;
@@ -167,5 +173,35 @@ public class RefactoringData {
 	public void setFullMessage(String fullMessage) {
 		this.fullMessage = fullMessage;
 	}
+	public int getNumberOfClasses() {
+		return numberOfClasses;
+	}
 
+	public void setNumberOfClasses(int numberOfClasses) {
+		this.numberOfClasses = numberOfClasses;
+	}
+
+	public int getSystemLOC() {
+		return systemLOC;
+	}
+
+	public void setSystemLOC(int systemLOC) {
+		this.systemLOC = systemLOC;
+	}
+
+	public int getNumberOfMethods() {
+		return numberOfMethods;
+	}
+
+	public void setNumberOfMethods(int numberOfMethods) {
+		this.numberOfMethods = numberOfMethods;
+	}
+
+	public Date getCommitDate() {
+		return commitDate;
+	}
+
+	public void setCommitDate(Date commitDate) {
+		this.commitDate = commitDate;
+	}
 }

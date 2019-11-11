@@ -10,9 +10,11 @@ import org.designroleminer.smelldetector.model.MethodDataSmelly;
 public class SmellRefactoredResult {
 	private Map<String, List<RefactoringData>> listRefactoringsByMethodSmelly;
 	private Map<String, List<RefactoringData>> listRefactoringsByMethodNotSmelly;
-	private ArrayList<RefactoringData> listRefactoring;
 	private HashSet<MethodDataSmelly> methodSmellyInitialNotRefactored;
-
+	
+	
+	private ArrayList<RefactoringData> listRefactoring;
+	
 	public HashSet<MethodDataSmelly> getMethodInitialSmellyNotRefactored() {
 		return methodSmellyInitialNotRefactored;
 	}
