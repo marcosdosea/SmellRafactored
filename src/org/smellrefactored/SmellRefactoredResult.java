@@ -5,12 +5,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.designroleminer.smelldetector.model.FilterSmellResult;
 import org.designroleminer.smelldetector.model.MethodDataSmelly;
 
 public class SmellRefactoredResult {
 	private Map<String, List<RefactoringData>> listRefactoringsByMethodSmelly;
 	private Map<String, List<RefactoringData>> listRefactoringsByMethodNotSmelly;
 	private HashSet<MethodDataSmelly> methodSmellyInitialNotRefactored;
+	private FilterSmellResult smellsCommitInitial;
 	
 	
 	private ArrayList<RefactoringData> listRefactoring;
@@ -46,5 +48,13 @@ public class SmellRefactoredResult {
 	public void setListRefactoringsByMethodNotSmelly(
 			Map<String, List<RefactoringData>> listRefactoringsByMethodNotSmelly) {
 		this.listRefactoringsByMethodNotSmelly = listRefactoringsByMethodNotSmelly;
+	}
+
+	public FilterSmellResult getSmellsCommitInitial() {
+		return smellsCommitInitial;
+	}
+
+	public void setSmellsCommitInitial(FilterSmellResult smellsCommitInitial) {
+		this.smellsCommitInitial = smellsCommitInitial;
 	}
 }
