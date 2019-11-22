@@ -3,7 +3,7 @@ package org.smellrefactored;
 import java.util.Date;
 import java.util.HashSet;
 
-public class RefactoringData {
+public class RefactoringData implements Comparable<RefactoringData> {
 
 	public String getRightSide() {
 		return rightSide;
@@ -26,8 +26,7 @@ public class RefactoringData {
 	private int numberOfMethods;
 	private int systemLOC;
 	private Date commitDate;
-	
-	
+
 	private String nomeClasse;
 	private String nomeMetodo;
 	private int linesOfCode;
@@ -37,7 +36,7 @@ public class RefactoringData {
 	private HashSet<String> listaTecnicas;
 	private String smell;
 	private String classDesignRole;
-	
+
 	public String getNomeClasse() {
 		return nomeClasse;
 	}
@@ -173,6 +172,7 @@ public class RefactoringData {
 	public void setFullMessage(String fullMessage) {
 		this.fullMessage = fullMessage;
 	}
+
 	public int getNumberOfClasses() {
 		return numberOfClasses;
 	}
@@ -204,4 +204,9 @@ public class RefactoringData {
 	public void setCommitDate(Date commitDate) {
 		this.commitDate = commitDate;
 	}
+
+	public int compareTo(RefactoringData o) {
+		return getCommitDate().compareTo(o.getCommitDate());
+	}
+
 }

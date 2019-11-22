@@ -41,10 +41,6 @@ public class CommitData implements Comparable<CommitData> {
 		this.date = date;
 	}
 
-	public int compareTo(CommitData o) {
-		return getDate().compareTo(o.getDate());
-	}
-
 	public CommitData getPrevious() {
 		return previous;
 	}
@@ -53,5 +49,7 @@ public class CommitData implements Comparable<CommitData> {
 		this.previous = previous;
 	}
 	
-	
+	public int compareTo(CommitData o) {
+		return getDate().compareTo(o.getDate());
+	}	
 }

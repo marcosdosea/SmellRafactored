@@ -45,6 +45,7 @@ public class SmellRefactoredManager {
 	private GitService gitService;
 	private Repository repo;
 	private TechniqueExecutor executor;
+	ArrayList<CommitData> commitsWithRefactoringMergedIntoMaster;
 
 	public SmellRefactoredManager(String urlRepository, String localFolder, String initialCommit, String finalCommit,
 			List<LimiarTecnica> listaLimiarTecnica) {
@@ -55,6 +56,7 @@ public class SmellRefactoredManager {
 		this.listaLimiarTecnica = listaLimiarTecnica;
 		gitService = new GitServiceImpl();
 		executor = new TechniqueExecutor(new DesignRoleTechnique());
+		commitsWithRefactoringMergedIntoMaster = new ArrayList<CommitData>();
 	}
 
 	public SmellRefactoredResult getSmellRefactoredBetweenCommit(String resultFile) {
@@ -123,6 +125,9 @@ public class SmellRefactoredManager {
 			RevCommit masterHead = revWalk.parseCommit(repo.resolve("refs/heads/master"));
 			while (logIterator.hasNext()) {
 				RevCommit currentCommit = logIterator.next();
+				if (currentCommit.getId().getName().equals("923b10dd7f7f134622fa890daf777e83113c8d3f")) {
+					System.out.println("aqui");
+				}
 				CommitData commitData = new CommitData();
 				commitData.setId(currentCommit.getId().getName());
 				commitData.setFullMessage(currentCommit.getFullMessage());
@@ -131,8 +136,9 @@ public class SmellRefactoredManager {
 				ObjectId id = repo.resolve(commitData.getId());
 				RevCommit otherHead = revWalk.parseCommit(id);
 				if (revWalk.isMergedInto(otherHead, masterHead)) {
-					if ((otherHead.getParentCount() == 1) || (otherHead.getShortMessage().contains("merge")
-							&& otherHead.getShortMessage().contains("pull"))) {
+					if ((otherHead.getParentCount() == 1)
+							|| (otherHead.getShortMessage().toUpperCase().contains("MERGE")
+									&& otherHead.getShortMessage().toUpperCase().contains("PULL"))) {
 						commitsMergedIntoMaster.add(commitData);
 					} else {
 						commitsNotMergedIntoMaster.add(commitData);
@@ -146,7 +152,6 @@ public class SmellRefactoredManager {
 			Collections.sort(commitsMergedIntoMaster);
 			Collections.sort(commitsNotMergedIntoMaster);
 
-			ArrayList<CommitData> commitsWithRefactoringMergedIntoMaster = new ArrayList<CommitData>();
 			Iterator<CommitData> it = commitsMergedIntoMaster.iterator();
 			CommitData previousCommit = null;
 			while (it.hasNext()) {
@@ -160,6 +165,26 @@ public class SmellRefactoredManager {
 				if (commitsWithRefactorings.contains(commit.getId()))
 					commitsWithRefactoringMergedIntoMaster.add(commit);
 			}
+
+			int countRefactoringRelatedOperations = 0;
+			int countRefactoringRelatedRenaming = 0;
+
+			ArrayList<RefactoringData> listRefactoringMergedIntoMaster = new ArrayList<RefactoringData>();
+			for (RefactoringData refactoring : listRefactoring) {
+				for (CommitData commit : commitsMergedIntoMaster) {
+					if (refactoring.getCommit().equals(commit.getId())) {
+						refactoring.setCommitDate(commit.getDate());
+						refactoring.setFullMessage(commit.getFullMessage());
+						refactoring.setShortMessage(commit.getShortMessage());
+						listRefactoringMergedIntoMaster.add(refactoring);
+						if (refactoring.getRefactoringType().contains("OPERATION"))
+							countRefactoringRelatedOperations++;
+						if (refactoring.getRefactoringType().equals("RENAME_METHOD"))
+							countRefactoringRelatedRenaming++;
+					}
+				}
+			}
+			Collections.sort(listRefactoringMergedIntoMaster);
 
 			FilterSmellResult smellsCommitInitial = obterSmellsCommit(initialCommit, repo);
 			//
@@ -249,16 +274,20 @@ public class SmellRefactoredManager {
 			// }
 			// }
 
-			result.setListRefactoring(listRefactoring);
+			result.setListRefactoring(listRefactoringMergedIntoMaster);
 			// result.setListRefactoringsByMethodSmelly(listRefactoringsByMethodSmelly);
 			// result.setListRefactoringsByMethodNotSmelly(listRefactoringsByMethodNotSmelly);
 			// result.setMethodSmellyInitialNotRefactored(metodosSmellyInitialNotRefactored);
 			result.setSmellsCommitInitial(smellsCommitInitial);
-			final PersistenceMechanism pmResult = new CSVFile(resultFile, true);
+			final PersistenceMechanism pmResult = new CSVFile(resultFile, false);
 
-			pmResult.write("RELATÓRIO COMPLETO SISTEMA");
+			pmResult.write("RELATORIO COMPLETO SISTEMA");
 
 			pmResult.write("Numero Refatoracoes em Metodos e Nao Metodos:", result.getListRefactoring().size());
+			pmResult.write("Numero Refatoracoes relacionadas a operacoes em Metodos:",
+					countRefactoringRelatedOperations);
+			pmResult.write("Numero Refatoracoes relacionadas a rename em Metodos:", countRefactoringRelatedRenaming);
+
 			pmResult.write("Numero Metodos Smell Commit Inicial:",
 					result.getSmellsCommitInitial().getMetodosSmell().size());
 			pmResult.write("Numero Metodos NOT Smell Commit Inicial:",
@@ -366,124 +395,147 @@ public class SmellRefactoredManager {
 
 		float falseNegative = 0;
 		float trueNegative = 0;
+
 		for (MethodDataSmelly methodNotSmelly : result.getSmellsCommitInitial().getMetodosNotSmelly()) {
-			MethodDataSmelly methodNotSmellyBuscar = methodNotSmelly;
+			MethodDataSmelly methodBuscar = methodNotSmelly;
 			boolean renamedMethod = false;
 			boolean refactoredMethod = false;
+			Date dateCommitRenamed = null;
 			do {
 				renamedMethod = false;
 				String methodRenamedName = null;
 				for (RefactoringData methodRefactored : result.getListRefactoring()) {
 					boolean isClassInvolved = methodRefactored.getInvolvedClassesBefore()
-							.contains(methodNotSmellyBuscar.getNomeClasse())
-							|| methodRefactored.getInvolvedClassesAfter()
-									.contains(methodNotSmellyBuscar.getNomeClasse());
+							.contains(methodBuscar.getNomeClasse())
+							|| methodRefactored.getInvolvedClassesAfter().contains(methodBuscar.getNomeClasse());
 
-					boolean isMethodRefactored = methodRefactored.getLeftSide()
-							.contains(methodNotSmellyBuscar.getNomeMetodo())
-							|| methodRefactored.getRightSide().contains(methodNotSmellyBuscar.getNomeMetodo());
+					boolean isMethodRefactored = methodRefactored.getLeftSide().contains(methodBuscar.getNomeMetodo())
+							|| methodRefactored.getRightSide().contains(methodBuscar.getNomeMetodo());
 
 					if (isClassInvolved && isMethodRefactored) {
 						if (methodRefactored.getRefactoringType().equals("RENAME_METHOD")
-								&& methodRefactored.getLeftSide().contains(methodNotSmellyBuscar.getNomeMetodo())
-								&& methodRefactored.getInvolvedClassesBefore()
-										.contains(methodNotSmellyBuscar.getNomeClasse())) {
-							renamedMethod = true;
-							methodRenamedName = extrairNomeMetodo(methodRefactored.getRightSide());
+								&& methodRefactored.getLeftSide().contains(methodBuscar.getNomeMetodo())
+								&& methodRefactored.getInvolvedClassesBefore().contains(methodBuscar.getNomeClasse())) {
+
+							if ((dateCommitRenamed == null) || (dateCommitRenamed != null
+									&& dateCommitRenamed.compareTo(methodRefactored.getCommitDate()) < 0)) {
+								renamedMethod = true;
+								dateCommitRenamed = methodRefactored.getCommitDate();
+								methodRenamedName = extrairNomeMetodo(methodRefactored.getRightSide());
+							}
 						} else if (methodRefactored.getRefactoringType().contains("OPERATION")) {
-							FilterSmellResult smellsCommit = obterSmellsCommit(methodRefactored.getCommit(), repo);
-							falseNegative++; // olhar o commit
-							refactoredMethod = true;
-							break; // busca pelo menos uma refatoracao
+							FilterSmellResult smellsPreviousCommit = obterSmellsPreviousCommit(repo,
+									methodRefactored.getCommit());
+							for (MethodDataSmelly methodNotSmell : smellsPreviousCommit.getMetodosNotSmelly()) {
+								boolean isSameClassMethod = methodNotSmell.getNomeClasse()
+										.equals(methodBuscar.getNomeClasse())
+										&& methodNotSmell.getNomeMetodo().equals(methodBuscar.getNomeMetodo());
+								if (isSameClassMethod) {
+									falseNegative++;
+									refactoredMethod = true;
+									break;
+								}
+							}
 						}
 					}
 				}
-				if (renamedMethod) {
-					methodNotSmellyBuscar.setNomeMetodo(methodRenamedName);
-				}
-				logger.info(methodNotSmellyBuscar.getNomeMetodo() + " " + renamedMethod + " " + refactoredMethod);
-
+				if (renamedMethod)
+					methodBuscar.setNomeMetodo(methodRenamedName);
+				else
+					dateCommitRenamed = null;
+				logger.info(methodBuscar.getNomeMetodo() + " " + renamedMethod + " " + refactoredMethod);
 			} while (renamedMethod && !refactoredMethod);
-
 			if (!refactoredMethod) {
 				trueNegative++;
 			}
 		}
-
-		float falsePositiveV = 0;
-		float falsePositiveX = 0;
-		float falsePositiveR = 0;
-		float falsePositiveD = 0;
 
 		float truePositiveV = 0;
 		float truePositiveX = 0;
 		float truePositiveR = 0;
 		float truePositiveD = 0;
 
-		for (MethodDataSmelly methodSmelly : result.getSmellsCommitInitial().getMetodosSmell()) {
-			MethodDataSmelly methodSmellyBuscar = methodSmelly;
-			boolean renamedMethod = false;
-			boolean refactoredMethodV = false;
-			boolean refactoredMethodX = false;
-			boolean refactoredMethodR = false;
-			boolean refactoredMethodD = false;
-			do {
-				renamedMethod = false;
-				String methodRenamedName = null;
-				for (RefactoringData methodRefactored : result.getListRefactoring()) {
-					boolean isClassInvolved = methodRefactored.getInvolvedClassesBefore()
-							.contains(methodSmellyBuscar.getNomeClasse())
-							|| methodRefactored.getInvolvedClassesAfter().contains(methodSmellyBuscar.getNomeClasse());
-					boolean isMethodRefactored = methodRefactored.getLeftSide()
-							.contains(methodSmellyBuscar.getNomeMetodo())
-							|| methodRefactored.getRightSide().contains(methodSmellyBuscar.getNomeMetodo());
+		float falsePositiveV = 0;
+		float falsePositiveX = 0;
+		float falsePositiveR = 0;
+		float falsePositiveD = 0;
 
-					if (isClassInvolved && isMethodRefactored) {
-						if (methodRefactored.getRefactoringType().equals("RENAME_METHOD")
-								&& methodRefactored.getLeftSide().contains(methodSmellyBuscar.getNomeMetodo())
-								&& methodRefactored.getInvolvedClassesBefore()
-										.contains(methodSmellyBuscar.getNomeClasse())) {
-							renamedMethod = true;
-							methodRenamedName = extrairNomeMetodo(methodRefactored.getRightSide());
-						} else if (methodRefactored.getRefactoringType().contains("OPERATION")) {
-							// olhar dentro do commit
-							if (methodSmellyBuscar.getSmell().equals("Metodo Longo")) {
-								if (!refactoredMethodV && methodSmellyBuscar.getListaTecnicas().contains("V")) {
-									truePositiveV++;
-									refactoredMethodV = true;
+		for (MethodDataSmelly methodSmelly : result.getSmellsCommitInitial().getMetodosSmell()) {
+
+			if (methodSmelly.getSmell().equals("Metodo Longo")) {
+				MethodDataSmelly methodSmellyBuscar = methodSmelly;
+				boolean renamedMethod = false;
+				boolean refactoredMethodV = false;
+				boolean refactoredMethodX = false;
+				boolean refactoredMethodR = false;
+				boolean refactoredMethodD = false;
+				Date dateCommitRenamed = null;
+				do {
+					renamedMethod = false;
+					String methodRenamedName = null;
+					for (RefactoringData methodRefactored : result.getListRefactoring()) {
+						boolean isClassInvolved = methodRefactored.getInvolvedClassesBefore()
+								.contains(methodSmellyBuscar.getNomeClasse())
+								|| methodRefactored.getInvolvedClassesAfter()
+										.contains(methodSmellyBuscar.getNomeClasse());
+						boolean isMethodRefactored = methodRefactored.getLeftSide()
+								.contains(methodSmellyBuscar.getNomeMetodo())
+								|| methodRefactored.getRightSide().contains(methodSmellyBuscar.getNomeMetodo());
+
+						if (isClassInvolved && isMethodRefactored) {
+							if (methodRefactored.getRefactoringType().equals("RENAME_METHOD")
+									&& methodRefactored.getLeftSide().contains(methodSmellyBuscar.getNomeMetodo())
+									&& methodRefactored.getInvolvedClassesBefore()
+											.contains(methodSmellyBuscar.getNomeClasse())) {
+								if ((dateCommitRenamed == null) || (dateCommitRenamed != null
+										&& dateCommitRenamed.compareTo(methodRefactored.getCommitDate()) < 0)) {
+									renamedMethod = true;
+									dateCommitRenamed = methodRefactored.getCommitDate();
+									methodRenamedName = extrairNomeMetodo(methodRefactored.getRightSide());
 								}
-								if (!refactoredMethodX && methodSmellyBuscar.getListaTecnicas().contains("X")) {
-									truePositiveX++;
-									refactoredMethodX = true;
-								}
-								if (!refactoredMethodR && methodSmellyBuscar.getListaTecnicas().contains("R")) {
-									truePositiveR++;
-									refactoredMethodR = true;
-								}
-								if (!refactoredMethodD && methodSmellyBuscar.getListaTecnicas().contains("D")) {
-									truePositiveD++;
-									refactoredMethodD = true;
+							} else if (methodRefactored.getRefactoringType().contains("OPERATION")) {
+								FilterSmellResult smellsPreviousCommit = obterSmellsPreviousCommit(repo,
+										methodRefactored.getCommit());
+								for (MethodDataSmelly methodSmell : smellsPreviousCommit.getMetodosSmell()) {
+									boolean isSameClassMethod = methodSmell.getNomeClasse()
+											.equals(methodSmellyBuscar.getNomeClasse())
+											&& methodSmell.getNomeMetodo().equals(methodSmellyBuscar.getNomeMetodo());
+									if ((isSameClassMethod) && methodSmell.getSmell().equals("Metodo Longo")) {
+										if (!refactoredMethodV && methodSmellyBuscar.getListaTecnicas().contains("V")) {
+											truePositiveV++;
+											refactoredMethodV = true;
+										}
+										if (!refactoredMethodX && methodSmellyBuscar.getListaTecnicas().contains("X")) {
+											truePositiveX++;
+											refactoredMethodX = true;
+										}
+										if (!refactoredMethodR && methodSmellyBuscar.getListaTecnicas().contains("R")) {
+											truePositiveR++;
+											refactoredMethodR = true;
+										}
+										if (!refactoredMethodD && methodSmellyBuscar.getListaTecnicas().contains("D")) {
+											truePositiveD++;
+											refactoredMethodD = true;
+										}
+									}
 								}
 							}
 						}
 					}
-				}
-				if (renamedMethod) {
-					methodSmellyBuscar.setNomeMetodo(methodRenamedName);
-				}
-			} while (renamedMethod
-					&& (!refactoredMethodD || !refactoredMethodR || !refactoredMethodV || !refactoredMethodX));
-			if (!refactoredMethodD) {
-				falsePositiveD++;
-			}
-			if (!refactoredMethodV) {
-				falsePositiveV++;
-			}
-			if (!refactoredMethodR) {
-				falsePositiveR++;
-			}
-			if (!refactoredMethodX) {
-				falsePositiveX++;
+					if (renamedMethod)
+						methodSmellyBuscar.setNomeMetodo(methodRenamedName);
+					else
+						dateCommitRenamed = null;
+				} while (renamedMethod
+						&& (!refactoredMethodD || !refactoredMethodR || !refactoredMethodV || !refactoredMethodX));
+				if (!refactoredMethodD)
+					falsePositiveD++;
+				if (!refactoredMethodV)
+					falsePositiveV++;
+				if (!refactoredMethodR)
+					falsePositiveR++;
+				if (!refactoredMethodX)
+					falsePositiveX++;
 			}
 		}
 
@@ -544,6 +596,24 @@ public class SmellRefactoredManager {
 		pmResult.write("Acuracia (D) = ", accuracyD);
 
 		pmResult.write("");
+	}
+
+	private FilterSmellResult obterSmellsPreviousCommit(Repository repo, String commitId) throws Exception {
+		CommitData previousCommit = null;
+		boolean achouCommit = false;
+		for (CommitData commit : commitsWithRefactoringMergedIntoMaster) {
+			if (commit.getId().equals(commitId)) {
+				previousCommit = commit.getPrevious();
+				achouCommit = true;
+				break;
+			}
+		}
+		FilterSmellResult smellsPreviousCommit;
+		if (achouCommit)
+			smellsPreviousCommit = obterSmellsCommit(previousCommit.getId(), repo);
+		else
+			smellsPreviousCommit = obterSmellsCommit(commitId, repo);
+		return smellsPreviousCommit;
 	}
 
 	private static String extrairNomeMetodo(String rightSide) {
