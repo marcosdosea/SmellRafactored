@@ -118,6 +118,7 @@ public class SmellRefactoredManager {
 			} catch (Exception e) {
 				logger.error(e.getMessage());
 			}
+			logger.info("Tota de refactorings encontrados: " + listRefactoring.size());
 
 			// Filtra os commits com refactoring cujo commit feito no master ou pull request
 			// realizados no master
