@@ -25,6 +25,7 @@ import org.refactoringminer.api.GitHistoryRefactoringMiner;
 import org.refactoringminer.api.GitService;
 import org.refactoringminer.api.Refactoring;
 import org.refactoringminer.api.RefactoringHandler;
+import org.refactoringminer.api.RefactoringType;
 import org.refactoringminer.rm1.GitHistoryRefactoringMinerImpl;
 import org.refactoringminer.util.GitServiceImpl;
 import org.repodriller.persistence.PersistenceMechanism;
@@ -35,6 +36,27 @@ import org.slf4j.LoggerFactory;
 import com.opencsv.CSVReader;
 
 public class SmellRefactoredManager {
+
+	public static final String[] LONG_CLASS_REFACTORIES = {
+			RefactoringType.EXTRACT_CLASS.toString()
+			, RefactoringType.EXTRACT_SUBCLASS.toString()
+			, RefactoringType.EXTRACT_SUPERCLASS.toString()
+			, RefactoringType.EXTRACT_AND_MOVE_OPERATION.toString()
+			, RefactoringType.MOVE_OPERATION.toString()
+			, RefactoringType.PULL_UP_OPERATION.toString()
+			, RefactoringType.PUSH_DOWN_OPERATION.toString()
+			};
+	public static final String[] CLASS_REFACTORIES = {
+			RefactoringType.EXTRACT_CLASS.toString()
+			, RefactoringType.EXTRACT_SUBCLASS.toString()
+			, RefactoringType.EXTRACT_SUPERCLASS.toString()
+			, RefactoringType.EXTRACT_AND_MOVE_OPERATION.toString()
+			, RefactoringType.MOVE_OPERATION.toString()
+			, RefactoringType.PULL_UP_OPERATION.toString()
+			, RefactoringType.PUSH_DOWN_OPERATION.toString()
+			, RefactoringType.RENAME_CLASS.toString()
+			};
+		
 
 	static Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
 
@@ -52,12 +74,15 @@ public class SmellRefactoredManager {
 	PersistenceMechanism pmResultEvaluationClasses;
 	PersistenceMechanism pmResultSmellRefactoredMethods;
 	PersistenceMechanism pmResultSmellRefactoredMethodsMessage;
-	
+
 	PersistenceMechanism pmResultSmellRefactoredClasses;
 	PersistenceMechanism pmResultSmellRefactoredClassesMessage;
-	
+
 	PersistenceMechanism pmResultSmellRefactoredCommit;
 	HashSet<String> listCommitEvaluated = new HashSet<String>();
+	
+	String fileRefactoringName;
+	Boolean reuseRefactoringFile;
 
 	public SmellRefactoredManager(String urlRepository, String localFolder, String initialCommit, String finalCommit,
 			List<LimiarTecnica> listaLimiarTecnica, String resultFileName) {
@@ -77,6 +102,9 @@ public class SmellRefactoredManager {
 		pmResultEvaluationClasses = new CSVFile(resultFileName + "-evaluation-classes.csv", false);
 		pmResultSmellRefactoredClasses = new CSVFile(resultFileName + "-smellRefactored-classes.csv", false);
 		pmResultSmellRefactoredClassesMessage = new CSVFile(resultFileName + "-smellRefactored-classes-message.csv", false);
+		
+		fileRefactoringName = resultFileName + "-refactoring.csv";
+		reuseRefactoringFile = false; // Gera o arquivo apenas uma vez a cada execução do estudo, evitando problemas durante o desenvolvimento e quando houver mudança na faixa de commits
 	}
 
 	public void getSmellRefactoredMethods() {
@@ -86,20 +114,15 @@ public class SmellRefactoredManager {
 		try {
 			repo = gitService.cloneIfNotExists(localFolder, urlRepository);
 
-			String fileRefactoringName = resultFileName + "-refactoring.csv";
-			File fileRefactoring = new File(fileRefactoringName);
-			if (!fileRefactoring.exists()) {
+			if (!reuseRefactoringFile) {
 				final PersistenceMechanism pmRefactoring = new CSVFile(fileRefactoringName, false);
 				pmRefactoring.write("Commmit-id", "Refactring-name", "Refactoring-Type", "Code Element Left",
 						"Code Element Right", "Class Before", "Class After");
-
 				// detect list of refactoring between commits
 				miner.detectBetweenCommits(repo, initialCommit, finalCommit, new RefactoringHandler() {
 					@Override
 					public void handle(String idCommit, List<Refactoring> refactorings) {
-
 						for (Refactoring ref : refactorings) {
-
 							pmRefactoring.write(idCommit, ref.getName(), ref.getRefactoringType(),
 									ref.leftSide().size() > 0 ? ref.leftSide().get(0).getCodeElement() : 0,
 									ref.rightSide().size() > 0 ? ref.rightSide().get(0).getCodeElement() : 0,
@@ -108,7 +131,8 @@ public class SmellRefactoredManager {
 						}
 					}
 				});
-			}
+				reuseRefactoringFile = true;
+		    }
 
 			// Obter lista de commits que possuem refatorações
 			ArrayList<RefactoringData> listRefactoring = new ArrayList<RefactoringData>();
@@ -128,7 +152,7 @@ public class SmellRefactoredManager {
 			} catch (Exception e) {
 				logger.error(e.getMessage());
 			}
-			logger.info("Tota de refactorings encontrados: " + listRefactoring.size());
+			logger.info("Total de refactorings encontrados: " + listRefactoring.size());
 
 			// Filtra os commits com refactoring cujo commit feito no master ou pull request
 			// realizados no master
@@ -217,10 +241,10 @@ public class SmellRefactoredManager {
 			pmResultEvaluation.write("Numero Metodos NOT Smell Commit Inicial:",
 					smellsCommitInitial.getMetodosNotSmelly().size());
 
-			pmResultSmellRefactoredMethodsMessage.write("Class", "Method", "Smell", "LOC", "CC", "EC", "NOP", "Tecnicas",
-					"Commit", "Refactoring", "Left Side", "Right Side", "Full Message");
-			pmResultSmellRefactoredMethods.write("Class", "Method", "Smell", "LOC", "CC", "EC", "NOP", "Tecnicas", "Commit",
-					"Refactoring", "Left Side", "Right Side");
+			pmResultSmellRefactoredMethodsMessage.write("Class", "Method", "Smell", "LOC", "CC", "EC", "NOP",
+					"Tecnicas", "Commit", "Refactoring", "Left Side", "Right Side", "Full Message");
+			pmResultSmellRefactoredMethods.write("Class", "Method", "Smell", "LOC", "CC", "EC", "NOP", "Tecnicas",
+					"Commit", "Refactoring", "Left Side", "Right Side");
 
 			evaluateSmellChangeOperation(smellsCommitInitial, listRefactoringMergedIntoMaster, repo,
 					MethodDataSmelly.LONG_METHOD);
@@ -250,8 +274,8 @@ public class SmellRefactoredManager {
 		}
 		logger.info("Gerando smells com a lista de problemas de design encontrados...");
 		FilterSmellResult smellsCommitInitial = FilterSmells.filtrar(report.all(), listaLimiarTecnica, commit);
-		FilterSmells.gravarMetodosSmell(smellsCommitInitial.getMetodosSmell(),
-				resultFileName + "-smells-commit-initial.csv");
+		FilterSmells.gravarMetodosSmell(smellsCommitInitial.getMetodosSmell(), resultFileName + "-smells-commit-initial.csv");
+		FilterSmells.gravarClassesSmell(smellsCommitInitial.getClassesSmell(), resultFileName + "-smells-commit-initial-class.csv");
 		return smellsCommitInitial;
 	}
 
@@ -836,8 +860,7 @@ public class SmellRefactoredManager {
 
 		pmResultEvaluation.write("");
 	}
-	
-	
+
 	public void getSmellRefactoredClasses() {
 
 		GitHistoryRefactoringMiner miner = new GitHistoryRefactoringMinerImpl();
@@ -845,20 +868,15 @@ public class SmellRefactoredManager {
 		try {
 			repo = gitService.cloneIfNotExists(localFolder, urlRepository);
 
-			String fileRefactoringName = resultFileName + "-refactoring.csv";
-			File fileRefactoring = new File(fileRefactoringName);
-			if (!fileRefactoring.exists()) {
+			if (!reuseRefactoringFile) {
 				final PersistenceMechanism pmRefactoring = new CSVFile(fileRefactoringName, false);
 				pmRefactoring.write("Commmit-id", "Refactring-name", "Refactoring-Type", "Code Element Left",
 						"Code Element Right", "Class Before", "Class After");
-
 				// detect list of refactoring between commits
 				miner.detectBetweenCommits(repo, initialCommit, finalCommit, new RefactoringHandler() {
 					@Override
 					public void handle(String idCommit, List<Refactoring> refactorings) {
-
 						for (Refactoring ref : refactorings) {
-
 							pmRefactoring.write(idCommit, ref.getName(), ref.getRefactoringType(),
 									ref.leftSide().size() > 0 ? ref.leftSide().get(0).getCodeElement() : 0,
 									ref.rightSide().size() > 0 ? ref.rightSide().get(0).getCodeElement() : 0,
@@ -867,6 +885,7 @@ public class SmellRefactoredManager {
 						}
 					}
 				});
+				reuseRefactoringFile = true;
 			}
 
 			// Obter lista de commits que possuem refatorações
@@ -887,7 +906,7 @@ public class SmellRefactoredManager {
 			} catch (Exception e) {
 				logger.error(e.getMessage());
 			}
-			logger.info("Tota de refactorings encontrados: " + listRefactoring.size());
+			logger.info("Total de refactorings encontrados: " + listRefactoring.size());
 
 			// Filtra os commits com refactoring cujo commit feito no master ou pull request
 			// realizados no master
@@ -951,8 +970,16 @@ public class SmellRefactoredManager {
 						refactoring.setFullMessage(commit.getFullMessage());
 						refactoring.setShortMessage(commit.getShortMessage());
 						listRefactoringMergedIntoMaster.add(refactoring);
-						if (refactoring.getRefactoringType().contains("CLASS"))
-							countRefactoringRelatedClasses++;
+						if (refactoring.getRefactoringType().equals(RefactoringType.RENAME_CLASS.toString())) {
+							// countRefactoringRelatedRenaming++;
+						} else {
+							for (String longClassRefactoring : CLASS_REFACTORIES) {
+								if (refactoring.getRefactoringType().equals(longClassRefactoring)) {
+									countRefactoringRelatedClasses++;
+									/// break;
+								}
+							}
+						}
 					}
 				}
 			}
@@ -971,20 +998,19 @@ public class SmellRefactoredManager {
 			pmResultEvaluationClasses.write("Numero Classes NOT Smell Commit Inicial:",
 					smellsCommitInitial.getClassesNotSmelly().size());
 
-			pmResultSmellRefactoredMethodsMessage.write("Class", "Smell", "CLOC", "Tecnicas",
-					"Commit", "Refactoring", "Left Side", "Right Side", "Full Message");
-			pmResultSmellRefactoredMethods.write("Class", "Smell", "CLOC", "Tecnicas", "Commit",
-					"Refactoring", "Left Side", "Right Side");
+			pmResultSmellRefactoredClassesMessage.write("Class", "Smell", "CLOC", "Tecnicas", "Commit", "Refactoring",
+					"Left Side", "Right Side", "Full Message");
+			pmResultSmellRefactoredClasses.write("Class", "Smell", "CLOC", "Tecnicas", "Commit", "Refactoring",
+					"Left Side", "Right Side");
 
-			evaluateSmellChangeClass(smellsCommitInitial, listRefactoringMergedIntoMaster, repo,
-					ClassDataSmelly.LONG_CLASS);
+			evaluateSmellChangeClass(smellsCommitInitial, listRefactoringMergedIntoMaster, repo, ClassDataSmelly.LONG_CLASS);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
 	}
 
-	private void evaluateSmellChangeClass(FilterSmellResult commitInitial,
-			ArrayList<RefactoringData> listRefactoring, Repository repo, String typeSmell) throws Exception {
+	private void evaluateSmellChangeClass(FilterSmellResult commitInitial, ArrayList<RefactoringData> listRefactoring,
+			Repository repo, String typeSmell) throws Exception {
 
 		float falseNegative = 0;
 		float trueNegative = 0;
@@ -998,15 +1024,17 @@ public class SmellRefactoredManager {
 				renamedClass = false;
 				String classRenamedName = null;
 				for (RefactoringData refactoring : listRefactoring) {
-					boolean isClassInvolved = refactoring.getInvolvedClassesBefore()
-							.contains(classBuscar.getNomeClasse())
-							|| refactoring.getInvolvedClassesAfter().contains(classBuscar.getNomeClasse());
+					boolean isClassInvolvedBefore = refactoring.getInvolvedClassesBefore()
+							.contains(classBuscar.getNomeClasse());
+					boolean isClassInvolvedAfter = refactoring.getInvolvedClassesAfter()
+							.contains(classBuscar.getNomeClasse());
+					boolean isClassInvolved = isClassInvolvedBefore || isClassInvolvedAfter;
 
 					boolean isClassRefactored = refactoring.getLeftSide().contains(classBuscar.getNomeClasse())
 							|| refactoring.getRightSide().contains(classBuscar.getNomeClasse());
 
 					if (isClassInvolved && isClassRefactored) {
-						if (refactoring.getRefactoringType().equals("RENAME_CLASS")
+						if (refactoring.getRefactoringType().equals(RefactoringType.RENAME_CLASS.toString())
 								&& refactoring.getLeftSide().contains(classBuscar.getNomeClasse())
 								&& refactoring.getInvolvedClassesBefore().contains(classBuscar.getNomeClasse())) {
 
@@ -1016,45 +1044,55 @@ public class SmellRefactoredManager {
 								dateCommitRenamed = refactoring.getCommitDate();
 								classRenamedName = refactoring.getRightSide();
 							}
-						} else if (refactoring.getRefactoringType().contains("CLASS")) {
-							FilterSmellResult smellsPreviousCommit = obterSmellsPreviousCommit(repo,
-									refactoring.getCommit());
-							for (ClassDataSmelly classNotSmell : smellsPreviousCommit.getClassesNotSmelly()) {
-								boolean isSameClass = classNotSmell.getNomeClasse().equals(classBuscar.getNomeClasse());
-								if (isSameClass) {
-									falseNegative++;
-									refactoredClass = true;
-									pmResultSmellRefactoredClassesMessage.write(refactoring.getNomeClasse(),
-											refactoring.getSmell(), classNotSmell.getLinesOfCode(), 
-											refactoring.getListaTecnicas(), refactoring.getCommit(),
-											refactoring.getRefactoringType(), refactoring.getLeftSide(),
-											refactoring.getRightSide(), refactoring.getFullMessage());
-
-									pmResultSmellRefactoredClasses.write(refactoring.getNomeClasse(),
-											refactoring.getSmell(), classNotSmell.getLinesOfCode(), 
-											refactoring.getListaTecnicas(), refactoring.getCommit(),
-											refactoring.getRefactoringType(), refactoring.getLeftSide(),
-											refactoring.getRightSide());
-
+						} else if (isClassInvolvedBefore) { // && !isClassInvolvedAfter
+							Boolean isClassRefactoring = false; 
+							for (String longClassRefactoring : CLASS_REFACTORIES) {
+								if (refactoring.getRefactoringType().equals(longClassRefactoring)) {
+									isClassRefactoring = true;
 									break;
+								}
+							}
+							if (isClassRefactoring) {
+								FilterSmellResult smellsPreviousCommit = obterSmellsPreviousCommit(repo,
+										refactoring.getCommit());
+								for (ClassDataSmelly classNotSmell : smellsPreviousCommit.getClassesNotSmelly()) {
+									boolean isSameClass = classNotSmell.getNomeClasse()
+											.equals(classBuscar.getNomeClasse());
+									if (isSameClass) {
+										falseNegative++;
+										refactoredClass = true;
+										pmResultSmellRefactoredClassesMessage.write(refactoring.getNomeClasse(),
+												refactoring.getSmell(), classNotSmell.getLinesOfCode(),
+												refactoring.getListaTecnicas(), refactoring.getCommit(),
+												refactoring.getRefactoringType(), refactoring.getLeftSide(),
+												refactoring.getRightSide(), refactoring.getFullMessage());
+										pmResultSmellRefactoredClasses.write(refactoring.getNomeClasse(),
+												refactoring.getSmell(), classNotSmell.getLinesOfCode(),
+												refactoring.getListaTecnicas(), refactoring.getCommit(),
+												refactoring.getRefactoringType(), refactoring.getLeftSide(),
+												refactoring.getRightSide());
+										break;
+									}
 								}
 							}
 						}
 					}
 				}
-				if (renamedClass)
+				if (renamedClass) {
 					classBuscar.setNomeClasse(classRenamedName);
-				else
+				} else {
 					dateCommitRenamed = null;
+				}
 			} while (renamedClass && !refactoredClass);
 			if (!refactoredClass) {
 				trueNegative++;
-				pmResultSmellRefactoredClassesMessage.write(classBuscar.getNomeClasse(), 
-						classBuscar.getSmell(), classBuscar.getLinesOfCode(), 
-						classBuscar.getListaTecnicas(), classBuscar.getCommit(), "", "", "", "");
+				pmResultSmellRefactoredClassesMessage.write(classBuscar.getNomeClasse(), classBuscar.getSmell(),
+						classBuscar.getLinesOfCode(), classBuscar.getListaTecnicas(), classBuscar.getCommit(), "", "",
+						"", "");
 
-				pmResultSmellRefactoredClasses.write(classBuscar.getNomeClasse(), classBuscar.getSmell(), 
-						classBuscar.getLinesOfCode(), classBuscar.getListaTecnicas(), classBuscar.getCommit(), "", "", "");
+				pmResultSmellRefactoredClasses.write(classBuscar.getNomeClasse(), classBuscar.getSmell(),
+						classBuscar.getLinesOfCode(), classBuscar.getListaTecnicas(), classBuscar.getCommit(), "", "",
+						"");
 			}
 		}
 
@@ -1085,16 +1123,26 @@ public class SmellRefactoredManager {
 					renamedClass = false;
 					String classRenamedName = null;
 					for (RefactoringData refactoring : listRefactoring) {
-						boolean isClassInvolved = refactoring.getInvolvedClassesBefore()
-								.contains(classSmellyBuscar.getNomeClasse())
-								|| refactoring.getInvolvedClassesAfter()
-										.contains(classSmellyBuscar.getNomeClasse());
+						boolean isClassInvolvedBefore = refactoring.getInvolvedClassesBefore()
+								.contains(classSmellyBuscar.getNomeClasse());
+						boolean isClassInvolvedAfter = refactoring.getInvolvedClassesAfter()
+								.contains(classSmellyBuscar.getNomeClasse());
+						boolean isClassInvolved = isClassInvolvedBefore || isClassInvolvedAfter;
 						boolean isClassRefactored = refactoring.getLeftSide()
 								.contains(classSmellyBuscar.getNomeClasse())
 								|| refactoring.getRightSide().contains(classSmellyBuscar.getNomeClasse());
-
+						
+						
+						/*
+						 * logger.info( "DEBUG: classSmellyBuscar: " + classSmellyBuscar.getNomeClasse()
+						 * + " " + refactoring.getNomeClasse() + " " +
+						 * refactoring.getInvolvedClassesBefore() + " " +
+						 * refactoring.getInvolvedClassesAfter() + " " + classSmellyBuscar.getSmell() +
+						 * " " + refactoring.getRefactoringType() + " " + isClassInvolvedBefore + " " +
+						 * isClassInvolvedAfter + " " + isClassInvolved + " " + isClassRefactored );
+						 */						
 						if (isClassInvolved && isClassRefactored) {
-							if (refactoring.getRefactoringType().equals("RENAME_CLASS")
+							if (refactoring.getRefactoringType().equals(RefactoringType.RENAME_CLASS.toString())
 									&& refactoring.getLeftSide().contains(classSmellyBuscar.getNomeClasse())
 									&& refactoring.getInvolvedClassesBefore()
 											.contains(classSmellyBuscar.getNomeClasse())) {
@@ -1104,54 +1152,68 @@ public class SmellRefactoredManager {
 									dateCommitRenamed = refactoring.getCommitDate();
 									classRenamedName = refactoring.getRightSide();
 								}
-							} else if (refactoring.getRefactoringType().contains("CLASS")) {
-								FilterSmellResult smellsPreviousCommit = obterSmellsPreviousCommit(repo,
-										refactoring.getCommit());
-								for (ClassDataSmelly classSmell : smellsPreviousCommit.getClassesSmell()) {
-									boolean isSameClass = classSmell.getNomeClasse()
-											.equals(classSmellyBuscar.getNomeClasse());
-									if ((isSameClass) && classSmell.getSmell().equals(typeSmell)) {
-										if (!refactoredMethodA && classSmellyBuscar.getListaTecnicas().contains("A")) {
-											truePositiveA++;
-											refactoredMethodA = true;
+							} else if (isClassInvolvedBefore) {
+								Boolean isLongClassRefactoring = false; 
+								for (String longClassRefactoring : LONG_CLASS_REFACTORIES) {
+									if (refactoring.getRefactoringType().equals(longClassRefactoring)) {
+										logger.info("DEBUG: isLongClassRefactoring: " + longClassRefactoring + " " + classSmellyBuscar.getNomeClasse());
+										isLongClassRefactoring = true;
+										break;
+									}
+								}
+								if (isLongClassRefactoring) {
+									FilterSmellResult smellsPreviousCommit = obterSmellsPreviousCommit(repo,
+											refactoring.getCommit());
+									logger.info("DEBUG: isLongClassRefactoring: " + refactoring.getCommit());
+									for (ClassDataSmelly classSmell : smellsPreviousCommit.getClassesSmell()) {
+										boolean isSameClass = classSmell.getNomeClasse()
+												.equals(classSmellyBuscar.getNomeClasse());
+										logger.info("DEBUG: Class smell: " + classSmell.getSmell());
+										if ((isSameClass) && classSmell.getSmell().equals(typeSmell)) {
+											if (!refactoredMethodA && classSmellyBuscar.getListaTecnicas().contains("A")) {
+												truePositiveA++;
+												refactoredMethodA = true;
+											}
+											if (!refactoredMethodV && classSmellyBuscar.getListaTecnicas().contains("V")) {
+												truePositiveV++;
+												refactoredMethodV = true;
+											}
+											if (!refactoredMethodX && classSmellyBuscar.getListaTecnicas().contains("X")) {
+												truePositiveX++;
+												refactoredMethodX = true;
+											}
+											if (!refactoredMethodR && classSmellyBuscar.getListaTecnicas().contains("R")) {
+												truePositiveR++;
+												refactoredMethodR = true;
+											}
+											if (!refactoredMethodD && classSmellyBuscar.getListaTecnicas().contains("D")) {
+												truePositiveD++;
+												refactoredMethodD = true;
+											}
+											pmResultSmellRefactoredClassesMessage.write(refactoring.getNomeClasse(),
+													refactoring.getSmell(), classSmell.getLinesOfCode(),
+													refactoring.getListaTecnicas(), refactoring.getCommit(),
+													refactoring.getRefactoringType(), refactoring.getLeftSide(),
+													refactoring.getRightSide(), refactoring.getFullMessage());
+											pmResultSmellRefactoredClasses.write(refactoring.getNomeClasse(),
+													refactoring.getSmell(), classSmell.getLinesOfCode(),
+													refactoring.getListaTecnicas(), refactoring.getCommit(),
+													refactoring.getRefactoringType(), refactoring.getLeftSide(),
+													refactoring.getRightSide());
 										}
-										if (!refactoredMethodV && classSmellyBuscar.getListaTecnicas().contains("V")) {
-											truePositiveV++;
-											refactoredMethodV = true;
-										}
-										if (!refactoredMethodX && classSmellyBuscar.getListaTecnicas().contains("X")) {
-											truePositiveX++;
-											refactoredMethodX = true;
-										}
-										if (!refactoredMethodR && classSmellyBuscar.getListaTecnicas().contains("R")) {
-											truePositiveR++;
-											refactoredMethodR = true;
-										}
-										if (!refactoredMethodD && classSmellyBuscar.getListaTecnicas().contains("D")) {
-											truePositiveD++;
-											refactoredMethodD = true;
-										}
-										pmResultSmellRefactoredClassesMessage.write(refactoring.getNomeClasse(),
-												refactoring.getSmell(),	classSmell.getLinesOfCode(), 
-												refactoring.getListaTecnicas(), refactoring.getCommit(),
-												refactoring.getRefactoringType(), refactoring.getLeftSide(),
-												refactoring.getRightSide(), refactoring.getFullMessage());
-										pmResultSmellRefactoredClasses.write(refactoring.getNomeClasse(),
-												refactoring.getSmell(),	classSmell.getLinesOfCode(), 
-												refactoring.getListaTecnicas(), refactoring.getCommit(),
-												refactoring.getRefactoringType(), refactoring.getLeftSide(),
-												refactoring.getRightSide());
 									}
 								}
 							}
 						}
 					}
-					if (renamedClass)
+					if (renamedClass) {
 						classSmellyBuscar.setNomeClasse(classRenamedName);
-					else
+					} else {
 						dateCommitRenamed = null;
+					}
 				} while (renamedClass && (!refactoredMethodA || !refactoredMethodD || !refactoredMethodR
 						|| !refactoredMethodV || !refactoredMethodX));
+				
 				if (!refactoredMethodA && classSmellyBuscar.getListaTecnicas().contains("A"))
 					falsePositiveA++;
 				if (!refactoredMethodD && classSmellyBuscar.getListaTecnicas().contains("D"))
@@ -1165,11 +1227,11 @@ public class SmellRefactoredManager {
 				if (!refactoredMethodA || !refactoredMethodD || !refactoredMethodR || !refactoredMethodV
 						|| !refactoredMethodX) {
 					pmResultSmellRefactoredClassesMessage.write(classSmellyBuscar.getNomeClasse(),
-							classSmellyBuscar.getSmell(), classSmellyBuscar.getLinesOfCode(), 
+							classSmellyBuscar.getSmell(), classSmellyBuscar.getLinesOfCode(),
 							classSmellyBuscar.getListaTecnicas(), classSmellyBuscar.getCommit(), "", "", "", "");
 
 					pmResultSmellRefactoredClasses.write(classSmellyBuscar.getNomeClasse(),
-							classSmellyBuscar.getSmell(), classSmellyBuscar.getLinesOfCode(), 
+							classSmellyBuscar.getSmell(), classSmellyBuscar.getLinesOfCode(),
 							classSmellyBuscar.getListaTecnicas(), classSmellyBuscar.getCommit(), "", "", "");
 				}
 
@@ -1247,9 +1309,6 @@ public class SmellRefactoredManager {
 		pmResultEvaluationClasses.write("");
 	}
 
-	
-	
-
 	private int countParameters(String metodo) {
 		int countParams = 0;
 		if (metodo.contains(",")) {
@@ -1282,10 +1341,11 @@ public class SmellRefactoredManager {
 			}
 		}
 		FilterSmellResult smellsPreviousCommit;
-		if (achouCommit)
+		if (achouCommit) {
 			smellsPreviousCommit = obterSmellsCommit(previousCommit.getId(), repo);
-		else
+		} else {
 			smellsPreviousCommit = obterSmellsCommit(commitId, repo);
+		}
 		return smellsPreviousCommit;
 	}
 
@@ -1313,6 +1373,6 @@ public class SmellRefactoredManager {
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
-		return result;
+ 		return result;
 	}
 }
