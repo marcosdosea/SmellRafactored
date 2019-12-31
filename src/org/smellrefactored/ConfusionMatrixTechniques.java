@@ -1,11 +1,7 @@
 package org.smellrefactored;
 
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.TreeSet;
 
 import org.repodriller.persistence.PersistenceMechanism;
 
