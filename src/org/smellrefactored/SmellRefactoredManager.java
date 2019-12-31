@@ -37,6 +37,8 @@ import com.opencsv.CSVReader;
 
 public class SmellRefactoredManager {
 
+	private String[] TECHNIQUES = {"A", "V", "X", "R", "D"};
+	
 	public static final String[] LONG_CLASS_REFACTORIES = {
 			RefactoringType.EXTRACT_CLASS.toString()
 			, RefactoringType.EXTRACT_SUBCLASS.toString()
@@ -70,8 +72,8 @@ public class SmellRefactoredManager {
 
 	private String resultFileName;
 	ArrayList<CommitData> commitsWithRefactoringMergedIntoMaster;
-	PersistenceMechanism pmResultEvaluation;
-	PersistenceMechanism pmResultEvaluationClasses;
+	PersistenceMechanism pmResultEvaluationMethod;
+	PersistenceMechanism pmResultEvaluationClass;
 	PersistenceMechanism pmResultSmellRefactoredMethods;
 	PersistenceMechanism pmResultSmellRefactoredMethodsMessage;
 
@@ -94,16 +96,19 @@ public class SmellRefactoredManager {
 		this.resultFileName = resultFileName;
 		gitService = new GitServiceImpl();
 		commitsWithRefactoringMergedIntoMaster = new ArrayList<CommitData>();
-		pmResultEvaluation = new CSVFile(resultFileName + "-evaluations.csv", false);
-		pmResultSmellRefactoredMethods = new CSVFile(resultFileName + "-smellRefactored.csv", false);
-		pmResultSmellRefactoredMethodsMessage = new CSVFile(resultFileName + "-smellRefactored-message.csv", false);
+
 		pmResultSmellRefactoredCommit = new CSVFile(resultFileName + "-smellRefactored-commit.csv", false);
 
-		pmResultEvaluationClasses = new CSVFile(resultFileName + "-evaluation-classes.csv", false);
+		pmResultEvaluationMethod = new CSVFile(resultFileName + "-evaluations-methods.csv", false);
+		pmResultSmellRefactoredMethods = new CSVFile(resultFileName + "-smellRefactored.csv", false);
+		pmResultSmellRefactoredMethodsMessage = new CSVFile(resultFileName + "-smellRefactored-message.csv", false);
+
+		pmResultEvaluationClass = new CSVFile(resultFileName + "-evaluation-classes.csv", false);
 		pmResultSmellRefactoredClasses = new CSVFile(resultFileName + "-smellRefactored-classes.csv", false);
 		pmResultSmellRefactoredClassesMessage = new CSVFile(resultFileName + "-smellRefactored-classes-message.csv", false);
 		
 		fileRefactoringName = resultFileName + "-refactoring.csv";
+		
 		reuseRefactoringFile = false; // Gera o arquivo apenas uma vez a cada execução do estudo, evitando problemas durante o desenvolvimento e quando houver mudança na faixa de commits
 	}
 
@@ -225,20 +230,20 @@ public class SmellRefactoredManager {
 				}
 			}
 			Collections.sort(listRefactoringMergedIntoMaster);
-			pmResultEvaluation.write("RELATORIO COMPLETO SISTEMA");
-			pmResultEvaluation.write("Numero Refatoracoes em Metodos e Nao Metodos:",
+			pmResultEvaluationMethod.write("RELATORIO COMPLETO SISTEMA");
+			pmResultEvaluationMethod.write("Numero Refatoracoes em Metodos e Nao Metodos:",
 					listRefactoringMergedIntoMaster.size());
-			pmResultEvaluation.write("Numero Refatoracoes relacionadas a operacoes em Metodos:",
+			pmResultEvaluationMethod.write("Numero Refatoracoes relacionadas a operacoes em Metodos:",
 					countRefactoringRelatedOperations);
-			pmResultEvaluation.write("Numero Refatoracoes relacionadas a rename em Metodos:",
+			pmResultEvaluationMethod.write("Numero Refatoracoes relacionadas a rename em Metodos:",
 					countRefactoringRelatedRenaming);
 
 			pmResultSmellRefactoredCommit.write("Commit", "NumberOfClasses", "NumberOfMethods", "SystemLOC");
 			FilterSmellResult smellsCommitInitial = obterSmellsCommit(initialCommit, repo);
 
-			pmResultEvaluation.write("Numero Metodos Smell Commit Inicial:",
+			pmResultEvaluationMethod.write("Numero Metodos Smell Commit Inicial:",
 					smellsCommitInitial.getMetodosSmell().size());
-			pmResultEvaluation.write("Numero Metodos NOT Smell Commit Inicial:",
+			pmResultEvaluationMethod.write("Numero Metodos NOT Smell Commit Inicial:",
 					smellsCommitInitial.getMetodosNotSmelly().size());
 
 			pmResultSmellRefactoredMethodsMessage.write("Class", "Method", "Smell", "LOC", "CC", "EC", "NOP",
@@ -274,7 +279,7 @@ public class SmellRefactoredManager {
 		}
 		logger.info("Gerando smells com a lista de problemas de design encontrados...");
 		FilterSmellResult smellsCommitInitial = FilterSmells.filtrar(report.all(), listaLimiarTecnica, commit);
-		FilterSmells.gravarMetodosSmell(smellsCommitInitial.getMetodosSmell(), resultFileName + "-smells-commit-initial.csv");
+		FilterSmells.gravarMetodosSmell(smellsCommitInitial.getMetodosSmell(), resultFileName + "-smells-commit-initial-method.csv");
 		FilterSmells.gravarClassesSmell(smellsCommitInitial.getClassesSmell(), resultFileName + "-smells-commit-initial-class.csv");
 		return smellsCommitInitial;
 	}
@@ -282,8 +287,7 @@ public class SmellRefactoredManager {
 	private void evaluateSmellChangeOperation(FilterSmellResult commitInitial,
 			ArrayList<RefactoringData> listRefactoring, Repository repo, String typeSmell) throws Exception {
 
-		float falseNegative = 0;
-		float trueNegative = 0;
+		ConfusionMatrixTechniques confusionMatrices = new ConfusionMatrixTechniques(typeSmell, TECHNIQUES);
 
 		for (MethodDataSmelly methodNotSmelly : commitInitial.getMetodosNotSmelly()) {
 			MethodDataSmelly methodBuscar = methodNotSmelly;
@@ -320,7 +324,7 @@ public class SmellRefactoredManager {
 										.equals(methodBuscar.getNomeClasse())
 										&& methodNotSmell.getNomeMetodo().equals(methodBuscar.getNomeMetodo());
 								if (isSameClassMethod) {
-									falseNegative++;
+									confusionMatrices.incFalseNegativeForAllTechniques();
 									refactoredMethod = true;
 									pmResultSmellRefactoredMethodsMessage.write(methodRefactored.getNomeClasse(),
 											methodRefactored.getNomeMetodo(), methodRefactored.getSmell(),
@@ -350,7 +354,7 @@ public class SmellRefactoredManager {
 					dateCommitRenamed = null;
 			} while (renamedMethod && !refactoredMethod);
 			if (!refactoredMethod) {
-				trueNegative++;
+				confusionMatrices.incTrueNegativeForAllTechniques();
 				pmResultSmellRefactoredMethodsMessage.write(methodBuscar.getNomeClasse(), methodBuscar.getNomeMetodo(),
 						methodBuscar.getSmell(), methodBuscar.getLinesOfCode(), methodBuscar.getComplexity(),
 						methodBuscar.getEfferent(), methodBuscar.getNumberOfParameters(),
@@ -363,28 +367,12 @@ public class SmellRefactoredManager {
 			}
 		}
 
-		float truePositiveA = 0;
-		float truePositiveV = 0;
-		float truePositiveX = 0;
-		float truePositiveR = 0;
-		float truePositiveD = 0;
-
-		float falsePositiveA = 0;
-		float falsePositiveV = 0;
-		float falsePositiveX = 0;
-		float falsePositiveR = 0;
-		float falsePositiveD = 0;
-
 		for (MethodDataSmelly methodSmelly : commitInitial.getMetodosSmell()) {
 
 			if (methodSmelly.getSmell().equals(typeSmell)) {
 				MethodDataSmelly methodSmellyBuscar = methodSmelly;
 				boolean renamedMethod = false;
-				boolean refactoredMethodA = false;
-				boolean refactoredMethodV = false;
-				boolean refactoredMethodX = false;
-				boolean refactoredMethodR = false;
-				boolean refactoredMethodD = false;
+				confusionMatrices.resetSensibleTechniques();
 				Date dateCommitRenamed = null;
 				do {
 					renamedMethod = false;
@@ -417,26 +405,7 @@ public class SmellRefactoredManager {
 											.equals(methodSmellyBuscar.getNomeClasse())
 											&& methodSmell.getNomeMetodo().equals(methodSmellyBuscar.getNomeMetodo());
 									if ((isSameClassMethod) && methodSmell.getSmell().equals(typeSmell)) {
-										if (!refactoredMethodA && methodSmellyBuscar.getListaTecnicas().contains("A")) {
-											truePositiveA++;
-											refactoredMethodA = true;
-										}
-										if (!refactoredMethodV && methodSmellyBuscar.getListaTecnicas().contains("V")) {
-											truePositiveV++;
-											refactoredMethodV = true;
-										}
-										if (!refactoredMethodX && methodSmellyBuscar.getListaTecnicas().contains("X")) {
-											truePositiveX++;
-											refactoredMethodX = true;
-										}
-										if (!refactoredMethodR && methodSmellyBuscar.getListaTecnicas().contains("R")) {
-											truePositiveR++;
-											refactoredMethodR = true;
-										}
-										if (!refactoredMethodD && methodSmellyBuscar.getListaTecnicas().contains("D")) {
-											truePositiveD++;
-											refactoredMethodD = true;
-										}
+										confusionMatrices.incTruePositiveForSensibleTechniques(methodSmellyBuscar.getListaTecnicas());
 										pmResultSmellRefactoredMethodsMessage.write(methodRefactored.getNomeClasse(),
 												methodRefactored.getNomeMetodo(), methodRefactored.getSmell(),
 												methodSmell.getLinesOfCode(), methodSmell.getComplexity(),
@@ -460,20 +429,10 @@ public class SmellRefactoredManager {
 						methodSmellyBuscar.setNomeMetodo(methodRenamedName);
 					else
 						dateCommitRenamed = null;
-				} while (renamedMethod && (!refactoredMethodA || !refactoredMethodD || !refactoredMethodR
-						|| !refactoredMethodV || !refactoredMethodX));
-				if (!refactoredMethodA && methodSmellyBuscar.getListaTecnicas().contains("A"))
-					falsePositiveA++;
-				if (!refactoredMethodD && methodSmellyBuscar.getListaTecnicas().contains("D"))
-					falsePositiveD++;
-				if (!refactoredMethodV && methodSmellyBuscar.getListaTecnicas().contains("V"))
-					falsePositiveV++;
-				if (!refactoredMethodR && methodSmellyBuscar.getListaTecnicas().contains("R"))
-					falsePositiveR++;
-				if (!refactoredMethodX && methodSmellyBuscar.getListaTecnicas().contains("X"))
-					falsePositiveX++;
-				if (!refactoredMethodA || !refactoredMethodD || !refactoredMethodR || !refactoredMethodV
-						|| !refactoredMethodX) {
+				} while (renamedMethod && confusionMatrices.hasInsensibleTechniques());
+				
+				confusionMatrices.incFalsePositiveForInsensibleTechniques(methodSmellyBuscar.getListaTecnicas());
+				if (confusionMatrices.hasInsensibleTechniques()) {
 					pmResultSmellRefactoredMethodsMessage.write(methodSmellyBuscar.getNomeClasse(),
 							methodSmellyBuscar.getNomeMetodo(), methodSmellyBuscar.getSmell(),
 							methodSmellyBuscar.getLinesOfCode(), methodSmellyBuscar.getComplexity(),
@@ -490,82 +449,14 @@ public class SmellRefactoredManager {
 			}
 		}
 
-		float precisionA = (truePositiveA + falsePositiveA) != 0 ? truePositiveA / (truePositiveA + falsePositiveA) : 0;
-		float precisionV = (truePositiveV + falsePositiveV) != 0 ? truePositiveV / (truePositiveV + falsePositiveV) : 0;
-		float precisionX = (truePositiveX + falsePositiveX) != 0 ? truePositiveX / (truePositiveX + falsePositiveX) : 0;
-		float precisionR = (truePositiveR + falsePositiveR) != 0 ? truePositiveR / (truePositiveR + falsePositiveR) : 0;
-		float precisionD = (truePositiveD + falsePositiveD) != 0 ? truePositiveD / (truePositiveD + falsePositiveD) : 0;
-
-		float recallA = (truePositiveA + falseNegative) != 0 ? truePositiveA / (truePositiveA + falseNegative) : 0;
-		float recallV = (truePositiveV + falseNegative) != 0 ? truePositiveV / (truePositiveV + falseNegative) : 0;
-		float recallX = (truePositiveX + falseNegative) != 0 ? truePositiveX / (truePositiveX + falseNegative) : 0;
-		float recallR = (truePositiveR + falseNegative) != 0 ? truePositiveR / (truePositiveR + falseNegative) : 0;
-		float recallD = (truePositiveD + falseNegative) != 0 ? truePositiveD / (truePositiveD + falseNegative) : 0;
-
-		float fMeasureA = (precisionA + recallA) != 0 ? (2 * precisionA * recallA) / (precisionA + recallA) : 0;
-		float fMeasureV = (precisionV + recallV) != 0 ? (2 * precisionV * recallV) / (precisionV + recallV) : 0;
-		float fMeasureX = (precisionX + recallX) != 0 ? (2 * precisionX * recallX) / (precisionX + recallX) : 0;
-		float fMeasureR = (precisionR + recallR) != 0 ? (2 * precisionR * recallR) / (precisionR + recallR) : 0;
-		float fMeasureD = (precisionD + recallD) != 0 ? (2 * precisionD * recallD) / (precisionD + recallD) : 0;
-
-		float accuracyA = (falsePositiveA + truePositiveA + falseNegative + trueNegative) != 0
-				? (truePositiveA + trueNegative) / (falsePositiveA + truePositiveA + falseNegative + trueNegative)
-				: 0;
-		float accuracyV = (falsePositiveV + truePositiveV + falseNegative + trueNegative) != 0
-				? (truePositiveV + trueNegative) / (falsePositiveV + truePositiveV + falseNegative + trueNegative)
-				: 0;
-		float accuracyX = (falsePositiveX + truePositiveX + falseNegative + trueNegative) != 0
-				? (truePositiveX + trueNegative) / (falsePositiveX + truePositiveX + falseNegative + trueNegative)
-				: 0;
-		float accuracyR = (falsePositiveR + truePositiveR + falseNegative + trueNegative) != 0
-				? (truePositiveR + trueNegative) / (falsePositiveR + truePositiveR + falseNegative + trueNegative)
-				: 0;
-		float accuracyD = (falsePositiveD + truePositiveD + falseNegative + trueNegative) != 0
-				? (truePositiveD + trueNegative) / (falsePositiveD + truePositiveD + falseNegative + trueNegative)
-				: 0;
-
-		pmResultEvaluation.write(typeSmell.toUpperCase());
-		pmResultEvaluation.write("True Negative", trueNegative);
-		pmResultEvaluation.write("False Negative = ", falseNegative);
-		pmResultEvaluation.write("False Positive (A) = ", falsePositiveA);
-		pmResultEvaluation.write("False Positive (V) = ", falsePositiveV);
-		pmResultEvaluation.write("False Positive (X) = ", falsePositiveX);
-		pmResultEvaluation.write("False Positive (R) = ", falsePositiveR);
-		pmResultEvaluation.write("False Positive (D) = ", falsePositiveD);
-		pmResultEvaluation.write("True Positive  (A) = ", truePositiveA);
-		pmResultEvaluation.write("True Positive  (V) = ", truePositiveV);
-		pmResultEvaluation.write("True Positive (X) = ", truePositiveX);
-		pmResultEvaluation.write("True Positive (R) = ", truePositiveR);
-		pmResultEvaluation.write("True Positive (D) = ", truePositiveD);
-		pmResultEvaluation.write("Precision (A) = ", precisionA);
-		pmResultEvaluation.write("Precision (V) = ", precisionV);
-		pmResultEvaluation.write("Precision (X) = ", precisionX);
-		pmResultEvaluation.write("Precision (R) = ", precisionR);
-		pmResultEvaluation.write("Precision (D) = ", precisionD);
-		pmResultEvaluation.write("Recall (A) = ", recallA);
-		pmResultEvaluation.write("Recall (V) = ", recallV);
-		pmResultEvaluation.write("Recall (X) = ", recallX);
-		pmResultEvaluation.write("Recall (R) = ", recallR);
-		pmResultEvaluation.write("Recall (D) = ", recallD);
-		pmResultEvaluation.write("F-measure (A) = ", fMeasureA);
-		pmResultEvaluation.write("F-measure (V) = ", fMeasureV);
-		pmResultEvaluation.write("F-measure (X) = ", fMeasureX);
-		pmResultEvaluation.write("F-measure (R) = ", fMeasureR);
-		pmResultEvaluation.write("F-measure (D) = ", fMeasureD);
-		pmResultEvaluation.write("Acuracia (A) = ", accuracyA);
-		pmResultEvaluation.write("Acuracia (V) = ", accuracyV);
-		pmResultEvaluation.write("Acuracia (X) = ", accuracyX);
-		pmResultEvaluation.write("Acuracia (R) = ", accuracyR);
-		pmResultEvaluation.write("Acuracia (D) = ", accuracyD);
-
-		pmResultEvaluation.write("");
+		confusionMatrices.writeToCsvFile(pmResultEvaluationMethod);
+	
 	}
 
 	private void evaluateSmellChangeParameters(FilterSmellResult commitInitial,
 			ArrayList<RefactoringData> listRefactoring, Repository repo, String typeSmell) throws Exception {
 
-		float falseNegative = 0;
-		float trueNegative = 0;
+		ConfusionMatrixTechniques confusionMatrices = new ConfusionMatrixTechniques(typeSmell, TECHNIQUES);
 
 		for (MethodDataSmelly methodNotSmelly : commitInitial.getMetodosNotSmelly()) {
 			MethodDataSmelly methodBuscar = methodNotSmelly;
@@ -602,7 +493,7 @@ public class SmellRefactoredManager {
 												.equals(methodBuscar.getNomeClasse())
 												&& methodNotSmell.getNomeMetodo().equals(methodBuscar.getNomeMetodo());
 										if (isSameClassMethod) {
-											falseNegative++;
+											confusionMatrices.incFalseNegativeForAllTechniques();
 											refactoredMethod = true;
 											pmResultSmellRefactoredMethodsMessage.write(methodRefactored.getNomeClasse(),
 													methodRefactored.getNomeMetodo(), methodRefactored.getSmell(),
@@ -637,7 +528,7 @@ public class SmellRefactoredManager {
 					dateCommitRenamed = null;
 			} while (renamedMethod && !refactoredMethod);
 			if (!refactoredMethod) {
-				trueNegative++;
+				confusionMatrices.incTrueNegativeForAllTechniques();
 				pmResultSmellRefactoredMethodsMessage.write(methodBuscar.getNomeClasse(), methodBuscar.getNomeMetodo(),
 						methodBuscar.getSmell(), methodBuscar.getLinesOfCode(), methodBuscar.getComplexity(),
 						methodBuscar.getEfferent(), methodBuscar.getNumberOfParameters(),
@@ -650,28 +541,12 @@ public class SmellRefactoredManager {
 			}
 		}
 
-		float truePositiveA = 0;
-		float truePositiveV = 0;
-		float truePositiveX = 0;
-		float truePositiveR = 0;
-		float truePositiveD = 0;
-
-		float falsePositiveA = 0;
-		float falsePositiveV = 0;
-		float falsePositiveX = 0;
-		float falsePositiveR = 0;
-		float falsePositiveD = 0;
-
 		for (MethodDataSmelly methodSmelly : commitInitial.getMetodosSmell()) {
 
 			if (methodSmelly.getSmell().equals(typeSmell)) {
 				MethodDataSmelly methodSmellyBuscar = methodSmelly;
 				boolean renamedMethod = false;
-				boolean refactoredMethodA = false;
-				boolean refactoredMethodV = false;
-				boolean refactoredMethodX = false;
-				boolean refactoredMethodR = false;
-				boolean refactoredMethodD = false;
+				confusionMatrices.resetSensibleTechniques();
 				Date dateCommitRenamed = null;
 				do {
 					renamedMethod = false;
@@ -706,31 +581,7 @@ public class SmellRefactoredManager {
 													&& methodSmell.getNomeMetodo()
 															.equals(methodSmellyBuscar.getNomeMetodo());
 											if ((isSameClassMethod) && methodSmell.getSmell().equals(typeSmell)) {
-												if (!refactoredMethodA
-														&& methodSmellyBuscar.getListaTecnicas().contains("A")) {
-													truePositiveA++;
-													refactoredMethodA = true;
-												}
-												if (!refactoredMethodV
-														&& methodSmellyBuscar.getListaTecnicas().contains("V")) {
-													truePositiveV++;
-													refactoredMethodV = true;
-												}
-												if (!refactoredMethodX
-														&& methodSmellyBuscar.getListaTecnicas().contains("X")) {
-													truePositiveX++;
-													refactoredMethodX = true;
-												}
-												if (!refactoredMethodR
-														&& methodSmellyBuscar.getListaTecnicas().contains("R")) {
-													truePositiveR++;
-													refactoredMethodR = true;
-												}
-												if (!refactoredMethodD
-														&& methodSmellyBuscar.getListaTecnicas().contains("D")) {
-													truePositiveD++;
-													refactoredMethodD = true;
-												}
+												confusionMatrices.incTruePositiveForSensibleTechniques(methodSmellyBuscar.getListaTecnicas());
 												pmResultSmellRefactoredMethodsMessage.write(methodRefactored.getNomeClasse(),
 														methodRefactored.getNomeMetodo(), methodRefactored.getSmell(),
 														methodSmell.getLinesOfCode(), methodSmell.getComplexity(),
@@ -760,20 +611,10 @@ public class SmellRefactoredManager {
 						methodSmellyBuscar.setNomeMetodo(methodRenamedName);
 					else
 						dateCommitRenamed = null;
-				} while (renamedMethod && (!refactoredMethodA || !refactoredMethodD || !refactoredMethodR
-						|| !refactoredMethodV || !refactoredMethodX));
-				if (!refactoredMethodA && methodSmellyBuscar.getListaTecnicas().contains("A"))
-					falsePositiveA++;
-				if (!refactoredMethodD && methodSmellyBuscar.getListaTecnicas().contains("D"))
-					falsePositiveD++;
-				if (!refactoredMethodV && methodSmellyBuscar.getListaTecnicas().contains("V"))
-					falsePositiveV++;
-				if (!refactoredMethodR && methodSmellyBuscar.getListaTecnicas().contains("R"))
-					falsePositiveR++;
-				if (!refactoredMethodX && methodSmellyBuscar.getListaTecnicas().contains("X"))
-					falsePositiveX++;
-				if (!refactoredMethodA || !refactoredMethodD || !refactoredMethodR || !refactoredMethodV
-						|| !refactoredMethodX) {
+				} while (renamedMethod && confusionMatrices.hasInsensibleTechniques());
+
+				confusionMatrices.incFalsePositiveForInsensibleTechniques(methodSmellyBuscar.getListaTecnicas());
+				if (confusionMatrices.hasInsensibleTechniques()) {
 					pmResultSmellRefactoredMethodsMessage.write(methodSmellyBuscar.getNomeClasse(),
 							methodSmellyBuscar.getNomeMetodo(), methodSmellyBuscar.getSmell(),
 							methodSmellyBuscar.getLinesOfCode(), methodSmellyBuscar.getComplexity(),
@@ -790,75 +631,8 @@ public class SmellRefactoredManager {
 			}
 		}
 
-		float precisionA = (truePositiveA + falsePositiveA) != 0 ? truePositiveA / (truePositiveA + falsePositiveA) : 0;
-		float precisionV = (truePositiveV + falsePositiveV) != 0 ? truePositiveV / (truePositiveV + falsePositiveV) : 0;
-		float precisionX = (truePositiveX + falsePositiveX) != 0 ? truePositiveX / (truePositiveX + falsePositiveX) : 0;
-		float precisionR = (truePositiveR + falsePositiveR) != 0 ? truePositiveR / (truePositiveR + falsePositiveR) : 0;
-		float precisionD = (truePositiveD + falsePositiveD) != 0 ? truePositiveD / (truePositiveD + falsePositiveD) : 0;
-
-		float recallA = (truePositiveA + falseNegative) != 0 ? truePositiveA / (truePositiveA + falseNegative) : 0;
-		float recallV = (truePositiveV + falseNegative) != 0 ? truePositiveV / (truePositiveV + falseNegative) : 0;
-		float recallX = (truePositiveX + falseNegative) != 0 ? truePositiveX / (truePositiveX + falseNegative) : 0;
-		float recallR = (truePositiveR + falseNegative) != 0 ? truePositiveR / (truePositiveR + falseNegative) : 0;
-		float recallD = (truePositiveD + falseNegative) != 0 ? truePositiveD / (truePositiveD + falseNegative) : 0;
-
-		float fMeasureA = (precisionA + recallA) != 0 ? (2 * precisionA * recallA) / (precisionA + recallA) : 0;
-		float fMeasureV = (precisionV + recallV) != 0 ? (2 * precisionV * recallV) / (precisionV + recallV) : 0;
-		float fMeasureX = (precisionX + recallX) != 0 ? (2 * precisionX * recallX) / (precisionX + recallX) : 0;
-		float fMeasureR = (precisionR + recallR) != 0 ? (2 * precisionR * recallR) / (precisionR + recallR) : 0;
-		float fMeasureD = (precisionD + recallD) != 0 ? (2 * precisionD * recallD) / (precisionD + recallD) : 0;
-
-		float accuracyA = (falsePositiveA + truePositiveA + falseNegative + trueNegative) != 0
-				? (truePositiveA + trueNegative) / (falsePositiveA + truePositiveA + falseNegative + trueNegative)
-				: 0;
-		float accuracyV = (falsePositiveV + truePositiveV + falseNegative + trueNegative) != 0
-				? (truePositiveV + trueNegative) / (falsePositiveV + truePositiveV + falseNegative + trueNegative)
-				: 0;
-		float accuracyX = (falsePositiveX + truePositiveX + falseNegative + trueNegative) != 0
-				? (truePositiveX + trueNegative) / (falsePositiveX + truePositiveX + falseNegative + trueNegative)
-				: 0;
-		float accuracyR = (falsePositiveR + truePositiveR + falseNegative + trueNegative) != 0
-				? (truePositiveR + trueNegative) / (falsePositiveR + truePositiveR + falseNegative + trueNegative)
-				: 0;
-		float accuracyD = (falsePositiveD + truePositiveD + falseNegative + trueNegative) != 0
-				? (truePositiveD + trueNegative) / (falsePositiveD + truePositiveD + falseNegative + trueNegative)
-				: 0;
-
-		pmResultEvaluation.write(typeSmell.toUpperCase());
-		pmResultEvaluation.write("True Negative", trueNegative);
-		pmResultEvaluation.write("False Negative = ", falseNegative);
-		pmResultEvaluation.write("False Positive (A) = ", falsePositiveA);
-		pmResultEvaluation.write("False Positive (V) = ", falsePositiveV);
-		pmResultEvaluation.write("False Positive (X) = ", falsePositiveX);
-		pmResultEvaluation.write("False Positive (R) = ", falsePositiveR);
-		pmResultEvaluation.write("False Positive (D) = ", falsePositiveD);
-		pmResultEvaluation.write("True Positive  (A) = ", truePositiveA);
-		pmResultEvaluation.write("True Positive  (V) = ", truePositiveV);
-		pmResultEvaluation.write("True Positive (X) = ", truePositiveX);
-		pmResultEvaluation.write("True Positive (R) = ", truePositiveR);
-		pmResultEvaluation.write("True Positive (D) = ", truePositiveD);
-		pmResultEvaluation.write("Precision (A) = ", precisionA);
-		pmResultEvaluation.write("Precision (V) = ", precisionV);
-		pmResultEvaluation.write("Precision (X) = ", precisionX);
-		pmResultEvaluation.write("Precision (R) = ", precisionR);
-		pmResultEvaluation.write("Precision (D) = ", precisionD);
-		pmResultEvaluation.write("Recall (A) = ", recallA);
-		pmResultEvaluation.write("Recall (V) = ", recallV);
-		pmResultEvaluation.write("Recall (X) = ", recallX);
-		pmResultEvaluation.write("Recall (R) = ", recallR);
-		pmResultEvaluation.write("Recall (D) = ", recallD);
-		pmResultEvaluation.write("F-measure (A) = ", fMeasureA);
-		pmResultEvaluation.write("F-measure (V) = ", fMeasureV);
-		pmResultEvaluation.write("F-measure (X) = ", fMeasureX);
-		pmResultEvaluation.write("F-measure (R) = ", fMeasureR);
-		pmResultEvaluation.write("F-measure (D) = ", fMeasureD);
-		pmResultEvaluation.write("Acuracia (A) = ", accuracyA);
-		pmResultEvaluation.write("Acuracia (V) = ", accuracyV);
-		pmResultEvaluation.write("Acuracia (X) = ", accuracyX);
-		pmResultEvaluation.write("Acuracia (R) = ", accuracyR);
-		pmResultEvaluation.write("Acuracia (D) = ", accuracyD);
-
-		pmResultEvaluation.write("");
+		confusionMatrices.writeToCsvFile(pmResultEvaluationMethod);
+		
 	}
 
 	public void getSmellRefactoredClasses() {
@@ -956,8 +730,9 @@ public class SmellRefactoredManager {
 				previousCommit.setFullMessage(commit.getFullMessage());
 				previousCommit.setShortMessage(commit.getShortMessage());
 				previousCommit.setId(commit.getId());
-				if (commitsWithRefactorings.contains(commit.getId()))
+				if (commitsWithRefactorings.contains(commit.getId())) {
 					commitsWithRefactoringMergedIntoMaster.add(commit);
+				}
 			}
 
 			int countRefactoringRelatedClasses = 0;
@@ -983,19 +758,19 @@ public class SmellRefactoredManager {
 					}
 				}
 			}
+			
 			Collections.sort(listRefactoringMergedIntoMaster);
-			pmResultEvaluationClasses.write("RELATORIO COMPLETO SISTEMA");
-			pmResultEvaluationClasses.write("Numero Refatoracoes em Metodos e Nao Metodos:",
-					listRefactoringMergedIntoMaster.size());
-			pmResultEvaluationClasses.write("Numero Refatoracoes relacionadas a Classes:",
-					countRefactoringRelatedClasses);
+			
+			pmResultEvaluationClass.write("RELATORIO COMPLETO SISTEMA");
+			pmResultEvaluationClass.write("Numero Refatoracoes em Metodos e Nao Metodos:", listRefactoringMergedIntoMaster.size());
+			pmResultEvaluationClass.write("Numero Refatoracoes relacionadas a Classes:", countRefactoringRelatedClasses);
 
 			pmResultSmellRefactoredCommit.write("Commit", "NumberOfClasses", "NumberOfMethods", "SystemLOC");
 			FilterSmellResult smellsCommitInitial = obterSmellsCommit(initialCommit, repo);
 
-			pmResultEvaluationClasses.write("Numero Classes Smell Commit Inicial:",
+			pmResultEvaluationClass.write("Numero Classes Smell Commit Inicial:",
 					smellsCommitInitial.getClassesSmell().size());
-			pmResultEvaluationClasses.write("Numero Classes NOT Smell Commit Inicial:",
+			pmResultEvaluationClass.write("Numero Classes NOT Smell Commit Inicial:",
 					smellsCommitInitial.getClassesNotSmelly().size());
 
 			pmResultSmellRefactoredClassesMessage.write("Class", "Smell", "CLOC", "Tecnicas", "Commit", "Refactoring",
@@ -1012,9 +787,8 @@ public class SmellRefactoredManager {
 	private void evaluateSmellChangeClass(FilterSmellResult commitInitial, ArrayList<RefactoringData> listRefactoring,
 			Repository repo, String typeSmell) throws Exception {
 
-		float falseNegative = 0;
-		float trueNegative = 0;
-
+		ConfusionMatrixTechniques confusionMatrices = new ConfusionMatrixTechniques(typeSmell, TECHNIQUES);
+		
 		for (ClassDataSmelly classNotSmelly : commitInitial.getClassesNotSmelly()) {
 			ClassDataSmelly classBuscar = classNotSmelly;
 			boolean renamedClass = false;
@@ -1059,7 +833,7 @@ public class SmellRefactoredManager {
 									boolean isSameClass = classNotSmell.getNomeClasse()
 											.equals(classBuscar.getNomeClasse());
 									if (isSameClass) {
-										falseNegative++;
+										confusionMatrices.incFalseNegativeForAllTechniques();
 										refactoredClass = true;
 										pmResultSmellRefactoredClassesMessage.write(refactoring.getNomeClasse(),
 												refactoring.getSmell(), classNotSmell.getLinesOfCode(),
@@ -1085,7 +859,7 @@ public class SmellRefactoredManager {
 				}
 			} while (renamedClass && !refactoredClass);
 			if (!refactoredClass) {
-				trueNegative++;
+				confusionMatrices.incTrueNegativeForAllTechniques();
 				pmResultSmellRefactoredClassesMessage.write(classBuscar.getNomeClasse(), classBuscar.getSmell(),
 						classBuscar.getLinesOfCode(), classBuscar.getListaTecnicas(), classBuscar.getCommit(), "", "",
 						"", "");
@@ -1096,28 +870,12 @@ public class SmellRefactoredManager {
 			}
 		}
 
-		float truePositiveA = 0;
-		float truePositiveV = 0;
-		float truePositiveX = 0;
-		float truePositiveR = 0;
-		float truePositiveD = 0;
-
-		float falsePositiveA = 0;
-		float falsePositiveV = 0;
-		float falsePositiveX = 0;
-		float falsePositiveR = 0;
-		float falsePositiveD = 0;
-
 		for (ClassDataSmelly classSmelly : commitInitial.getClassesSmell()) {
 
 			if (classSmelly.getSmell().equals(typeSmell)) {
 				ClassDataSmelly classSmellyBuscar = classSmelly;
 				boolean renamedClass = false;
-				boolean refactoredMethodA = false;
-				boolean refactoredMethodV = false;
-				boolean refactoredMethodX = false;
-				boolean refactoredMethodR = false;
-				boolean refactoredMethodD = false;
+				confusionMatrices.resetSensibleTechniques();
 				Date dateCommitRenamed = null;
 				do {
 					renamedClass = false;
@@ -1156,7 +914,7 @@ public class SmellRefactoredManager {
 								Boolean isLongClassRefactoring = false; 
 								for (String longClassRefactoring : LONG_CLASS_REFACTORIES) {
 									if (refactoring.getRefactoringType().equals(longClassRefactoring)) {
-										logger.info("DEBUG: isLongClassRefactoring: " + longClassRefactoring + " " + classSmellyBuscar.getNomeClasse());
+										// logger.info("DEBUG: isLongClassRefactoring: " + longClassRefactoring + " " + classSmellyBuscar.getNomeClasse());
 										isLongClassRefactoring = true;
 										break;
 									}
@@ -1164,32 +922,13 @@ public class SmellRefactoredManager {
 								if (isLongClassRefactoring) {
 									FilterSmellResult smellsPreviousCommit = obterSmellsPreviousCommit(repo,
 											refactoring.getCommit());
-									logger.info("DEBUG: isLongClassRefactoring: " + refactoring.getCommit());
+									// logger.info("DEBUG: isLongClassRefactoring: " + refactoring.getCommit());
 									for (ClassDataSmelly classSmell : smellsPreviousCommit.getClassesSmell()) {
 										boolean isSameClass = classSmell.getNomeClasse()
 												.equals(classSmellyBuscar.getNomeClasse());
-										logger.info("DEBUG: Class smell: " + classSmell.getSmell());
+										// logger.info("DEBUG: Class smell: " + classSmell.getSmell());
 										if ((isSameClass) && classSmell.getSmell().equals(typeSmell)) {
-											if (!refactoredMethodA && classSmellyBuscar.getListaTecnicas().contains("A")) {
-												truePositiveA++;
-												refactoredMethodA = true;
-											}
-											if (!refactoredMethodV && classSmellyBuscar.getListaTecnicas().contains("V")) {
-												truePositiveV++;
-												refactoredMethodV = true;
-											}
-											if (!refactoredMethodX && classSmellyBuscar.getListaTecnicas().contains("X")) {
-												truePositiveX++;
-												refactoredMethodX = true;
-											}
-											if (!refactoredMethodR && classSmellyBuscar.getListaTecnicas().contains("R")) {
-												truePositiveR++;
-												refactoredMethodR = true;
-											}
-											if (!refactoredMethodD && classSmellyBuscar.getListaTecnicas().contains("D")) {
-												truePositiveD++;
-												refactoredMethodD = true;
-											}
+											confusionMatrices.incTruePositiveForSensibleTechniques(classSmellyBuscar.getListaTecnicas());
 											pmResultSmellRefactoredClassesMessage.write(refactoring.getNomeClasse(),
 													refactoring.getSmell(), classSmell.getLinesOfCode(),
 													refactoring.getListaTecnicas(), refactoring.getCommit(),
@@ -1211,21 +950,10 @@ public class SmellRefactoredManager {
 					} else {
 						dateCommitRenamed = null;
 					}
-				} while (renamedClass && (!refactoredMethodA || !refactoredMethodD || !refactoredMethodR
-						|| !refactoredMethodV || !refactoredMethodX));
+				} while (renamedClass && confusionMatrices.hasInsensibleTechniques());
 				
-				if (!refactoredMethodA && classSmellyBuscar.getListaTecnicas().contains("A"))
-					falsePositiveA++;
-				if (!refactoredMethodD && classSmellyBuscar.getListaTecnicas().contains("D"))
-					falsePositiveD++;
-				if (!refactoredMethodV && classSmellyBuscar.getListaTecnicas().contains("V"))
-					falsePositiveV++;
-				if (!refactoredMethodR && classSmellyBuscar.getListaTecnicas().contains("R"))
-					falsePositiveR++;
-				if (!refactoredMethodX && classSmellyBuscar.getListaTecnicas().contains("X"))
-					falsePositiveX++;
-				if (!refactoredMethodA || !refactoredMethodD || !refactoredMethodR || !refactoredMethodV
-						|| !refactoredMethodX) {
+				confusionMatrices.incFalsePositiveForInsensibleTechniques(classSmellyBuscar.getListaTecnicas());
+				if (confusionMatrices.hasInsensibleTechniques()) {
 					pmResultSmellRefactoredClassesMessage.write(classSmellyBuscar.getNomeClasse(),
 							classSmellyBuscar.getSmell(), classSmellyBuscar.getLinesOfCode(),
 							classSmellyBuscar.getListaTecnicas(), classSmellyBuscar.getCommit(), "", "", "", "");
@@ -1238,75 +966,7 @@ public class SmellRefactoredManager {
 			}
 		}
 
-		float precisionA = (truePositiveA + falsePositiveA) != 0 ? truePositiveA / (truePositiveA + falsePositiveA) : 0;
-		float precisionV = (truePositiveV + falsePositiveV) != 0 ? truePositiveV / (truePositiveV + falsePositiveV) : 0;
-		float precisionX = (truePositiveX + falsePositiveX) != 0 ? truePositiveX / (truePositiveX + falsePositiveX) : 0;
-		float precisionR = (truePositiveR + falsePositiveR) != 0 ? truePositiveR / (truePositiveR + falsePositiveR) : 0;
-		float precisionD = (truePositiveD + falsePositiveD) != 0 ? truePositiveD / (truePositiveD + falsePositiveD) : 0;
-
-		float recallA = (truePositiveA + falseNegative) != 0 ? truePositiveA / (truePositiveA + falseNegative) : 0;
-		float recallV = (truePositiveV + falseNegative) != 0 ? truePositiveV / (truePositiveV + falseNegative) : 0;
-		float recallX = (truePositiveX + falseNegative) != 0 ? truePositiveX / (truePositiveX + falseNegative) : 0;
-		float recallR = (truePositiveR + falseNegative) != 0 ? truePositiveR / (truePositiveR + falseNegative) : 0;
-		float recallD = (truePositiveD + falseNegative) != 0 ? truePositiveD / (truePositiveD + falseNegative) : 0;
-
-		float fMeasureA = (precisionA + recallA) != 0 ? (2 * precisionA * recallA) / (precisionA + recallA) : 0;
-		float fMeasureV = (precisionV + recallV) != 0 ? (2 * precisionV * recallV) / (precisionV + recallV) : 0;
-		float fMeasureX = (precisionX + recallX) != 0 ? (2 * precisionX * recallX) / (precisionX + recallX) : 0;
-		float fMeasureR = (precisionR + recallR) != 0 ? (2 * precisionR * recallR) / (precisionR + recallR) : 0;
-		float fMeasureD = (precisionD + recallD) != 0 ? (2 * precisionD * recallD) / (precisionD + recallD) : 0;
-
-		float accuracyA = (falsePositiveA + truePositiveA + falseNegative + trueNegative) != 0
-				? (truePositiveA + trueNegative) / (falsePositiveA + truePositiveA + falseNegative + trueNegative)
-				: 0;
-		float accuracyV = (falsePositiveV + truePositiveV + falseNegative + trueNegative) != 0
-				? (truePositiveV + trueNegative) / (falsePositiveV + truePositiveV + falseNegative + trueNegative)
-				: 0;
-		float accuracyX = (falsePositiveX + truePositiveX + falseNegative + trueNegative) != 0
-				? (truePositiveX + trueNegative) / (falsePositiveX + truePositiveX + falseNegative + trueNegative)
-				: 0;
-		float accuracyR = (falsePositiveR + truePositiveR + falseNegative + trueNegative) != 0
-				? (truePositiveR + trueNegative) / (falsePositiveR + truePositiveR + falseNegative + trueNegative)
-				: 0;
-		float accuracyD = (falsePositiveD + truePositiveD + falseNegative + trueNegative) != 0
-				? (truePositiveD + trueNegative) / (falsePositiveD + truePositiveD + falseNegative + trueNegative)
-				: 0;
-
-		pmResultEvaluationClasses.write(typeSmell.toUpperCase());
-		pmResultEvaluationClasses.write("True Negative", trueNegative);
-		pmResultEvaluationClasses.write("False Negative = ", falseNegative);
-		pmResultEvaluationClasses.write("False Positive (A) = ", falsePositiveA);
-		pmResultEvaluationClasses.write("False Positive (V) = ", falsePositiveV);
-		pmResultEvaluationClasses.write("False Positive (X) = ", falsePositiveX);
-		pmResultEvaluationClasses.write("False Positive (R) = ", falsePositiveR);
-		pmResultEvaluationClasses.write("False Positive (D) = ", falsePositiveD);
-		pmResultEvaluationClasses.write("True Positive  (A) = ", truePositiveA);
-		pmResultEvaluationClasses.write("True Positive  (V) = ", truePositiveV);
-		pmResultEvaluationClasses.write("True Positive (X) = ", truePositiveX);
-		pmResultEvaluationClasses.write("True Positive (R) = ", truePositiveR);
-		pmResultEvaluationClasses.write("True Positive (D) = ", truePositiveD);
-		pmResultEvaluationClasses.write("Precision (A) = ", precisionA);
-		pmResultEvaluationClasses.write("Precision (V) = ", precisionV);
-		pmResultEvaluationClasses.write("Precision (X) = ", precisionX);
-		pmResultEvaluationClasses.write("Precision (R) = ", precisionR);
-		pmResultEvaluationClasses.write("Precision (D) = ", precisionD);
-		pmResultEvaluationClasses.write("Recall (A) = ", recallA);
-		pmResultEvaluationClasses.write("Recall (V) = ", recallV);
-		pmResultEvaluationClasses.write("Recall (X) = ", recallX);
-		pmResultEvaluationClasses.write("Recall (R) = ", recallR);
-		pmResultEvaluationClasses.write("Recall (D) = ", recallD);
-		pmResultEvaluationClasses.write("F-measure (A) = ", fMeasureA);
-		pmResultEvaluationClasses.write("F-measure (V) = ", fMeasureV);
-		pmResultEvaluationClasses.write("F-measure (X) = ", fMeasureX);
-		pmResultEvaluationClasses.write("F-measure (R) = ", fMeasureR);
-		pmResultEvaluationClasses.write("F-measure (D) = ", fMeasureD);
-		pmResultEvaluationClasses.write("Acuracia (A) = ", accuracyA);
-		pmResultEvaluationClasses.write("Acuracia (V) = ", accuracyV);
-		pmResultEvaluationClasses.write("Acuracia (X) = ", accuracyX);
-		pmResultEvaluationClasses.write("Acuracia (R) = ", accuracyR);
-		pmResultEvaluationClasses.write("Acuracia (D) = ", accuracyD);
-
-		pmResultEvaluationClasses.write("");
+		confusionMatrices.writeToCsvFile(pmResultEvaluationClass);
 	}
 
 	private int countParameters(String metodo) {
