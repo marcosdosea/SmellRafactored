@@ -78,6 +78,10 @@ public class ConfusionMatrixTechniques {
 		}
 
 		for (String technique: confusionMatrices.keySet()) {
+			persistenceMechanism.write("Accuracy (" + technique + ") = ", confusionMatrices.get(technique).getAccuracy());
+		}
+		
+		for (String technique: confusionMatrices.keySet()) {
 			persistenceMechanism.write("Precision (" + technique + ") = ", confusionMatrices.get(technique).getPrecision());
 		}
 
@@ -92,9 +96,9 @@ public class ConfusionMatrixTechniques {
 		for (String technique: confusionMatrices.keySet()) {
 			persistenceMechanism.write("Matthews Correlation Coefficient (" + technique + ") = ", confusionMatrices.get(technique).getMatthewsCorrelationCoefficient());
 		}
-		
+
 		for (String technique: confusionMatrices.keySet()) {
-			persistenceMechanism.write("Accuracy (" + technique + ") = ", confusionMatrices.get(technique).getAccuracy());
+			persistenceMechanism.write("Kappa (" + technique + ") = ", confusionMatrices.get(technique).getKappa());
 		}
 		
 		persistenceMechanism.write("");
