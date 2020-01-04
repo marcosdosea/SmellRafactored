@@ -264,6 +264,7 @@ public class SmellRefactoredMethod {
 			}
 		}
 
+		pmResultEvaluationMethods.write("");
 		confusionMatrices.writeToCsvFile(pmResultEvaluationMethods);
 	
 	}
@@ -448,6 +449,7 @@ public class SmellRefactoredMethod {
 			}
 		}
 
+		pmResultEvaluationMethods.write("");
 		confusionMatrices.writeToCsvFile(pmResultEvaluationMethods);
 		
 	}

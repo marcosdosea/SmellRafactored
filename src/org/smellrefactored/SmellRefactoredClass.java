@@ -292,6 +292,7 @@ public class SmellRefactoredClass {
 			}
 		}
 
+		pmResultEvaluationClass.write("");
 		confusionMatrices.writeToCsvFile(pmResultEvaluationClass);
 	}
 	

@@ -9,56 +9,54 @@ public class ConfusionMatrix {
 	
 
 	
+	public void setTruePositive(float truePositive) {
+		this.truePositive = truePositive;
+	}
+	public void incTruePositive() {
+		this.truePositive++;
+	}
 	public float getTruePositive() {
 		return truePositive;
 	}
 
-	public void incTruePositive() {
-		this.truePositive++;
-	}
-
-	public void setTruePositive(float truePositive) {
-		this.truePositive = truePositive;
-	}
-
 	
 	
-	public float getFalsePositive() {
-		return falsePositive;
-	}
-
-	public void incFalsePositive() {
-		this.falsePositive++;
-	}
-
 	public void setFalsePositive(float falsePositive) {
 		this.falsePositive = falsePositive;
 	}
+	public void incFalsePositive() {
+		this.falsePositive++;
+	}
+	public float getFalsePositive() {
+		return falsePositive;
+	}
+	public float getType1Error() {
+		return this.getFalsePositive();
+	}
 
 	
+	public void setTrueNegative(float trueNegative) {
+		this.trueNegative = trueNegative;
+	}
+	public void incTrueNegative() {
+		this.trueNegative++;
+	}
 	public float getTrueNegative() {
 		return trueNegative;
 	}
 
-	public void incTrueNegative() {
-		this.trueNegative++;
-	}
-
-	public void setTrueNegative(float trueNegative) {
-		this.trueNegative = trueNegative;
-	}
-
 	
-	public float getFalseNegative() {
-		return falseNegative;
+	public void setFalseNegative(float falseNegative) {
+		this.falseNegative = falseNegative;
 	}
-
 	public void incFalseNegative() {
 		this.falseNegative++;
 	}
-
-	public void setFalseNegative(float falseNegative) {
-		this.falseNegative = falseNegative;
+	public float getFalseNegative() {
+		return falseNegative;
+	}
+	public float getType2Error() {
+		return this.getFalseNegative();
 	}
 		
 
@@ -137,7 +135,7 @@ public class ConfusionMatrix {
 		return (  ((1 + beta2) * precision * recall) / (precision + recall)  );
 	}
 
-	public float getFMeasure() {
+	public float getF1Measure() {
 		return (this.getFMeasure(1));
 	}
 
@@ -160,18 +158,18 @@ public class ConfusionMatrix {
         return (this.getTrueNegative() / this.getPredictedNegative());		
 	}
 
-	public float getMissRate() {
+	public float getFalseNegativeRate() {
 		return (this.getFalseNegative() / this.getRealPositive());
 	}
-	public float getFalseNegativeRate() {
-		return (this.getMissRate());
+	public float getMissRate() {
+		return (this.getFalseNegativeRate());
 	}
 	
-	public float getFallOut() {
+	public float getFalsePositiveRate() {
 		return (this.getFalsePositive() / this.getRealNegative());
 	}
-	public float getFalsePositiveRate() {
-		return (this.getFallOut());
+	public float getFallOut() {
+		return (this.getFalsePositiveRate());
 	}
 	
 	public float getFalseDiscoveryRate() {
@@ -187,13 +185,35 @@ public class ConfusionMatrix {
 		return ( (this.getTruePositive() * this.getTrueNegative()) - (this.getFalsePositive() * this.getFalseNegative()) ) / divider;  
 	}
 
-	public float getKappa() {
-		float totalAccuracy = this.getAccuracy();
-		float randomAccuracyDivider = (float) Math.pow(this.getSampleSize(), 2);
+	private float getKappaRandomAccuracy() {
 		float randomAccuracyNumerator = (this.getRealNegative()  * this.getPredictedNegative()) + (this.getRealPositive() * this.getPredictedPositive());
-		float randomAccuracy = randomAccuracyNumerator / randomAccuracyDivider;
-		float kappaDivider = (1-randomAccuracy);
-		return (totalAccuracy - randomAccuracy) / kappaDivider;
+		float randomAccuracyDivider = (float) Math.pow(this.getSampleSize(), 2);
+		return (randomAccuracyNumerator / randomAccuracyDivider);
+	} 
+	public float getKappa() {
+		float randomAccuracy = this.getKappaRandomAccuracy();
+		return (this.getAccuracy() - randomAccuracy) / (1 - randomAccuracy);
 	}
+
+	
+	// Based on http://standardwisdom.com/softwarejournal/2011/12/matthews-correlation-coefficient-how-well-does-it-do/
+	public float getNetReward(float truePositiveReward, float trueNegativeReward, float falsePositiveReward, float falseNegativeReward) {
+		return (
+				( (this.truePositive * truePositiveReward) + (this.trueNegative * trueNegativeReward) ) 
+				+
+				( (this.falsePositive * falsePositiveReward) + (this.falseNegative * falseNegativeReward) )
+				);
+	}
+	
+	
+	public float getPositiveLikelihoodRatio( ) {
+		return (this.getTruePositiveRate() / this.getFalsePositiveRate());		
+	}
+	public float getNegativeLikelihoodRatio() {
+		return (this.getFalseNegativeRate() / this.getTrueNegativeRate());
+	}
+	public float getOddsRatio() {
+		return (this.getPositiveLikelihoodRatio() / this.getNegativeLikelihoodRatio());
+	} 
 	
 }

@@ -64,6 +64,7 @@ public class ConfusionMatrixTechniques {
 	}
 	
 	public void writeToCsvFile(PersistenceMechanism persistenceMechanism) {
+		
 		persistenceMechanism.write(title.toUpperCase());
 		
 		persistenceMechanism.write("True Negative = ", trueNegative);
@@ -90,7 +91,7 @@ public class ConfusionMatrixTechniques {
 		}
 
 		for (String technique: confusionMatrices.keySet()) {
-			persistenceMechanism.write("F-measure (" + technique + ") = ", confusionMatrices.get(technique).getFMeasure());
+			persistenceMechanism.write("F-measure (" + technique + ") = ", confusionMatrices.get(technique).getF1Measure());
 		}
 
 		for (String technique: confusionMatrices.keySet()) {
@@ -100,8 +101,15 @@ public class ConfusionMatrixTechniques {
 		for (String technique: confusionMatrices.keySet()) {
 			persistenceMechanism.write("Kappa (" + technique + ") = ", confusionMatrices.get(technique).getKappa());
 		}
+
+		float truePositiveReward  = 10; 
+		float trueNegativeReward  = 1; 
+		float falsePositiveReward = -3;
+		float falseNegativeReward = -10;
+		for (String technique: confusionMatrices.keySet()) {
+			persistenceMechanism.write("Net Reward (Weight: TP=" + truePositiveReward + " TN=" + trueNegativeReward + " FP=" + falsePositiveReward + " FN=" + falseNegativeReward + ") (" + technique + ") = ", confusionMatrices.get(technique).getNetReward(truePositiveReward, trueNegativeReward, falsePositiveReward, falseNegativeReward));
+		}
 		
-		persistenceMechanism.write("");
 		}
 
 }
