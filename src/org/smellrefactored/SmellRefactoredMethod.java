@@ -35,7 +35,7 @@ public class SmellRefactoredMethod {
 		this.commitSmell = commitSmell;
 		this.resultFileName = resultFileName;
 		
-		pmResultEvaluationMethods = new CSVFile(resultFileName + "-evaluations-methods.csv", false);
+		pmResultEvaluationMethods = new CSVFile(resultFileName + "-evaluation-methods.csv", false);
 		pmResultSmellRefactoredMethods = new CSVFile(resultFileName + "-smellRefactored.csv", false);
 		pmResultSmellRefactoredMethodsMessage = new CSVFile(resultFileName + "-smellRefactored-message.csv", false);
 	}
@@ -220,6 +220,7 @@ public class SmellRefactoredMethod {
 											&& methodSmell.getNomeMetodo().equals(methodSmellyBuscar.getNomeMetodo());
 									if ((isSameClassMethod) && methodSmell.getSmell().equals(typeSmell)) {
 										confusionMatrices.incTruePositiveForSensibleTechniques(methodSmellyBuscar.getListaTecnicas());
+										confusionMatrices.incFalseNegativeForInsensibleTechniquesExcept(methodSmellyBuscar.getListaTecnicas());
 										pmResultSmellRefactoredMethodsMessage.write(methodRefactored.getNomeClasse(),
 												methodRefactored.getNomeMetodo(), methodRefactored.getSmell(),
 												methodSmell.getLinesOfCode(), methodSmell.getComplexity(),
@@ -247,6 +248,7 @@ public class SmellRefactoredMethod {
 				} while (renamedMethod && confusionMatrices.hasInsensibleTechniques());
 				
 				confusionMatrices.incFalsePositiveForInsensibleTechniques(methodSmellyBuscar.getListaTecnicas());
+				confusionMatrices.incTrueNegativeForInsensibleTechniquesExcept(methodSmellyBuscar.getListaTecnicas());
 				if (confusionMatrices.hasInsensibleTechniques()) {
 					pmResultSmellRefactoredMethodsMessage.write(methodSmellyBuscar.getNomeClasse(),
 							methodSmellyBuscar.getNomeMetodo(), methodSmellyBuscar.getSmell(),
@@ -399,6 +401,7 @@ public class SmellRefactoredMethod {
 															.equals(methodSmellyBuscar.getNomeMetodo());
 											if ((isSameClassMethod) && methodSmell.getSmell().equals(typeSmell)) {
 												confusionMatrices.incTruePositiveForSensibleTechniques(methodSmellyBuscar.getListaTecnicas());
+												confusionMatrices.incFalseNegativeForInsensibleTechniquesExcept(methodSmellyBuscar.getListaTecnicas());
 												pmResultSmellRefactoredMethodsMessage.write(methodRefactored.getNomeClasse(),
 														methodRefactored.getNomeMetodo(), methodRefactored.getSmell(),
 														methodSmell.getLinesOfCode(), methodSmell.getComplexity(),
@@ -432,6 +435,7 @@ public class SmellRefactoredMethod {
 				} while (renamedMethod && confusionMatrices.hasInsensibleTechniques());
 
 				confusionMatrices.incFalsePositiveForInsensibleTechniques(methodSmellyBuscar.getListaTecnicas());
+				confusionMatrices.incTrueNegativeForInsensibleTechniquesExcept(methodSmellyBuscar.getListaTecnicas());
 				if (confusionMatrices.hasInsensibleTechniques()) {
 					pmResultSmellRefactoredMethodsMessage.write(methodSmellyBuscar.getNomeClasse(),
 							methodSmellyBuscar.getNomeMetodo(), methodSmellyBuscar.getSmell(),

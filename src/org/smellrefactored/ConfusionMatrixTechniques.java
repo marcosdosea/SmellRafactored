@@ -45,6 +45,27 @@ public class ConfusionMatrixTechniques {
 		}
 	}
 	
+	public void incTrueNegativeForInsensibleTechniquesExcept(HashSet<String> exceptTechniques) {
+		for (String technique: confusionMatrices.keySet()) {
+			if (!sensibleTechniques.contains(technique)) {
+				if (!exceptTechniques.contains(technique)) {
+					confusionMatrices.get(technique).incTrueNegative();
+				}
+			}
+		}
+	}
+	
+	public void incFalseNegativeForInsensibleTechniquesExcept(HashSet<String> exceptTechniques) {
+		for (String technique: confusionMatrices.keySet()) {
+			if (!sensibleTechniques.contains(technique)) {
+				if (!exceptTechniques.contains(technique)) {
+					sensibleTechniques.add(technique);
+					confusionMatrices.get(technique).incFalseNegative();
+				}
+			}
+		}
+	}
+	
 	public void incFalseNegativeForAllTechniques() {
 		falseNegative++;
 		for (ConfusionMatrix confusionMatrix : confusionMatrices.values()) {
@@ -67,15 +88,27 @@ public class ConfusionMatrixTechniques {
 		
 		persistenceMechanism.write(title.toUpperCase());
 		
-		persistenceMechanism.write("True Negative = ", trueNegative);
-		persistenceMechanism.write("False Negative = ", falseNegative);
+		persistenceMechanism.write("Common True Negative = ", trueNegative);
+		persistenceMechanism.write("Common False Negative = ", falseNegative);
 
 		for (String technique: confusionMatrices.keySet()) {
-			persistenceMechanism.write("False Positive (" + technique + ") = ", confusionMatrices.get(technique).getFalsePositive());
+			persistenceMechanism.write("Sample Size (" + technique + ") = ", confusionMatrices.get(technique).getSampleSize());
+		}
+
+		for (String technique: confusionMatrices.keySet()) {
+			persistenceMechanism.write("True Negative (" + technique + ") = ", confusionMatrices.get(technique).getTrueNegative());
+		}
+
+		for (String technique: confusionMatrices.keySet()) {
+			persistenceMechanism.write("False Negative (" + technique + ") = ", confusionMatrices.get(technique).getFalseNegative());
 		}
 
 		for (String technique: confusionMatrices.keySet()) {
 			persistenceMechanism.write("True Positive (" + technique + ") = ", confusionMatrices.get(technique).getTruePositive());
+		}
+
+		for (String technique: confusionMatrices.keySet()) {
+			persistenceMechanism.write("False Positive (" + technique + ") = ", confusionMatrices.get(technique).getFalsePositive());
 		}
 
 		for (String technique: confusionMatrices.keySet()) {

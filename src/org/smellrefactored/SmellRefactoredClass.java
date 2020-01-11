@@ -265,6 +265,7 @@ public class SmellRefactoredClass {
 										// logger.info("DEBUG: Class smell: " + classSmell.getSmell());
 										if ((isSameClass) && classSmell.getSmell().equals(typeSmell)) {
 											confusionMatrices.incTruePositiveForSensibleTechniques(classSmellyBuscar.getListaTecnicas());
+											confusionMatrices.incFalseNegativeForInsensibleTechniquesExcept(classSmellyBuscar.getListaTecnicas());
 											pmResultSmellRefactoredClassesMessage.write(refactoring.getNomeClasse(),
 													refactoring.getSmell(), classSmell.getLinesOfCode(),
 													refactoring.getListaTecnicas(), refactoring.getCommit(),
@@ -289,6 +290,7 @@ public class SmellRefactoredClass {
 				} while (renamedClass && confusionMatrices.hasInsensibleTechniques());
 				
 				confusionMatrices.incFalsePositiveForInsensibleTechniques(classSmellyBuscar.getListaTecnicas());
+				confusionMatrices.incTrueNegativeForInsensibleTechniquesExcept(classSmellyBuscar.getListaTecnicas());
 				if (confusionMatrices.hasInsensibleTechniques()) {
 					pmResultSmellRefactoredClassesMessage.write(classSmellyBuscar.getNomeClasse(),
 							classSmellyBuscar.getSmell(), classSmellyBuscar.getLinesOfCode(),
