@@ -25,6 +25,7 @@ public class SmellRefactoredMethod {
 	PersistenceMechanism pmResultEvaluationMethods;
 	PersistenceMechanism pmResultSmellRefactoredMethods;
 	PersistenceMechanism pmResultSmellRefactoredMethodsMessage;
+	PersistenceMechanism pmResultSmellRefactoredMethodsMachineLearning;
 	
 	CommitSmell commitSmell;
 
@@ -38,6 +39,7 @@ public class SmellRefactoredMethod {
 		pmResultEvaluationMethods = new CSVFile(resultFileName + "-evaluation-methods.csv", false);
 		pmResultSmellRefactoredMethods = new CSVFile(resultFileName + "-smellRefactored.csv", false);
 		pmResultSmellRefactoredMethodsMessage = new CSVFile(resultFileName + "-smellRefactored-message.csv", false);
+		pmResultSmellRefactoredMethodsMachineLearning = new CSVFile(resultFileName + "-smellRefactored-methods-machineLearning.csv", false);
 	}
 	
 	public void getSmellRefactoredMethods() {
@@ -83,6 +85,7 @@ public class SmellRefactoredMethod {
 					"Tecnicas", "Commit", "Refactoring", "Left Side", "Right Side", "Full Message");
 			pmResultSmellRefactoredMethods.write("Class", "Method", "Smell", "LOC", "CC", "EC", "NOP", "Tecnicas",
 					"Commit", "Refactoring", "Left Side", "Right Side");
+			pmResultSmellRefactoredMethodsMachineLearning.write("DesignRole", "LOC", "CC", "EC", "NOP", "isRefactoring", "Refactoring");
 
 			evaluateSmellChangeOperation(smellsCommitInitial, listRefactoringMergedIntoMaster,
 					MethodDataSmelly.LONG_METHOD);
@@ -146,7 +149,6 @@ public class SmellRefactoredMethod {
 											methodRefactored.getListaTecnicas(), methodRefactored.getCommit(),
 											methodRefactored.getRefactoringType(), methodRefactored.getLeftSide(),
 											methodRefactored.getRightSide(), methodRefactored.getFullMessage());
-
 									pmResultSmellRefactoredMethods.write(methodRefactored.getNomeClasse(),
 											methodRefactored.getNomeMetodo(), methodRefactored.getSmell(),
 											methodNotSmell.getLinesOfCode(), methodNotSmell.getComplexity(),
@@ -154,7 +156,10 @@ public class SmellRefactoredMethod {
 											methodRefactored.getListaTecnicas(), methodRefactored.getCommit(),
 											methodRefactored.getRefactoringType(), methodRefactored.getLeftSide(),
 											methodRefactored.getRightSide());
-
+									pmResultSmellRefactoredMethodsMachineLearning.write(methodRefactored.getClassDesignRole(),
+											methodNotSmell.getLinesOfCode(), methodNotSmell.getComplexity(),
+											methodNotSmell.getEfferent(), methodNotSmell.getNumberOfParameters(),
+											"true", methodRefactored.getRefactoringType());
 									break;
 								}
 							}
@@ -174,11 +179,14 @@ public class SmellRefactoredMethod {
 						methodBuscar.getSmell(), methodBuscar.getLinesOfCode(), methodBuscar.getComplexity(),
 						methodBuscar.getEfferent(), methodBuscar.getNumberOfParameters(),
 						methodBuscar.getListaTecnicas(), methodBuscar.getCommit(), "", "", "", "");
-
 				pmResultSmellRefactoredMethods.write(methodBuscar.getNomeClasse(), methodBuscar.getNomeMetodo(),
 						methodBuscar.getSmell(), methodBuscar.getLinesOfCode(), methodBuscar.getComplexity(),
 						methodBuscar.getEfferent(), methodBuscar.getNumberOfParameters(),
 						methodBuscar.getListaTecnicas(), methodBuscar.getCommit(), "", "", "");
+				pmResultSmellRefactoredMethodsMachineLearning.write(methodBuscar.getClassDesignRole(),
+						methodBuscar.getLinesOfCode(), methodBuscar.getComplexity(),
+						methodBuscar.getEfferent(), methodBuscar.getNumberOfParameters(),
+						"false", "");
 			}
 		}
 
@@ -218,23 +226,29 @@ public class SmellRefactoredMethod {
 									boolean isSameClassMethod = methodSmell.getNomeClasse()
 											.equals(methodSmellyBuscar.getNomeClasse())
 											&& methodSmell.getNomeMetodo().equals(methodSmellyBuscar.getNomeMetodo());
-									if ((isSameClassMethod) && methodSmell.getSmell().equals(typeSmell)) {
-										confusionMatrices.incTruePositiveForSensibleTechniques(methodSmellyBuscar.getListaTecnicas());
-										confusionMatrices.incFalseNegativeForInsensibleTechniquesExcept(methodSmellyBuscar.getListaTecnicas());
-										pmResultSmellRefactoredMethodsMessage.write(methodRefactored.getNomeClasse(),
+									if (isSameClassMethod) {
+										if ((isSameClassMethod) && methodSmell.getSmell().equals(typeSmell)) {
+											confusionMatrices.incTruePositiveForSensibleTechniques(methodSmellyBuscar.getListaTecnicas());
+											confusionMatrices.incFalseNegativeForInsensibleTechniquesExcept(methodSmellyBuscar.getListaTecnicas());
+											pmResultSmellRefactoredMethodsMessage.write(methodRefactored.getNomeClasse(),
 												methodRefactored.getNomeMetodo(), methodRefactored.getSmell(),
 												methodSmell.getLinesOfCode(), methodSmell.getComplexity(),
 												methodSmell.getEfferent(), methodSmell.getNumberOfParameters(),
 												methodRefactored.getListaTecnicas(), methodRefactored.getCommit(),
 												methodRefactored.getRefactoringType(), methodRefactored.getLeftSide(),
 												methodRefactored.getRightSide(), methodRefactored.getFullMessage());
-										pmResultSmellRefactoredMethods.write(methodRefactored.getNomeClasse(),
+											pmResultSmellRefactoredMethods.write(methodRefactored.getNomeClasse(),
 												methodRefactored.getNomeMetodo(), methodRefactored.getSmell(),
 												methodSmell.getLinesOfCode(), methodSmell.getComplexity(),
 												methodSmell.getEfferent(), methodSmell.getNumberOfParameters(),
 												methodRefactored.getListaTecnicas(), methodRefactored.getCommit(),
 												methodRefactored.getRefactoringType(), methodRefactored.getLeftSide(),
 												methodRefactored.getRightSide());
+										}
+										pmResultSmellRefactoredMethodsMachineLearning.write(methodRefactored.getClassDesignRole(),
+												methodRefactored.getLinesOfCode(), methodRefactored.getComplexity(),
+												methodRefactored.getEfferent(), methodRefactored.getNumberOfParameters(),
+												"true", methodRefactored.getRefactoringType());
 									}
 								}
 							}
@@ -255,7 +269,6 @@ public class SmellRefactoredMethod {
 							methodSmellyBuscar.getLinesOfCode(), methodSmellyBuscar.getComplexity(),
 							methodSmellyBuscar.getEfferent(), methodSmellyBuscar.getNumberOfParameters(),
 							methodSmellyBuscar.getListaTecnicas(), methodSmellyBuscar.getCommit(), "", "", "", "");
-
 					pmResultSmellRefactoredMethods.write(methodSmellyBuscar.getNomeClasse(),
 							methodSmellyBuscar.getNomeMetodo(), methodSmellyBuscar.getSmell(),
 							methodSmellyBuscar.getLinesOfCode(), methodSmellyBuscar.getComplexity(),
@@ -322,7 +335,6 @@ public class SmellRefactoredMethod {
 													methodRefactored.getRefactoringType(),
 													methodRefactored.getLeftSide(), methodRefactored.getRightSide(),
 													methodRefactored.getFullMessage());
-
 											pmResultSmellRefactoredMethods.write(methodRefactored.getNomeClasse(),
 													methodRefactored.getNomeMetodo(), methodRefactored.getSmell(),
 													methodNotSmell.getLinesOfCode(), methodNotSmell.getComplexity(),
@@ -331,7 +343,10 @@ public class SmellRefactoredMethod {
 													methodRefactored.getListaTecnicas(), methodRefactored.getCommit(),
 													methodRefactored.getRefactoringType(),
 													methodRefactored.getLeftSide(), methodRefactored.getRightSide());
-
+											pmResultSmellRefactoredMethodsMachineLearning.write(methodRefactored.getClassDesignRole(),
+													methodNotSmell.getLinesOfCode(), methodNotSmell.getComplexity(),
+													methodNotSmell.getEfferent(), methodNotSmell.getNumberOfParameters(),
+													"true", methodRefactored.getRefactoringType());
 											break;
 										}
 									}
@@ -353,11 +368,14 @@ public class SmellRefactoredMethod {
 						methodBuscar.getSmell(), methodBuscar.getLinesOfCode(), methodBuscar.getComplexity(),
 						methodBuscar.getEfferent(), methodBuscar.getNumberOfParameters(),
 						methodBuscar.getListaTecnicas(), methodBuscar.getCommit(), "", "", "", "");
-
 				pmResultSmellRefactoredMethods.write(methodBuscar.getNomeClasse(), methodBuscar.getNomeMetodo(),
 						methodBuscar.getSmell(), methodBuscar.getLinesOfCode(), methodBuscar.getComplexity(),
 						methodBuscar.getEfferent(), methodBuscar.getNumberOfParameters(),
 						methodBuscar.getListaTecnicas(), methodBuscar.getCommit(), "", "", "");
+				pmResultSmellRefactoredMethodsMachineLearning.write(methodBuscar.getClassDesignRole(),
+						methodBuscar.getLinesOfCode(), methodBuscar.getComplexity(),
+						methodBuscar.getEfferent(), methodBuscar.getNumberOfParameters(),
+						"false", "");
 			}
 		}
 
@@ -399,10 +417,11 @@ public class SmellRefactoredMethod {
 													.equals(methodSmellyBuscar.getNomeClasse())
 													&& methodSmell.getNomeMetodo()
 															.equals(methodSmellyBuscar.getNomeMetodo());
-											if ((isSameClassMethod) && methodSmell.getSmell().equals(typeSmell)) {
-												confusionMatrices.incTruePositiveForSensibleTechniques(methodSmellyBuscar.getListaTecnicas());
-												confusionMatrices.incFalseNegativeForInsensibleTechniquesExcept(methodSmellyBuscar.getListaTecnicas());
-												pmResultSmellRefactoredMethodsMessage.write(methodRefactored.getNomeClasse(),
+											if (isSameClassMethod) {
+												if (methodSmell.getSmell().equals(typeSmell)) {
+													confusionMatrices.incTruePositiveForSensibleTechniques(methodSmellyBuscar.getListaTecnicas());
+													confusionMatrices.incFalseNegativeForInsensibleTechniquesExcept(methodSmellyBuscar.getListaTecnicas());
+													pmResultSmellRefactoredMethodsMessage.write(methodRefactored.getNomeClasse(),
 														methodRefactored.getNomeMetodo(), methodRefactored.getSmell(),
 														methodSmell.getLinesOfCode(), methodSmell.getComplexity(),
 														methodSmell.getEfferent(), methodSmell.getNumberOfParameters(),
@@ -411,7 +430,7 @@ public class SmellRefactoredMethod {
 														methodRefactored.getRefactoringType(),
 														methodRefactored.getLeftSide(), methodRefactored.getRightSide(),
 														methodRefactored.getFullMessage());
-												pmResultSmellRefactoredMethods.write(methodRefactored.getNomeClasse(),
+													pmResultSmellRefactoredMethods.write(methodRefactored.getNomeClasse(),
 														methodRefactored.getNomeMetodo(), methodRefactored.getSmell(),
 														methodSmell.getLinesOfCode(), methodSmell.getComplexity(),
 														methodSmell.getEfferent(), methodSmell.getNumberOfParameters(),
@@ -420,6 +439,11 @@ public class SmellRefactoredMethod {
 														methodRefactored.getRefactoringType(),
 														methodRefactored.getLeftSide(),
 														methodRefactored.getRightSide());
+												}
+												pmResultSmellRefactoredMethodsMachineLearning.write(methodRefactored.getClassDesignRole(),
+														methodSmell.getLinesOfCode(), methodSmell.getComplexity(),
+														methodSmell.getEfferent(), methodSmell.getNumberOfParameters(),
+														"true", methodRefactored.getRefactoringType());
 											}
 										}
 									}
@@ -494,6 +518,5 @@ public class SmellRefactoredMethod {
 		return countParams;
 	}
 
-	
 	
 }

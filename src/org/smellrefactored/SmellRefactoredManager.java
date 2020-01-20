@@ -1,5 +1,6 @@
 package org.smellrefactored;
 
+import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -74,22 +75,25 @@ public class SmellRefactoredManager {
 		try {
 			repo = gitService.cloneIfNotExists(localFolder, urlRepository);
 
-			final PersistenceMechanism pmRefactoring = new CSVFile(fileRefactoringName, false);
-			pmRefactoring.write("Commmit-id", "Refactring-name", "Refactoring-Type", "Code Element Left",
-					"Code Element Right", "Class Before", "Class After");
-			// detect list of refactoring between commits
-			miner.detectBetweenCommits(repo, initialCommit, finalCommit, new RefactoringHandler() {
-				@Override
-				public void handle(String idCommit, List<Refactoring> refactorings) {
-					for (Refactoring ref : refactorings) {
-						pmRefactoring.write(idCommit, ref.getName(), ref.getRefactoringType(),
+			File fileRefactoring = new File(fileRefactoringName);
+			if (!fileRefactoring.exists()) {
+				final PersistenceMechanism pmRefactoring = new CSVFile(fileRefactoringName, false);
+				pmRefactoring.write("Commmit-id", "Refactring-name", "Refactoring-Type", "Code Element Left",
+						"Code Element Right", "Class Before", "Class After");
+				// detect list of refactoring between commits
+				miner.detectBetweenCommits(repo, initialCommit, finalCommit, new RefactoringHandler() {
+					@Override
+					public void handle(String idCommit, List<Refactoring> refactorings) {
+						for (Refactoring ref : refactorings) {
+							pmRefactoring.write(idCommit, ref.getName(), ref.getRefactoringType(),
 								ref.leftSide().size() > 0 ? ref.leftSide().get(0).getCodeElement() : 0,
 								ref.rightSide().size() > 0 ? ref.rightSide().get(0).getCodeElement() : 0,
 								ref.getInvolvedClassesBeforeRefactoring(),
 								ref.getInvolvedClassesAfterRefactoring());
+						}
 					}
-				}
-			});
+				});
+			}
 
 			// Obter lista de commits que possuem refatorações
 			HashSet<String> commitsWithRefactorings = new HashSet<String>();
@@ -200,9 +204,54 @@ public class SmellRefactoredManager {
 			result.setRightSide(line[4]);
 			result.setInvolvedClassesBefore(line[5]);
 			result.setInvolvedClassesAfter(line[6]);
+			
+			if (result.getRefactoringType().contains("VARIABLE")) {
+				result.setNomeClasse(getClassNameFromInvolvedClassesBefore(result));
+			} else if (result.getRefactoringType().contains("ATTRIBUTE")) {
+				result.setNomeClasse(getClassNameFromInvolvedClassesBefore(result));
+			} else if (result.getRefactoringType().contains("PARAMETER")) {
+				result.setNomeClasse(getClassNameFromInvolvedClassesBefore(result));
+			} else if (result.getRefactoringType().contains("RETURN_TYPE")) {
+				result.setNomeClasse(getClassNameFromInvolvedClassesBefore(result));
+			} else if (result.getRefactoringType().contains("OPERATION")) {
+				result.setNomeClasse(getClassNameFromInvolvedClassesBefore(result));
+				result.setNomeMetodo(getMethodNameFromMethodSignature(result.getLeftSide()));
+			} else  if (result.getRefactoringType().contains("EXTRACT_SUPERCLASS")) {
+				result.setNomeClasse(result.getLeftSide());
+			} else if (result.getRefactoringType().contains("CLASS")) {
+				result.setNomeClasse(getClassNameFromInvolvedClassesBefore(result));
+			} else if (result.getRefactoringType().contains("PACKAGE")) {
+				/// @TODO: to implement
+			}
+			if (result.getNomeClasse() != null) {
+				if (result.getNomeClasse() != "") {
+					result.setClassDesignRole( getDesignRoleByClassName( result.getNomeClasse()) );
+				}
+			}
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.error(e.getMessage() + " (line:" + line[0] + ", " + line[1] + ", " + line[2] + ", " + line[3] + ", " + line[4] + ", " + line[5] + ", " + line[6] + ")");
 		}
- 		return result;
+		return result;
 	}
+	
+	private static String getClassNameFromInvolvedClassesBefore(RefactoringData refactoringData) {
+		return refactoringData.getInvolvedClassesBefore().replace("[", "").replace("]", "");
+	}
+	
+	private static String getMethodNameFromMethodSignature(String methodSignature) {
+		int methodNameEnd = methodSignature.indexOf("(");
+		String partialMethodName = methodSignature.substring(0, methodNameEnd);
+		int methodNameBegin = partialMethodName.lastIndexOf(" ") + 1;
+		return partialMethodName.substring(methodNameBegin);
+	}	
+	private static String getDesignRoleByClassName(String className) {
+		/// @TODO: refinar detecção de DesignRole 
+		// DesignRole designRole = new DesignRole();
+		String result = ""; /// = designRole.findDefaultDesignRole(className); // private method in DesignRole 
+		if (result=="") {
+			result = "Undefined";
+		}
+		return result.toUpperCase();
+	}
+	
 }

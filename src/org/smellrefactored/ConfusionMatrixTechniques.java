@@ -8,6 +8,7 @@ import org.repodriller.persistence.PersistenceMechanism;
 public class ConfusionMatrixTechniques {
 	
 	private String title = "";
+	private String subtitle = "";
 
 	private float falseNegative = 0;
 	private float trueNegative = 0;
@@ -22,6 +23,10 @@ public class ConfusionMatrixTechniques {
 			confusionMatrices.put(technique, new ConfusionMatrix());
 		}
 		sensibleTechniques = new HashSet<String>();
+	}
+
+	public void setSubtitle(String subtitle) {
+		this.subtitle = subtitle;
 	}
 	
 	public void resetSensibleTechniques() {
@@ -83,10 +88,17 @@ public class ConfusionMatrixTechniques {
 	public boolean hasInsensibleTechniques() {
 		return (confusionMatrices.size() > 0) && (sensibleTechniques.size() < confusionMatrices.size());
 	}
+
+	public boolean hasSensibleTechniques() {
+		return (sensibleTechniques.size() > 0);
+	}
 	
 	public void writeToCsvFile(PersistenceMechanism persistenceMechanism) {
 		
 		persistenceMechanism.write(title.toUpperCase());
+		if (!subtitle.isEmpty() ) {
+			persistenceMechanism.write(subtitle);
+		}
 		
 		persistenceMechanism.write("Common True Negative = ", trueNegative);
 		persistenceMechanism.write("Common False Negative = ", falseNegative);
@@ -135,6 +147,7 @@ public class ConfusionMatrixTechniques {
 			persistenceMechanism.write("Kappa (" + technique + ") = ", confusionMatrices.get(technique).getKappa());
 		}
 
+		/*
 		float truePositiveReward  = 10; 
 		float trueNegativeReward  = 1; 
 		float falsePositiveReward = -3;
@@ -142,6 +155,7 @@ public class ConfusionMatrixTechniques {
 		for (String technique: confusionMatrices.keySet()) {
 			persistenceMechanism.write("Net Reward (Weight: TP=" + truePositiveReward + " TN=" + trueNegativeReward + " FP=" + falsePositiveReward + " FN=" + falseNegativeReward + ") (" + technique + ") = ", confusionMatrices.get(technique).getNetReward(truePositiveReward, trueNegativeReward, falsePositiveReward, falseNegativeReward));
 		}
+		*/
 		
 		}
 
