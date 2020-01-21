@@ -117,10 +117,10 @@ public class SmellRefactoredClass {
 			Collections.sort(listRefactoringMergedIntoMaster);
 			
 			pmResultEvaluationClass.write("RELATORIO COMPLETO SISTEMA");
-			pmResultEvaluationClass.write("Total de refatoracoes:", listRefactoringMergedIntoMaster.size());
-			pmResultEvaluationClass.write("Total de refatoracoes em classes:", countRefactoringRelatedClasses);
-			pmResultEvaluationClass.write("Total de trocas de nome de classes:", countRefactoringRelatedClassesRenaming, getClassRenameRefactoringTypes());
-			pmResultEvaluationClass.write("Total de refatoracoes para classes longas:", countRefactoringRelatedLongClass);
+			pmResultEvaluationClass.write("Numero total de refatoracoes detectadas:", listRefactoringMergedIntoMaster.size());
+			pmResultEvaluationClass.write("Numero de refatoracoes relacionadas a classes:", countRefactoringRelatedClasses, getClassRefactoringTypes());
+			pmResultEvaluationClass.write("Numero de refatoracoes relacionadas a rename em classes:", countRefactoringRelatedClassesRenaming, getClassRenameRefactoringTypes());
+			pmResultEvaluationClass.write("Numero de refatoracoes relacionadas a " + ClassDataSmelly.LONG_CLASS + ":", countRefactoringRelatedLongClass, getLongClassRefactoringTypes());
 
 			FilterSmellResult smellsCommitInitial = this.commitSmell.obterSmellsCommit(initialCommit);
 
@@ -138,8 +138,10 @@ public class SmellRefactoredClass {
 			
 			evaluateSmellChangeClass(smellsCommitInitial, listRefactoringMergedIntoMaster, ClassDataSmelly.LONG_CLASS, this.getLongClassRefactoringTypes(), ignorePredictionForDelayedRefactorings);
 			
-			for (String longClassRefactoringType : this.getLongClassRefactoringTypes()) {
-				evaluateSmellChangeClass(smellsCommitInitial, listRefactoringMergedIntoMaster, ClassDataSmelly.LONG_CLASS, new HashSet<String>(Arrays.asList(longClassRefactoringType)), ignorePredictionForDelayedRefactorings);
+			if (this.getLongClassRefactoringTypes().size() > 1) {
+				for (String longClassRefactoringType : this.getLongClassRefactoringTypes()) {
+					evaluateSmellChangeClass(smellsCommitInitial, listRefactoringMergedIntoMaster, ClassDataSmelly.LONG_CLASS, new HashSet<String>(Arrays.asList(longClassRefactoringType)), ignorePredictionForDelayedRefactorings);
+				}
 			}
 			
 		} catch (Exception e) {
