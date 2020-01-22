@@ -7,8 +7,11 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.designroleminer.smelldetector.model.ClassDataSmelly;
+import org.designroleminer.smelldetector.model.FilterSmellResult;
 import org.designroleminer.smelldetector.model.LimiarTecnica;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.ObjectId;
@@ -194,6 +197,17 @@ public class SmellRefactoredManager {
 		}
 	}
 
+
+	public static int countRealPositive(LinkedHashMap<String, Integer> refactoringsCounter, HashSet<String> targetTefactoringTypes) {
+		int realPositive = 0;
+		for (String targetTefactoringType: targetTefactoringTypes) {
+			realPositive += refactoringsCounter.getOrDefault(targetTefactoringType, 0);
+		}
+		return realPositive;
+	}
+	
+	
+	
 	private static RefactoringData getRecordFromLine(String[] line) {
 		RefactoringData result = new RefactoringData();
 		try {
@@ -217,10 +231,10 @@ public class SmellRefactoredManager {
 				result.setNomeClasse(getClassNameFromInvolvedClassesBefore(result));
 			} else if (result.getRefactoringType().contains("OPERATION")) {
 				result.setNomeClasse(getClassNameFromInvolvedClassesBefore(result));
-				result.setNomeMetodo(getMethodNameFromMethodSignature(result.getLeftSide()));
+				result.setNomeMetodo(SmellRefactoredMethod.extrairNomeMetodo(result.getLeftSide()));
 			} else if (result.getRefactoringType().contains("METHOD")) {
 				result.setNomeClasse(getClassNameFromInvolvedClassesBefore(result));
-				result.setNomeMetodo(getMethodNameFromMethodSignature(result.getLeftSide()));
+				result.setNomeMetodo(SmellRefactoredMethod.extrairNomeMetodo(result.getLeftSide()));
 			} else  if (result.getRefactoringType().contains("EXTRACT_SUPERCLASS")) {
 				result.setNomeClasse(result.getLeftSide());
 			} else if (result.getRefactoringType().contains("CLASS")) {
@@ -248,12 +262,6 @@ public class SmellRefactoredManager {
 		return refactoringData.getInvolvedClassesBefore().replace("[", "").replace("]", "");
 	}
 	
-	private static String getMethodNameFromMethodSignature(String methodSignature) {
-		int methodNameEnd = methodSignature.indexOf("(");
-		String partialMethodName = methodSignature.substring(0, methodNameEnd);
-		int methodNameBegin = partialMethodName.lastIndexOf(" ") + 1;
-		return partialMethodName.substring(methodNameBegin);
-	}	
 	private static String getDesignRoleByClassName(String className) {
 		/// @TODO: refinar detecção de DesignRole 
 		// DesignRole designRole = new DesignRole();

@@ -285,12 +285,8 @@ public class SmellRefactoredMethod {
 						continue;
 					}
 				
-					boolean isClassInvolved = methodRefactored.getInvolvedClassesBefore()
-							.contains(methodBuscar.getNomeClasse())
-							|| methodRefactored.getInvolvedClassesAfter().contains(methodBuscar.getNomeClasse());
-
-					boolean isMethodRefactored = methodRefactored.getLeftSide().contains(methodBuscar.getNomeMetodo())
-							|| methodRefactored.getRightSide().contains(methodBuscar.getNomeMetodo());
+					boolean isClassInvolved = isThereClassInvolvement(methodBuscar.getNomeClasse(), methodRefactored);
+					boolean isMethodRefactored = wasMethodRefactored(methodBuscar.getNomeMetodo(), methodRefactored);
 
 					if (isClassInvolved && isMethodRefactored) {
 						
@@ -391,13 +387,9 @@ public class SmellRefactoredMethod {
 						if ( (!this.getMethodRenameRefactoringTypes().contains(methodRefactored.getRefactoringType())) && (!targetTefactoringTypes.contains(methodRefactored.getRefactoringType())) ) {
 							continue;
 						}
-						boolean isClassInvolved = methodRefactored.getInvolvedClassesBefore()
-								.contains(methodSmellyBuscar.getNomeClasse())
-								|| methodRefactored.getInvolvedClassesAfter()
-										.contains(methodSmellyBuscar.getNomeClasse());
-						boolean isMethodRefactored = methodRefactored.getLeftSide()
-								.contains(methodSmellyBuscar.getNomeMetodo())
-								|| methodRefactored.getRightSide().contains(methodSmellyBuscar.getNomeMetodo());
+
+						boolean isClassInvolved = isThereClassInvolvement(methodSmellyBuscar.getNomeClasse(), methodRefactored);
+						boolean isMethodRefactored = wasMethodRefactored(methodSmellyBuscar.getNomeMetodo(), methodRefactored);
 
 						if (isClassInvolved && isMethodRefactored) {
 							
@@ -489,18 +481,36 @@ public class SmellRefactoredMethod {
 		if (ignorePredictionForDelayedRefactorings) {
 			confusionMatrices.addSubtitle("Ignored predictions by delayed refactorings: " + ignoredPredictionCount.toString());
 		}
+
 		
-		int realPositive = 0;
-		for (String targetTefactoringType: targetTefactoringTypes) {
-			realPositive += refactoringsCounter.getOrDefault(targetTefactoringType, 0);
-		}
+		int realPositive = SmellRefactoredManager.countRealPositive(refactoringsCounter, targetTefactoringTypes);
 		confusionMatrices.setRealPositiveValidation(realPositive);
+		
+		int positiveCount = countPrediction(commitInitial, typeSmell);
+		confusionMatrices.setPredictionCountValidation(positiveCount);
+
 		
 		pmResultEvaluationMethods.write("");
 		confusionMatrices.writeToCsvFile(pmResultEvaluationMethods);
 	
 	}
 
+	private static int countPrediction(FilterSmellResult commitInitial, String smellType) {
+		int positivePredictionCount = countPositivePrediction(commitInitial, smellType);
+		int negativePredictionCount = commitInitial.getMetodosNotSmelly().size(); 
+		return positivePredictionCount + negativePredictionCount;
+	}
+	private static int countPositivePrediction(FilterSmellResult commitInitial, String smellType) {
+		int total = 0; 
+		for (MethodDataSmelly classSmelly : commitInitial.getMetodosSmell()) {
+			if (classSmelly.getSmell().contains(smellType)) {
+				total++;	
+			}
+		}
+		return total;
+	}
+	
+	
 	private void evaluateSmellChangeParameters(FilterSmellResult commitInitial,
 			ArrayList<RefactoringData> listRefactoring, String typeSmell, HashSet<String> targetTefactoringTypes, boolean ignorePredictionForDelayedRefactorings) throws Exception {
 
@@ -521,12 +531,8 @@ public class SmellRefactoredMethod {
 						continue;
 					}
 					
-					boolean isClassInvolved = methodRefactored.getInvolvedClassesBefore()
-							.contains(methodBuscar.getNomeClasse())
-							|| methodRefactored.getInvolvedClassesAfter().contains(methodBuscar.getNomeClasse());
-
-					boolean isMethodRefactored = methodRefactored.getLeftSide().contains(methodBuscar.getNomeMetodo())
-							|| methodRefactored.getRightSide().contains(methodBuscar.getNomeMetodo());
+					boolean isClassInvolved = isThereClassInvolvement(methodBuscar.getNomeClasse(), methodRefactored);
+					boolean isMethodRefactored = wasMethodRefactored(methodBuscar.getNomeMetodo(), methodRefactored);
 
 					if (isClassInvolved && isMethodRefactored) {
 						
@@ -636,14 +642,10 @@ public class SmellRefactoredMethod {
 						if ( (!this.getMethodRenameRefactoringTypes().contains(methodRefactored.getRefactoringType())) && (!targetTefactoringTypes.contains(methodRefactored.getRefactoringType())) ) {
 							continue;
 						}
-						boolean isClassInvolved = methodRefactored.getInvolvedClassesBefore()
-								.contains(methodSmellyBuscar.getNomeClasse())
-								|| methodRefactored.getInvolvedClassesAfter()
-										.contains(methodSmellyBuscar.getNomeClasse());
-						boolean isMethodRefactored = methodRefactored.getLeftSide()
-								.contains(methodSmellyBuscar.getNomeMetodo())
-								|| methodRefactored.getRightSide().contains(methodSmellyBuscar.getNomeMetodo());
 
+						boolean isClassInvolved = isThereClassInvolvement(methodSmellyBuscar.getNomeClasse(), methodRefactored);
+						boolean isMethodRefactored = wasMethodRefactored(methodSmellyBuscar.getNomeMetodo(), methodRefactored);
+						
 						if (isClassInvolved && isMethodRefactored) {
 							
 							if ( (targetTefactoringTypes.contains(methodRefactored.getRefactoringType())) 
@@ -748,12 +750,23 @@ public class SmellRefactoredMethod {
 			}
 		}
 
+		int realPositive = SmellRefactoredManager.countRealPositive(refactoringsCounter, targetTefactoringTypes);
+		confusionMatrices.setRealPositiveValidation(realPositive);
+		
+		int positiveCount = countPrediction(commitInitial, typeSmell);
+		confusionMatrices.setPredictionCountValidation(positiveCount);
+		
 		pmResultEvaluationMethods.write("");
 		confusionMatrices.writeToCsvFile(pmResultEvaluationMethods);
 		
 	}
 	
-	private static String extrairNomeMetodo(String rightSide) {
+	public static String extrairNomeMetodo(String rightSide) {
+		int methodNameEnd = rightSide.indexOf("(");
+		String partialMethodName = rightSide.substring(0, methodNameEnd);
+		int methodNameBegin = partialMethodName.lastIndexOf(" ") + 1;
+		return partialMethodName.substring(methodNameBegin);
+		/*
 		String nomeMetodo = rightSide.substring(0, rightSide.indexOf(")") + 1);
 		if (nomeMetodo.contains("public ")) {
 			nomeMetodo = nomeMetodo.substring("public ".length());
@@ -765,6 +778,7 @@ public class SmellRefactoredMethod {
 			nomeMetodo = nomeMetodo.substring("protected ".length());
 		}
 		return nomeMetodo;
+		*/
 	}
 
 	private int countParameters(String metodo) {
@@ -836,10 +850,16 @@ public class SmellRefactoredMethod {
 		return nextCommit;
 	}
 	
+
+	private boolean isThereClassInvolvement(String className, RefactoringData refactoring) {
+		return refactoring.getInvolvedClassesBefore().contains(className);
+		//	|| refactoring.getInvolvedClassesAfter().contains(className);
+	}
+	
 	private boolean wasMethodRefactored(String methodName, RefactoringData refactoring) {
 		return refactoring.getLeftSide().contains(methodName)
-				|| refactoring.getRightSide().contains(methodName)
-				|| ( (refactoring.getNomeClasse()!=null) && (refactoring.getNomeClasse().equals(methodName)) );
+		// 	|| refactoring.getRightSide().contains(methodName)
+			|| ( (refactoring.getNomeMetodo()!=null) && (refactoring.getNomeMetodo().equals(methodName)) );
 	}
 	
 

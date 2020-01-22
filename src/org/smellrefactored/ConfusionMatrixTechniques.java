@@ -15,6 +15,7 @@ public class ConfusionMatrixTechniques {
 	private float commonFalseNegative = 0;
 	private float commonTrueNegative = 0;
 	private Float realPositiveValidation = null;
+	private Float preditiveValidation = null;
 	
 	private LinkedHashMap<String, ConfusionMatrix> confusionMatrices;
 	private HashSet<String> techniquesInRound;
@@ -77,6 +78,16 @@ public class ConfusionMatrixTechniques {
 		}
 	}
 	
+	/*
+	public void putInRound(HashSet<String> techniques) {
+		for (String technique: techniques) {
+			if (!techniquesInRound.contains(technique)) {
+					techniquesInRound.add(technique);
+			}
+		}
+	}
+	*/
+	
 	public void incFalseNegativeForAllTechniques() {
 		commonFalseNegative++;
 		for (ConfusionMatrix confusionMatrix : confusionMatrices.values()) {
@@ -103,6 +114,10 @@ public class ConfusionMatrixTechniques {
 		this.realPositiveValidation = value;
 	}
 	
+	public void setPredictionCountValidation(float value) {
+		this.preditiveValidation = value;
+	}
+	
 	public void writeToCsvFile(PersistenceMechanism persistenceMechanism) {
 		
 		persistenceMechanism.write(title.toUpperCase());
@@ -113,10 +128,19 @@ public class ConfusionMatrixTechniques {
 
 		for (String technique: confusionMatrices.keySet()) {
 			if ( (this.realPositiveValidation!=null) && (confusionMatrices.get(technique).getRealPositive() != this.realPositiveValidation) ) {
-				persistenceMechanism.write("Warning (" + technique + ") = ", "Observed positive(" + confusionMatrices.get(technique).getRealPositive() + ") differ from expected(" + this.realPositiveValidation + ").");
+				persistenceMechanism.write("Warning (" + technique + ") = ", "Real positive(" + confusionMatrices.get(technique).getRealPositive() + ") differ from expected(" + this.realPositiveValidation + ").");
 			}
 		}
+		/* Conferir resultado da contagem de preditivos negativos
+		for (String technique: confusionMatrices.keySet()) {
+			if ( (this.preditiveValidation!=null) && ( (confusionMatrices.get(technique).getPredictedPositive() + confusionMatrices.get(technique).getPredictedNegative()) != this.preditiveValidation) ) {
+				float predictionCount = confusionMatrices.get(technique).getPredictedPositive() + confusionMatrices.get(technique).getPredictedNegative();
+				persistenceMechanism.write("Warning (" + technique + ") = ", "Prediction count (" + predictionCount + ") differ from expected(" + this.preditiveValidation + ").");
+			}
+		}
+		*/
 
+		
 		
 		persistenceMechanism.write("Common True Negative = ", commonTrueNegative);
 		persistenceMechanism.write("Common False Negative = ", commonFalseNegative);
