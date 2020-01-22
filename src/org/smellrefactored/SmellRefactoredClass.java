@@ -40,8 +40,8 @@ public class SmellRefactoredClass {
 
 	private HashSet<String> getClassRenameRefactoringTypes() {
 		HashSet<String> refactoringTypes = new HashSet<String>();
-		refactoringTypes.add(RefactoringType.RENAME_CLASS.toString());
-		refactoringTypes.add(RefactoringType.MOVE_CLASS.toString());
+//		refactoringTypes.add(RefactoringType.RENAME_CLASS.toString());
+//		refactoringTypes.add(RefactoringType.MOVE_CLASS.toString());
 		// refactoringTypes.add(RefactoringType.MOVE_RENAME_CLASS.toString());
 		/// refactoringTypes.add(RefactoringType.MOVE_SOURCE_FOLDER.toString());
 		/// refactoringTypes.add(RefactoringType.RENAME_PACKAGE.toString());
