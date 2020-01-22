@@ -1,70 +1,76 @@
 package org.smellrefactored;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 import org.repodriller.persistence.PersistenceMechanism;
 
 public class ConfusionMatrixTechniques {
 	
 	private String title = "";
-	private String subtitle = "";
+	private ArrayList<String> subtitles = new ArrayList<String>();
 
-	private float falseNegative = 0;
-	private float trueNegative = 0;
+	private float commonFalseNegative = 0;
+	private float commonTrueNegative = 0;
+	private Float realPositiveValidation = null;
 	
 	private LinkedHashMap<String, ConfusionMatrix> confusionMatrices;
-	private HashSet<String> sensibleTechniques;
+	private HashSet<String> techniquesInRound;
 	
 	public ConfusionMatrixTechniques(String titleToResult, String[] techniques) {
 		title = titleToResult;
+		subtitles.clear();
 		confusionMatrices = new LinkedHashMap<String, ConfusionMatrix>(); 
 		for (String technique: techniques) {
 			confusionMatrices.put(technique, new ConfusionMatrix());
 		}
-		sensibleTechniques = new HashSet<String>();
+		techniquesInRound = new HashSet<String>();
 	}
 
-	public void setSubtitle(String subtitle) {
-		this.subtitle = subtitle;
+	public void addSubtitle(String subtitle) {
+		this.subtitles.add(subtitle);
 	}
 	
-	public void resetSensibleTechniques() {
-		sensibleTechniques.clear();
+	public void resetRound() {
+		techniquesInRound.clear();
 	}
 
-	public void incTruePositiveForSensibleTechniques(HashSet<String> techniques) {
+	public void incTruePositiveIfOutOfRound(HashSet<String> techniques) {
 		for (String technique: techniques) {
-			if (!sensibleTechniques.contains(technique)) {
-				sensibleTechniques.add(technique);
+			if (!techniquesInRound.contains(technique)) {
+				techniquesInRound.add(technique);
 				confusionMatrices.get(technique).incTruePositive();
 			}
 		}
 	}
 	
-	public void incFalsePositiveForInsensibleTechniques(HashSet<String> techniques) {
+	public void incFalsePositiveIfOutOfRound(HashSet<String> techniques) {
 		for (String technique: techniques) {
-			if (!sensibleTechniques.contains(technique)) {
+			if (!techniquesInRound.contains(technique)) {
+				techniquesInRound.add(technique);
 				confusionMatrices.get(technique).incFalsePositive();
 			}
 		}
 	}
 	
-	public void incTrueNegativeForInsensibleTechniquesExcept(HashSet<String> exceptTechniques) {
+	public void incTrueNegativeForAllTechniquesOutOfRoundExcept(HashSet<String> exceptTechniques) {
 		for (String technique: confusionMatrices.keySet()) {
-			if (!sensibleTechniques.contains(technique)) {
+			if (!techniquesInRound.contains(technique)) {
 				if (!exceptTechniques.contains(technique)) {
+					techniquesInRound.add(technique);
 					confusionMatrices.get(technique).incTrueNegative();
 				}
 			}
 		}
 	}
 	
-	public void incFalseNegativeForInsensibleTechniquesExcept(HashSet<String> exceptTechniques) {
+	public void incFalseNegativeForAllTechniquesOutOfRoundExcept(HashSet<String> exceptTechniques) {
 		for (String technique: confusionMatrices.keySet()) {
-			if (!sensibleTechniques.contains(technique)) {
+			if (!techniquesInRound.contains(technique)) {
 				if (!exceptTechniques.contains(technique)) {
-					sensibleTechniques.add(technique);
+					techniquesInRound.add(technique);
 					confusionMatrices.get(technique).incFalseNegative();
 				}
 			}
@@ -72,36 +78,48 @@ public class ConfusionMatrixTechniques {
 	}
 	
 	public void incFalseNegativeForAllTechniques() {
-		falseNegative++;
+		commonFalseNegative++;
 		for (ConfusionMatrix confusionMatrix : confusionMatrices.values()) {
 			confusionMatrix.incFalseNegative();
 		}
 	}
 
 	public void incTrueNegativeForAllTechniques() {
-		trueNegative++;
+		commonTrueNegative++;
 		for (ConfusionMatrix confusionMatrix : confusionMatrices.values()) {
 			confusionMatrix.incTrueNegative();
 		}
 	}
 	
-	public boolean hasInsensibleTechniques() {
-		return (confusionMatrices.size() > 0) && (sensibleTechniques.size() < confusionMatrices.size());
+	public boolean hasTechniqueOutOfRound() {
+		return (confusionMatrices.size() > 0) && (techniquesInRound.size() < confusionMatrices.size());
 	}
 
-	public boolean hasSensibleTechniques() {
-		return (sensibleTechniques.size() > 0);
+	public boolean hasTechniqueInRound() {
+		return (techniquesInRound.size() > 0);
+	}
+
+	public void setRealPositiveValidation(float value) {
+		this.realPositiveValidation = value;
 	}
 	
 	public void writeToCsvFile(PersistenceMechanism persistenceMechanism) {
 		
 		persistenceMechanism.write(title.toUpperCase());
-		if (!subtitle.isEmpty() ) {
-			persistenceMechanism.write(subtitle);
+
+		for (String subtitleLine: this.subtitles) {
+			persistenceMechanism.write(subtitleLine);
 		}
+
+		for (String technique: confusionMatrices.keySet()) {
+			if ( (this.realPositiveValidation!=null) && (confusionMatrices.get(technique).getRealPositive() != this.realPositiveValidation) ) {
+				persistenceMechanism.write("Warning (" + technique + ") = ", "Observed positive(" + confusionMatrices.get(technique).getRealPositive() + ") differ from expected(" + this.realPositiveValidation + ").");
+			}
+		}
+
 		
-		persistenceMechanism.write("Common True Negative = ", trueNegative);
-		persistenceMechanism.write("Common False Negative = ", falseNegative);
+		persistenceMechanism.write("Common True Negative = ", commonTrueNegative);
+		persistenceMechanism.write("Common False Negative = ", commonFalseNegative);
 
 		for (String technique: confusionMatrices.keySet()) {
 			persistenceMechanism.write("Sample Size (" + technique + ") = ", confusionMatrices.get(technique).getSampleSize());

@@ -205,6 +205,8 @@ public class SmellRefactoredManager {
 			result.setInvolvedClassesBefore(line[5]);
 			result.setInvolvedClassesAfter(line[6]);
 			
+			
+			
 			if (result.getRefactoringType().contains("VARIABLE")) {
 				result.setNomeClasse(getClassNameFromInvolvedClassesBefore(result));
 			} else if (result.getRefactoringType().contains("ATTRIBUTE")) {
@@ -216,12 +218,20 @@ public class SmellRefactoredManager {
 			} else if (result.getRefactoringType().contains("OPERATION")) {
 				result.setNomeClasse(getClassNameFromInvolvedClassesBefore(result));
 				result.setNomeMetodo(getMethodNameFromMethodSignature(result.getLeftSide()));
+			} else if (result.getRefactoringType().contains("METHOD")) {
+				result.setNomeClasse(getClassNameFromInvolvedClassesBefore(result));
+				result.setNomeMetodo(getMethodNameFromMethodSignature(result.getLeftSide()));
 			} else  if (result.getRefactoringType().contains("EXTRACT_SUPERCLASS")) {
 				result.setNomeClasse(result.getLeftSide());
 			} else if (result.getRefactoringType().contains("CLASS")) {
 				result.setNomeClasse(getClassNameFromInvolvedClassesBefore(result));
 			} else if (result.getRefactoringType().contains("PACKAGE")) {
 				/// @TODO: to implement
+			} else if (result.getRefactoringType().contains("FOLDER")) {
+				/// @TODO: to implement
+			}
+			if (result.getNomeClasse() == null) {
+				// logger.error("Classe Name is NULL (line:" + line[0] + ", " + line[1] + ", " + line[2] + ", " + line[3] + ", " + line[4] + ", " + line[5] + ", " + line[6] + ")");
 			}
 			if (result.getNomeClasse() != null) {
 				if (result.getNomeClasse() != "") {
