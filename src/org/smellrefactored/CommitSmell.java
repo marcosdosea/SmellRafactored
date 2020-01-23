@@ -2,6 +2,7 @@ package org.smellrefactored;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.designroleminer.MetricReport;
@@ -27,6 +28,8 @@ public class CommitSmell {
 	private List<LimiarTecnica> listaLimiarTecnica;
 	String resultFileName;
 	
+	private LinkedHashMap<String, LimiarTecnica> techniquesThresholds;
+	
 	PersistenceMechanism pmResultSmellRefactoredCommit;
 
 	HashSet<String> listCommitEvaluated = new HashSet<String>();
@@ -40,6 +43,11 @@ public class CommitSmell {
 		this.listaLimiarTecnica = listaLimiarTecnica;
 		this.resultFileName = resultFileName;
 		
+		techniquesThresholds = new LinkedHashMap<String, LimiarTecnica>();
+		for (LimiarTecnica limiarTecnica : this.listaLimiarTecnica) {
+			techniquesThresholds.put(limiarTecnica.getTecnica(), limiarTecnica);
+		}
+
 		pmResultSmellRefactoredCommit = new CSVFile(resultFileName + "-smellRefactored-commit.csv", false);
 	}
 	
@@ -87,6 +95,10 @@ public class CommitSmell {
 		FilterSmells.gravarMetodosSmell(smellsCommitInitial.getMetodosSmell(), resultFileName + "-smells-commit-initial-method.csv");
 		FilterSmells.gravarClassesSmell(smellsCommitInitial.getClassesSmell(), resultFileName + "-smells-commit-initial-class.csv");
 		return smellsCommitInitial;
+	}
+	
+	public LinkedHashMap<String, LimiarTecnica> getTechniquesThresholds() {
+ 		return (this.techniquesThresholds);
 	}
 	
 	

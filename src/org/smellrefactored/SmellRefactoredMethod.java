@@ -17,10 +17,6 @@ import org.slf4j.LoggerFactory;
 
 public class SmellRefactoredMethod {
 
-	private String[] TECHNIQUES = {"A", "V", "X", "R", "D"};
-
-	boolean ignorePredictionForDelayedRefactorings = false;
-	
 	private HashSet<String> getLongMethodRefactoringTypes() {
 		HashSet<String> refactoringTypes = new HashSet<String>();
 		refactoringTypes.add(RefactoringType.EXTRACT_OPERATION.toString());
@@ -235,34 +231,34 @@ public class SmellRefactoredMethod {
 			pmResultSmellRefactoredMethodsMachineLearning.write("DesignRole", "LOC", "CC", "EC", "NOP", "isRefactoring", "Refactoring");
 
 			// LONG_METHOD
-			evaluateSmellChangeOperation(smellsCommitInitial, listRefactoringMergedIntoMaster, MethodDataSmelly.LONG_METHOD, this.getLongMethodRefactoringTypes(), ignorePredictionForDelayedRefactorings);
+			evaluateSmellChangeOperation(smellsCommitInitial, listRefactoringMergedIntoMaster, MethodDataSmelly.LONG_METHOD, this.getLongMethodRefactoringTypes());
 			if (this.getLongMethodRefactoringTypes().size() > 1) {
 				for (String longClassRefactoringType : this.getLongMethodRefactoringTypes()) {
-					evaluateSmellChangeOperation(smellsCommitInitial, listRefactoringMergedIntoMaster, MethodDataSmelly.LONG_METHOD, new HashSet<String>(Arrays.asList(longClassRefactoringType)), ignorePredictionForDelayedRefactorings);
+					evaluateSmellChangeOperation(smellsCommitInitial, listRefactoringMergedIntoMaster, MethodDataSmelly.LONG_METHOD, new HashSet<String>(Arrays.asList(longClassRefactoringType)));
 				}
 			}
 			
 			// COMPLEX_METHOD
-			evaluateSmellChangeOperation(smellsCommitInitial, listRefactoringMergedIntoMaster, MethodDataSmelly.COMPLEX_METHOD, this.getComplexMethodRefactoringTypes(), ignorePredictionForDelayedRefactorings);
+			evaluateSmellChangeOperation(smellsCommitInitial, listRefactoringMergedIntoMaster, MethodDataSmelly.COMPLEX_METHOD, this.getComplexMethodRefactoringTypes());
 			if (this.getComplexMethodRefactoringTypes().size() > 1) {
 				for (String longClassRefactoringType : this.getComplexMethodRefactoringTypes()) {
-					evaluateSmellChangeOperation(smellsCommitInitial, listRefactoringMergedIntoMaster, MethodDataSmelly.COMPLEX_METHOD, new HashSet<String>(Arrays.asList(longClassRefactoringType)), ignorePredictionForDelayedRefactorings);
+					evaluateSmellChangeOperation(smellsCommitInitial, listRefactoringMergedIntoMaster, MethodDataSmelly.COMPLEX_METHOD, new HashSet<String>(Arrays.asList(longClassRefactoringType)));
 				}
 			}
 
 			// HIGH_EFFERENT_COUPLING
-			evaluateSmellChangeOperation(smellsCommitInitial, listRefactoringMergedIntoMaster, MethodDataSmelly.HIGH_EFFERENT_COUPLING, this.getHighEfferentCouplingRefactoringTypes(), ignorePredictionForDelayedRefactorings);
+			evaluateSmellChangeOperation(smellsCommitInitial, listRefactoringMergedIntoMaster, MethodDataSmelly.HIGH_EFFERENT_COUPLING, this.getHighEfferentCouplingRefactoringTypes());
 			if (this.getHighEfferentCouplingRefactoringTypes().size() > 1) {
 				for (String longClassRefactoringType : this.getHighEfferentCouplingRefactoringTypes()) {
-					evaluateSmellChangeOperation(smellsCommitInitial, listRefactoringMergedIntoMaster, MethodDataSmelly.HIGH_EFFERENT_COUPLING, new HashSet<String>(Arrays.asList(longClassRefactoringType)), ignorePredictionForDelayedRefactorings);
+					evaluateSmellChangeOperation(smellsCommitInitial, listRefactoringMergedIntoMaster, MethodDataSmelly.HIGH_EFFERENT_COUPLING, new HashSet<String>(Arrays.asList(longClassRefactoringType)));
 				}
 			}
 
 			// MANY_PARAMETERS
-			evaluateSmellChangeParameters(smellsCommitInitial, listRefactoringMergedIntoMaster, MethodDataSmelly.MANY_PARAMETERS, this.getManyParametersRefactoringTypes(), ignorePredictionForDelayedRefactorings);
+			evaluateSmellChangeParameters(smellsCommitInitial, listRefactoringMergedIntoMaster, MethodDataSmelly.MANY_PARAMETERS, this.getManyParametersRefactoringTypes());
 			if (this.getManyParametersRefactoringTypes().size() > 1) {
 				for (String longClassRefactoringType : this.getManyParametersRefactoringTypes()) {
-					evaluateSmellChangeParameters(smellsCommitInitial, listRefactoringMergedIntoMaster, MethodDataSmelly.MANY_PARAMETERS, new HashSet<String>(Arrays.asList(longClassRefactoringType)), ignorePredictionForDelayedRefactorings);
+					evaluateSmellChangeParameters(smellsCommitInitial, listRefactoringMergedIntoMaster, MethodDataSmelly.MANY_PARAMETERS, new HashSet<String>(Arrays.asList(longClassRefactoringType)));
 				}
 			}
 			
@@ -272,9 +268,9 @@ public class SmellRefactoredMethod {
 	}
 
 	private void evaluateSmellChangeOperation(FilterSmellResult commitInitial,
-			ArrayList<RefactoringData> listRefactoring, String typeSmell, HashSet<String> targetTefactoringTypes, boolean ignorePredictionForDelayedRefactorings) throws Exception {
+			ArrayList<RefactoringData> listRefactoring, String typeSmell, HashSet<String> targetTefactoringTypes) throws Exception {
 
-		ConfusionMatrixTechniques confusionMatrices = new ConfusionMatrixTechniques(typeSmell + " " + targetTefactoringTypes.toString(), TECHNIQUES);
+		ConfusionMatrixPredictors confusionMatrices = new ConfusionMatrixPredictors(typeSmell + " " + targetTefactoringTypes.toString(), this.commitSmell.getTechniquesThresholds().keySet());
 		
 		Integer ignoredPredictionCount = 0;
 
@@ -282,22 +278,15 @@ public class SmellRefactoredMethod {
 				confusionMatrices);
 
 		ignoredPredictionCount = computePositivePredictionsForChangeOperation(commitInitial, listRefactoring, typeSmell,
-				targetTefactoringTypes, ignorePredictionForDelayedRefactorings, confusionMatrices,
+				targetTefactoringTypes, confusionMatrices,
 				ignoredPredictionCount);
-
-		if (ignorePredictionForDelayedRefactorings) {
-			confusionMatrices.addSubtitle("Ignored predictions by delayed refactorings: " + ignoredPredictionCount.toString());
-		}
 
 		
 		int realPositive = SmellRefactoredManager.countRealPositive(refactoringsCounter, targetTefactoringTypes);
-		confusionMatrices.setRealPositiveValidation(realPositive);
-		
-		// int predictionCount = countPrediction(commitInitial, typeSmell);
-		// confusionMatrices.setPredictionCountValidation(predictionCount);
-		for (String technique : TECHNIQUES) {
-			int positivePredictionCount = countPositivePredictionForTechnique(commitInitial, typeSmell, technique);
-			confusionMatrices.addSubtitle("Positive Prediction (" + technique + ") = , " + positivePredictionCount);
+		confusionMatrices.setValidationRealPositive(realPositive);
+		for (String technique : this.commitSmell.getTechniquesThresholds().keySet()) {
+			Integer positivePredictionExpected = countPositivePredictionForTechnique(commitInitial, typeSmell, technique);
+			confusionMatrices.setValidationPositivePrediction(technique, positivePredictionExpected);
 		}
 		
 		pmResultEvaluationMethods.write("");
@@ -320,14 +309,15 @@ public class SmellRefactoredMethod {
 
 	private Integer computePositivePredictionsForChangeOperation(FilterSmellResult commitInitial,
 			ArrayList<RefactoringData> listRefactoring, String typeSmell, HashSet<String> targetTefactoringTypes,
-			boolean ignorePredictionForDelayedRefactorings, ConfusionMatrixTechniques confusionMatrices,
-			Integer ignoredPredictionCount) {
+			ConfusionMatrixPredictors confusionMatrices,
+			Integer ignoredPredictionCount) throws Exception {
 		for (MethodDataSmelly methodSmelly : commitInitial.getMetodosSmell()) {
 			if (methodSmelly.getSmell().equals(typeSmell)) {
 				MethodDataSmelly methodSmellyBuscar = methodSmelly;
 				boolean renamedMethod = false;
 				Date dateCommitRenamed = null;
-				confusionMatrices.resetRound();
+				PredictionRound predictionRound = confusionMatrices.newRound();
+				predictionRound.setDefaultCondition(false);
 				do {
 					renamedMethod = false;
 					String methodRenamedName = null;
@@ -341,8 +331,9 @@ public class SmellRefactoredMethod {
 							if (targetTefactoringTypes.contains(methodRefactored.getRefactoringType())) {
 								MethodDataSmelly methodSmell = obterSmellPreviousCommit(methodRefactored.getCommit(), methodSmellyBuscar.getNomeClasse(), methodSmellyBuscar.getNomeMetodo(), typeSmell);
 								if (methodSmell != null) {
-									confusionMatrices.incTruePositiveIfOutOfRound(methodSmellyBuscar.getListaTecnicas());
-									confusionMatrices.incFalseNegativeForAllTechniquesOutOfRoundExcept(methodSmellyBuscar.getListaTecnicas());
+									predictionRound.setCondition(true);
+									predictionRound.setTrue(methodSmellyBuscar.getListaTecnicas());
+									predictionRound.setFalseAllExcept(methodSmellyBuscar.getListaTecnicas());
 									writeTruePositiveToCsvFiles(methodRefactored, methodSmell);
 								}
 							}
@@ -364,27 +355,14 @@ public class SmellRefactoredMethod {
 					} else {
 						dateCommitRenamed = null;
 					}
-				} while (renamedMethod && confusionMatrices.hasTechniqueOutOfRound());
+				} while (renamedMethod && predictionRound.isAnyoneOutOfRound());
 				
-				boolean ignorePrediction = false;
-				if (ignorePredictionForDelayedRefactorings) {
-					if (!confusionMatrices.hasTechniqueInRound()) {
-						if (hasDelayedRefactoring(commitInitial.getCommitId(), methodSmellyBuscar.getNomeClasse(), methodSmellyBuscar.getNomeMetodo(), targetTefactoringTypes)) {
-							ignorePrediction = true;
-							ignoredPredictionCount++;
-						}
-					}
+				predictionRound.setTrue(methodSmellyBuscar.getListaTecnicas());
+				predictionRound.setFalseAllExcept(methodSmellyBuscar.getListaTecnicas());
+				if (predictionRound.isAnyoneOutOfRound()) {
+					writeNegativeToCsvFiles(methodSmellyBuscar);
 				}
-					
-				if (!ignorePrediction) {
-					confusionMatrices.incFalsePositiveIfOutOfRound(methodSmellyBuscar.getListaTecnicas());
-					confusionMatrices.incTrueNegativeForAllTechniquesOutOfRoundExcept(methodSmellyBuscar.getListaTecnicas());
-					if (confusionMatrices.hasTechniqueOutOfRound()) {
-						writeNegativeToCsvFiles(methodSmellyBuscar);
-					}
-				}
-				
-
+				confusionMatrices.processPredictionRound(predictionRound);
 			}
 		}
 		return ignoredPredictionCount;
@@ -392,74 +370,61 @@ public class SmellRefactoredMethod {
 
 	private void computeNegativePredictionsForChangeOperation(FilterSmellResult commitInitial,
 			ArrayList<RefactoringData> listRefactoring, String smellType, HashSet<String> targetTefactoringTypes,
-			ConfusionMatrixTechniques confusionMatrices) {
+			ConfusionMatrixPredictors confusionMatrices) throws Exception {
 		for (MethodDataSmelly methodNotSmelly : commitInitial.getMetodosNotSmelly()) {
-			// if ( (methodNotSmelly.getSmell() != null) && (methodNotSmelly.getSmell().equals(smellType)) ) {
-				MethodDataSmelly methodBuscar = methodNotSmelly;
-				boolean renamedMethod = false;
-				boolean refactoredMethod = false;
-				Date dateCommitRenamed = null;
-				confusionMatrices.resetRound();
-				do {
-					renamedMethod = false;
-					String methodRenamedName = null;
-					for (RefactoringData methodRefactored : listRefactoring) {
-						if ( (!this.getMethodRenameRefactoringTypes().contains(methodRefactored.getRefactoringType())) && (!targetTefactoringTypes.contains(methodRefactored.getRefactoringType())) ) {
-							continue;
-						}
-				
-						if (wasMethodRefactored(methodBuscar.getNomeClasse(), methodBuscar.getNomeMetodo(), methodRefactored)) {
-						
-							if (targetTefactoringTypes.contains(methodRefactored.getRefactoringType())) {
-								MethodDataSmelly methodSmell = obterSmellPreviousCommit(methodRefactored.getCommit(), methodBuscar.getNomeClasse(), methodBuscar.getNomeMetodo(), smellType);
-								if (methodSmell != null) {
-									confusionMatrices.incFalseNegativeForAllTechniquesOutOfRound();
-									refactoredMethod = true;
-									writeFalseNegativeToCsvFiles(methodRefactored, methodBuscar);
-									break;
-								}
-							}
-							if (this.getMethodRenameRefactoringTypes().contains(methodRefactored.getRefactoringType())) {
-								if ((dateCommitRenamed == null) || (dateCommitRenamed != null
-										&& dateCommitRenamed.compareTo(methodRefactored.getCommitDate()) < 0)) {
-									renamedMethod = true;
-									dateCommitRenamed = methodRefactored.getCommitDate();
-									methodRenamedName = extrairNomeMetodo(methodRefactored.getRightSide());
-								}
-							} 
-						
-						}
-					
-					
+			MethodDataSmelly methodBuscar = methodNotSmelly;
+			boolean renamedMethod = false;
+			boolean refactoredMethod = false;
+			Date dateCommitRenamed = null;
+			PredictionRound predictionRound = confusionMatrices.newRound();
+			predictionRound.setDefaultCondition(false);
+			do {
+				renamedMethod = false;
+				String methodRenamedName = null;
+				for (RefactoringData methodRefactored : listRefactoring) {
+					if ( (!this.getMethodRenameRefactoringTypes().contains(methodRefactored.getRefactoringType())) && (!targetTefactoringTypes.contains(methodRefactored.getRefactoringType())) ) {
+						continue;
 					}
-					if (renamedMethod) {
-						methodBuscar.setNomeMetodo(methodRenamedName);
-					} else {
-						dateCommitRenamed = null;
-					}
-				} while (renamedMethod && !refactoredMethod);
 			
-				if (!refactoredMethod) {
-					boolean ignorePrediction = false;
-					/* A existencia de refatoração não imediata não implica em refatoração atualmente necessária
-					if (ignorePredictionForDelayedRefactorings) {
-						if (!confusionMatrices.hasSensibleTechniques()) {
-							if (hasDelayedRefactoring(commitInitial.getCommitId(), classBuscar.getNomeClasse(), targetTefactoringTypes)) {
-								ignorePrediction = true;
-								ignoredPredictionCount++;
+					if (wasMethodRefactored(methodBuscar.getNomeClasse(), methodBuscar.getNomeMetodo(), methodRefactored)) {
+					
+						if (targetTefactoringTypes.contains(methodRefactored.getRefactoringType())) {
+							MethodDataSmelly methodSmell = obterSmellPreviousCommit(methodRefactored.getCommit(), methodBuscar.getNomeClasse(), methodBuscar.getNomeMetodo(), smellType);
+							if (methodSmell != null) {
+								predictionRound.setCondition(true);
+								predictionRound.setFalseAllExcept(methodSmell.getListaTecnicas());
+								refactoredMethod = true;
+								writeFalseNegativeToCsvFiles(methodRefactored, methodBuscar);
+								break;
 							}
 						}
+						if (this.getMethodRenameRefactoringTypes().contains(methodRefactored.getRefactoringType())) {
+							if ((dateCommitRenamed == null) || (dateCommitRenamed != null
+									&& dateCommitRenamed.compareTo(methodRefactored.getCommitDate()) < 0)) {
+								renamedMethod = true;
+								dateCommitRenamed = methodRefactored.getCommitDate();
+								methodRenamedName = extrairNomeMetodo(methodRefactored.getRightSide());
+							}
+						} 
+					
 					}
-					 */
-						
-					if (!ignorePrediction) {
-						confusionMatrices.incTrueNegativeForAllTechniquesOutOfRound();
-						writeNegativeToCsvFiles(methodBuscar);
-					}
+				
+				
 				}
-		//	}
-		}
+				if (renamedMethod) {
+					methodBuscar.setNomeMetodo(methodRenamedName);
+				} else {
+					dateCommitRenamed = null;
+				}
+			} while (renamedMethod && !refactoredMethod);
+		
+			if (!refactoredMethod) {
+				writeNegativeToCsvFiles(methodBuscar);
+			}
+			predictionRound.setFalseForAllOutOfRound();
+			confusionMatrices.processPredictionRound(predictionRound);
 	}
+}
 
 	private void writeNegativeToCsvFiles(MethodDataSmelly methodSmellyBuscar) {
 		pmResultSmellRefactoredMethodsMessage.write(methodSmellyBuscar.getNomeClasse(),
@@ -539,9 +504,9 @@ public class SmellRefactoredMethod {
 	
 	
 	private void evaluateSmellChangeParameters(FilterSmellResult commitInitial,
-			ArrayList<RefactoringData> listRefactoring, String typeSmell, HashSet<String> targetTefactoringTypes, boolean ignorePredictionForDelayedRefactorings) throws Exception {
+			ArrayList<RefactoringData> listRefactoring, String typeSmell, HashSet<String> targetTefactoringTypes) throws Exception {
 
-		ConfusionMatrixTechniques confusionMatrices = new ConfusionMatrixTechniques(typeSmell + " " + targetTefactoringTypes.toString(), TECHNIQUES);
+		ConfusionMatrixPredictors confusionMatrices = new ConfusionMatrixPredictors(typeSmell + " " + targetTefactoringTypes.toString(), this.commitSmell.getTechniquesThresholds().keySet());
 
 		Integer ignoredPredictionCount = 0;
 		
@@ -549,17 +514,14 @@ public class SmellRefactoredMethod {
 				confusionMatrices);
 
 		computePositivePredictionsForChangeParameters(commitInitial, listRefactoring, typeSmell, targetTefactoringTypes,
-				ignorePredictionForDelayedRefactorings, confusionMatrices, ignoredPredictionCount);
+				confusionMatrices, ignoredPredictionCount);
 
 		
 		int realPositive = SmellRefactoredManager.countRealPositive(refactoringsCounter, targetTefactoringTypes);
-		confusionMatrices.setRealPositiveValidation(realPositive);
-		
-		// int predictionCount = countPrediction(commitInitial, typeSmell);
-		// confusionMatrices.setPredictionCountValidation(predictionCount);
-		for (String technique : TECHNIQUES) {
-			int positivePredictionCount = countPositivePredictionForTechnique(commitInitial, typeSmell, technique);
-			confusionMatrices.addSubtitle("Positive Prediction (" + technique + ") = , " + positivePredictionCount);
+		confusionMatrices.setValidationRealPositive(realPositive);
+		for (String technique : this.commitSmell.getTechniquesThresholds().keySet()) {
+			Integer positivePredictionExpected = countPositivePredictionForTechnique(commitInitial, typeSmell, technique);
+			confusionMatrices.setValidationPositivePrediction(technique, positivePredictionExpected);
 		}
 		
 		pmResultEvaluationMethods.write("");
@@ -569,14 +531,15 @@ public class SmellRefactoredMethod {
 
 	private void computePositivePredictionsForChangeParameters(FilterSmellResult commitInitial,
 			ArrayList<RefactoringData> listRefactoring, String typeSmell, HashSet<String> targetTefactoringTypes,
-			boolean ignorePredictionForDelayedRefactorings, ConfusionMatrixTechniques confusionMatrices,
-			Integer ignoredPredictionCount) {
+			ConfusionMatrixPredictors confusionMatrices,
+			Integer ignoredPredictionCount) throws Exception {
 		for (MethodDataSmelly methodSmelly : commitInitial.getMetodosSmell()) {
 			if (methodSmelly.getSmell().equals(typeSmell)) {
 				MethodDataSmelly methodSmellyBuscar = methodSmelly;
 				boolean renamedMethod = false;
 				Date dateCommitRenamed = null;
-				confusionMatrices.resetRound();
+				PredictionRound predictionRound = confusionMatrices.newRound();
+				predictionRound.setDefaultCondition(false);
 				do {
 					renamedMethod = false;
 					String methodRenamedName = null;
@@ -601,8 +564,9 @@ public class SmellRefactoredMethod {
 											methodRefactored.getLeftSide())) {
 										MethodDataSmelly methodSmell = obterSmellPreviousCommit(methodRefactored.getCommit(), methodSmellyBuscar.getNomeClasse(), methodSmellyBuscar.getNomeMetodo(), typeSmell);
 										if (methodSmell != null) {
-											confusionMatrices.incTruePositiveIfOutOfRound(methodSmellyBuscar.getListaTecnicas());
-											confusionMatrices.incFalseNegativeForAllTechniquesOutOfRoundExcept(methodSmellyBuscar.getListaTecnicas());
+											predictionRound.setCondition(true);
+											predictionRound.setTrue(methodSmellyBuscar.getListaTecnicas());
+											predictionRound.setFalseAllExcept(methodSmellyBuscar.getListaTecnicas());
 											writeTruePositiveToCsvFiles(methodRefactored, methodSmell);
 										}
 									}
@@ -624,25 +588,14 @@ public class SmellRefactoredMethod {
 					} else {
 						dateCommitRenamed = null;
 					}
-				} while (renamedMethod && confusionMatrices.hasTechniqueOutOfRound());
+				} while (renamedMethod && predictionRound.isAnyoneOutOfRound());
 
-				boolean ignorePrediction = false;
-				if (ignorePredictionForDelayedRefactorings) {
-					if (!confusionMatrices.hasTechniqueInRound()) {
-						if (hasDelayedRefactoring(commitInitial.getCommitId(), methodSmellyBuscar.getNomeClasse(), methodSmellyBuscar.getNomeMetodo(), targetTefactoringTypes)) {
-							ignorePrediction = true;
-							ignoredPredictionCount++;
-						}
-					}
+				predictionRound.setTrue(methodSmellyBuscar.getListaTecnicas());
+				predictionRound.setFalseAllExcept(methodSmellyBuscar.getListaTecnicas());
+				if (predictionRound.isAnyoneOutOfRound()) {
+					writeNegativeToCsvFiles(methodSmellyBuscar);
 				}
-					
-				if (!ignorePrediction) {
-					confusionMatrices.incFalsePositiveIfOutOfRound(methodSmellyBuscar.getListaTecnicas());
-					confusionMatrices.incTrueNegativeForAllTechniquesOutOfRoundExcept(methodSmellyBuscar.getListaTecnicas());
-					if (confusionMatrices.hasTechniqueOutOfRound()) {
-						writeNegativeToCsvFiles(methodSmellyBuscar);
-					}
-				}
+				confusionMatrices.processPredictionRound(predictionRound);
 				
 			}
 		}
@@ -650,78 +603,66 @@ public class SmellRefactoredMethod {
 
 	private void computeNegativePredictionsForChangeParameters(FilterSmellResult commitInitial,
 			ArrayList<RefactoringData> listRefactoring, String smellType, HashSet<String> targetTefactoringTypes,
-			ConfusionMatrixTechniques confusionMatrices) {
+			ConfusionMatrixPredictors confusionMatrices) throws Exception {
 		for (MethodDataSmelly methodNotSmelly : commitInitial.getMetodosNotSmelly()) {
-			// if ( (methodNotSmelly.getSmell() != null) && (methodNotSmelly.getSmell().equals(smellType)) ) {
-				MethodDataSmelly methodBuscar = methodNotSmelly;
-				boolean renamedMethod = false;
-				boolean refactoredMethod = false;
-				Date dateCommitRenamed = null;
-				confusionMatrices.resetRound();
-				do {
-					renamedMethod = false;
-					String methodRenamedName = null;
-					for (RefactoringData methodRefactored : listRefactoring) {
-						if ( (!this.getMethodRenameRefactoringTypes().contains(methodRefactored.getRefactoringType())) && (!targetTefactoringTypes.contains(methodRefactored.getRefactoringType())) ) {
-							continue;
-						}
+			MethodDataSmelly methodBuscar = methodNotSmelly;
+			boolean renamedMethod = false;
+			boolean refactoredMethod = false;
+			Date dateCommitRenamed = null;
+			PredictionRound predictionRound = confusionMatrices.newRound();
+			predictionRound.setDefaultCondition(false);
+			do {
+				renamedMethod = false;
+				String methodRenamedName = null;
+				for (RefactoringData methodRefactored : listRefactoring) {
+					if ( (!this.getMethodRenameRefactoringTypes().contains(methodRefactored.getRefactoringType())) && (!targetTefactoringTypes.contains(methodRefactored.getRefactoringType())) ) {
+						continue;
+					}
+				
+					if (wasMethodRefactored(methodBuscar.getNomeClasse(), methodBuscar.getNomeMetodo(), methodRefactored)) {
 					
-						if (wasMethodRefactored(methodBuscar.getNomeClasse(), methodBuscar.getNomeMetodo(), methodRefactored)) {
-						
-							if (targetTefactoringTypes.contains(methodRefactored.getRefactoringType())) {
+						if (targetTefactoringTypes.contains(methodRefactored.getRefactoringType())) {
 
-								if ((dateCommitRenamed == null) || (dateCommitRenamed != null
-										&& dateCommitRenamed.compareTo(methodRefactored.getCommitDate()) < 0)) {
-									if (countParameters(methodRefactored.getRightSide()) < countParameters(
-											methodRefactored.getLeftSide())) {
-										MethodDataSmelly methodSmell = obterSmellPreviousCommit(methodRefactored.getCommit(), methodBuscar.getNomeClasse(), methodBuscar.getNomeMetodo(), smellType);
-										if (methodSmell != null) {
-											confusionMatrices.incFalseNegativeForAllTechniquesOutOfRound();
-											refactoredMethod = true;
-											writeFalseNegativeToCsvFiles(methodRefactored, methodBuscar);
-											break;
-										}
+							if ((dateCommitRenamed == null) || (dateCommitRenamed != null
+									&& dateCommitRenamed.compareTo(methodRefactored.getCommitDate()) < 0)) {
+								if (countParameters(methodRefactored.getRightSide()) < countParameters(
+										methodRefactored.getLeftSide())) {
+									MethodDataSmelly methodSmell = obterSmellPreviousCommit(methodRefactored.getCommit(), methodBuscar.getNomeClasse(), methodBuscar.getNomeMetodo(), smellType);
+									if (methodSmell != null) {
+										predictionRound.setCondition(true);
+										predictionRound.setTrue(methodSmell.getListaTecnicas());
+										predictionRound.setFalseAllExcept(methodSmell.getListaTecnicas());
+										refactoredMethod = true;
+										writeFalseNegativeToCsvFiles(methodRefactored, methodBuscar);
+										break;
 									}
 								}
+							}
 								
-							}
-							if (this.getMethodRenameRefactoringTypes().contains(methodRefactored.getRefactoringType())) {
-								if ((dateCommitRenamed == null) || (dateCommitRenamed != null
-									&& dateCommitRenamed.compareTo(methodRefactored.getCommitDate()) < 0)) {
-								renamedMethod = true;
-								dateCommitRenamed = methodRefactored.getCommitDate();
-								methodRenamedName = extrairNomeMetodo(methodRefactored.getRightSide());
-								}
-							}
-						
 						}
-					}
-					if (renamedMethod) {
-						methodBuscar.setNomeMetodo(methodRenamedName);
-					} else {
-						dateCommitRenamed = null;
-					}
-				} while (renamedMethod && !refactoredMethod);
-			
-				if (!refactoredMethod) {
-					boolean ignorePrediction = false;
-					/* A existencia de refatoração não imediata não implica em refatoração atualmente necessária
-					if (ignorePredictionForDelayedRefactorings) {
-						if (!confusionMatrices.hasSensibleTechniques()) {
-							if (hasDelayedRefactoring(commitInitial.getCommitId(), classBuscar.getNomeClasse(), targetTefactoringTypes)) {
-								ignorePrediction = true;
-								ignoredPredictionCount++;
+						if (this.getMethodRenameRefactoringTypes().contains(methodRefactored.getRefactoringType())) {
+							if ((dateCommitRenamed == null) || (dateCommitRenamed != null
+								&& dateCommitRenamed.compareTo(methodRefactored.getCommitDate()) < 0)) {
+							renamedMethod = true;
+							dateCommitRenamed = methodRefactored.getCommitDate();
+							methodRenamedName = extrairNomeMetodo(methodRefactored.getRightSide());
 							}
 						}
-					}
-					 */
-							
-					if (!ignorePrediction) {
-						confusionMatrices.incTrueNegativeForAllTechniquesOutOfRound();
-						writeNegativeToCsvFiles(methodBuscar);
+					
 					}
 				}
-		//	}
+				if (renamedMethod) {
+					methodBuscar.setNomeMetodo(methodRenamedName);
+				} else {
+					dateCommitRenamed = null;
+				}
+			} while (renamedMethod && !refactoredMethod);
+		
+			if (!refactoredMethod) {
+				writeNegativeToCsvFiles(methodBuscar);
+			}
+			predictionRound.setFalseForAllOutOfRound();
+			confusionMatrices.processPredictionRound(predictionRound);
 		}
 	}
 	

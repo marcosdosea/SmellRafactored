@@ -6,9 +6,11 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 import org.designroleminer.smelldetector.model.ClassDataSmelly;
 import org.designroleminer.smelldetector.model.FilterSmellResult;
+import org.designroleminer.smelldetector.model.LimiarTecnica;
 import org.refactoringminer.api.RefactoringType;
 import org.repodriller.persistence.PersistenceMechanism;
 import org.repodriller.persistence.csv.CSVFile;
@@ -16,10 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SmellRefactoredClass {
-
-	private String[] TECHNIQUES = {"A", "V", "X", "R", "D"};
-
-	boolean ignorePredictionForDelayedRefactorings = false;
 
 	private HashSet<String> getLongClassRefactoringTypes() {
 		HashSet<String> refactoringTypes = new HashSet<String>();
@@ -156,10 +154,10 @@ public class SmellRefactoredClass {
 			pmResultSmellRefactoredClassesMachineLearning.write("DesignRole", "CLOC", "isRefactoring", "Refactoring");
 
 			
-			evaluateSmellChangeClass(smellsCommitInitial, listRefactoringMergedIntoMaster, ClassDataSmelly.LONG_CLASS, this.getLongClassRefactoringTypes(), ignorePredictionForDelayedRefactorings);
+			evaluateSmellChangeClass(smellsCommitInitial, listRefactoringMergedIntoMaster, ClassDataSmelly.LONG_CLASS, this.getLongClassRefactoringTypes());
 			if (this.getLongClassRefactoringTypes().size() > 1) {
 				for (String longClassRefactoringType : this.getLongClassRefactoringTypes()) {
-					evaluateSmellChangeClass(smellsCommitInitial, listRefactoringMergedIntoMaster, ClassDataSmelly.LONG_CLASS, new HashSet<String>(Arrays.asList(longClassRefactoringType)), ignorePredictionForDelayedRefactorings);
+					evaluateSmellChangeClass(smellsCommitInitial, listRefactoringMergedIntoMaster, ClassDataSmelly.LONG_CLASS, new HashSet<String>(Arrays.asList(longClassRefactoringType)));
 				}
 			}
 			
@@ -169,10 +167,10 @@ public class SmellRefactoredClass {
 	}
 
 	
-	private void evaluateSmellChangeClass(FilterSmellResult commitInitial, ArrayList<RefactoringData> listRefactoring, String typeSmell, HashSet<String> targetTefactoringTypes, boolean ignorePredictionForDelayedRefactorings) throws Exception {
+	private void evaluateSmellChangeClass(FilterSmellResult commitInitial, ArrayList<RefactoringData> listRefactoring, String typeSmell, HashSet<String> targetTefactoringTypes) throws Exception {
 
 
-		ConfusionMatrixTechniques confusionMatrices = new ConfusionMatrixTechniques(typeSmell + " " + targetTefactoringTypes.toString(), TECHNIQUES);
+		ConfusionMatrixPredictors confusionMatrices = new ConfusionMatrixPredictors(typeSmell + " " + targetTefactoringTypes.toString(), this.commitSmell.getTechniquesThresholds().keySet());
 	
 		// TP
 		computeTruePositive(listRefactoring, typeSmell, targetTefactoringTypes, confusionMatrices);
@@ -186,22 +184,15 @@ public class SmellRefactoredClass {
 		
 		
 		int realPositive = SmellRefactoredManager.countRealPositive(refactoringsCounter, targetTefactoringTypes);
-		confusionMatrices.setRealPositiveValidation(realPositive);
-		
-		// int predictionCount = countPrediction(commitInitial, typeSmell);
-		// confusionMatrices.setPredictionCountValidation(predictionCount);
-		for (String technique : TECHNIQUES) {
-			int positivePredictionCount = countPositivePredictionForTechnique(commitInitial, typeSmell, technique);
-			confusionMatrices.addSubtitle("Positive Prediction (" + technique + ") = , " + positivePredictionCount);
-		}
-		
+		confusionMatrices.setValidationRealPositive(realPositive);
+
 		pmResultEvaluationClass.write("");
 		confusionMatrices.writeToCsvFile(pmResultEvaluationClass);
 	}
 
 	
 	private void computeFalsePositive(FilterSmellResult commitInitial, ArrayList<RefactoringData> listRefactoring,
-			String typeSmell, HashSet<String> targetTefactoringTypes, ConfusionMatrixTechniques confusionMatrices)
+			String typeSmell, HashSet<String> targetTefactoringTypes, ConfusionMatrixPredictors confusionMatrices)
 			throws Exception {
 		for (ClassDataSmelly classSmelly : commitInitial.getClassesSmell()) {
 
@@ -209,7 +200,8 @@ public class SmellRefactoredClass {
 				ClassDataSmelly classSmellyBuscar = classSmelly;
 				boolean renamedClass = false;
 				Date dateCommitRenamed = null;
-				confusionMatrices.resetRound();
+				PredictionRound predictionRound = confusionMatrices.newRound();
+				predictionRound.setDefaultCondition(false);
 				do {
 					renamedClass = false;
 					String classRenamedName = null;
@@ -222,7 +214,8 @@ public class SmellRefactoredClass {
 							if (targetTefactoringTypes.contains(refactoring.getRefactoringType())) {
 								ClassDataSmelly classSmell = obterSmellPreviousCommit(refactoring.getCommit(), classSmellyBuscar.getNomeClasse(), typeSmell);
 								if (classSmell != null) { // && classSmellyBuscar.getCommit()
-									confusionMatrices.putInRoundWithoutInc(classSmell.getListaTecnicas());
+									predictionRound.setCondition(true);
+									predictionRound.setNullIfOutOfRound(classSmell.getListaTecnicas());
 									writeTruePositiveToCsvFiles(refactoring, classSmell);
 								}
 							}
@@ -242,12 +235,14 @@ public class SmellRefactoredClass {
 					} else {
 						dateCommitRenamed = null;
 					}
-				} while (renamedClass && confusionMatrices.hasTechniqueOutOfRound());
+				} while (renamedClass && predictionRound.isAnyoneOutOfRound() );
 				
-				confusionMatrices.incFalsePositiveIfOutOfRound(classSmellyBuscar.getListaTecnicas());
-				if (confusionMatrices.hasTechniqueOutOfRound()) {
-					writeNegativeToCsvFiles(classSmellyBuscar);
+				predictionRound.setTrueIfOutOfRound(classSmellyBuscar.getListaTecnicas());
+				if (predictionRound.isAnyoneOutOfRound()) {
+				 	writeNegativeToCsvFiles(classSmellyBuscar);
 				}
+				predictionRound.setNullForAllOutOfRound();
+				confusionMatrices.processPredictionRound(predictionRound);
 				
 			}
 		}
@@ -259,13 +254,14 @@ public class SmellRefactoredClass {
 	
 	
 	private void computeTrueNegativeCommon(FilterSmellResult commitInitial, ArrayList<RefactoringData> listRefactoring,
-			String smellType, HashSet<String> targetTefactoringTypes, ConfusionMatrixTechniques confusionMatrices) throws Exception {
+			String smellType, HashSet<String> targetTefactoringTypes, ConfusionMatrixPredictors confusionMatrices) throws Exception {
 		for (ClassDataSmelly classNotSmelly : commitInitial.getClassesNotSmelly()) {
 			ClassDataSmelly classBuscar = classNotSmelly;
 			boolean renamedClass = false;
 			boolean refactoredClass = false;
 			Date dateCommitRenamed = null;
-			confusionMatrices.resetRound();
+			PredictionRound predictionRound = confusionMatrices.newRound();
+			predictionRound.setDefaultCondition(false);
 			do {
 				renamedClass = false;
 				String classRenamedName = null;
@@ -279,9 +275,8 @@ public class SmellRefactoredClass {
 							ClassDataSmelly classSmell = obterSmellPreviousCommit(refactoring.getCommit(), classBuscar.getNomeClasse(), smellType);
 							if (classSmell != null) {
 								logger.info("False Negative" + refactoring.getRefactoringType() + ": " + classBuscar.getNomeClasse() + " to " + classRenamedName);
-								// confusionMatrices.incFalseNegativeForAllTechniquesOutOfRound();
-								confusionMatrices.putInRoundWithoutInc(classSmell.getListaTecnicas());
-								confusionMatrices.incTrueNegativeForAllTechniquesOutOfRoundExcept(classSmell.getListaTecnicas());
+								predictionRound.setCondition(true);
+								predictionRound.setNullIfOutOfRound(classSmell.getListaTecnicas());
 								refactoredClass = true;
 								writeFalseNegativeToCsvFiles(refactoring, classSmell);
 								//break;
@@ -306,13 +301,14 @@ public class SmellRefactoredClass {
 			} while (renamedClass && !refactoredClass);
 		
 			if (!refactoredClass) {
-				confusionMatrices.incTrueNegativeForAllTechniquesOutOfRound();
+				predictionRound.setFalseForAllOutOfRound();
 				writeNegativeToCsvFiles(classBuscar);
 			}
+			confusionMatrices.processPredictionRound(predictionRound);
 		}
 	}
 	private void computeTrueNegativeIndividual(FilterSmellResult commitInitial, ArrayList<RefactoringData> listRefactoring,
-			String typeSmell, HashSet<String> targetTefactoringTypes, ConfusionMatrixTechniques confusionMatrices)
+			String typeSmell, HashSet<String> targetTefactoringTypes, ConfusionMatrixPredictors confusionMatrices)
 			throws Exception {
 		for (ClassDataSmelly classSmelly : commitInitial.getClassesSmell()) {
 
@@ -320,7 +316,8 @@ public class SmellRefactoredClass {
 				ClassDataSmelly classSmellyBuscar = classSmelly;
 				boolean renamedClass = false;
 				Date dateCommitRenamed = null;
-				confusionMatrices.resetRound();
+				PredictionRound predictionRound = confusionMatrices.newRound();
+				predictionRound.setDefaultCondition(false);
 				do {
 					renamedClass = false;
 					String classRenamedName = null;
@@ -333,8 +330,9 @@ public class SmellRefactoredClass {
 							if (targetTefactoringTypes.contains(refactoring.getRefactoringType())) {
 								ClassDataSmelly classSmell = obterSmellPreviousCommit(refactoring.getCommit(), classSmellyBuscar.getNomeClasse(), typeSmell);
 								if (classSmell != null) {
-									confusionMatrices.putInRoundWithoutInc(classSmell.getListaTecnicas()); // confusionMatrices.incTruePositiveIfOutOfRound(classSmell.getListaTecnicas());
-									confusionMatrices.putAllTechniquesInRoundWithoutIncExcept(classSmell.getListaTecnicas()); // confusionMatrices.incFalseNegativeForAllTechniquesOutOfRoundExcept(classSmell.getListaTecnicas());
+									predictionRound.setCondition(true);
+									predictionRound.setNull(classSmell.getListaTecnicas());
+									predictionRound.setNullAllExcept(classSmell.getListaTecnicas());
 									writeTruePositiveToCsvFiles(refactoring, classSmell);
 								}
 							}
@@ -354,13 +352,14 @@ public class SmellRefactoredClass {
 					} else {
 						dateCommitRenamed = null;
 					}
-				} while (renamedClass && confusionMatrices.hasTechniqueOutOfRound());
+				} while (renamedClass && predictionRound.isAnyoneInRound());
 				
-				confusionMatrices.putInRoundWithoutInc(classSmellyBuscar.getListaTecnicas()); // confusionMatrices.incFalsePositiveIfOutOfRound(classSmellyBuscar.getListaTecnicas());
-				confusionMatrices.incTrueNegativeForAllTechniquesOutOfRoundExcept(classSmellyBuscar.getListaTecnicas());
-				if (confusionMatrices.hasTechniqueOutOfRound()) {
+				predictionRound.setNullIfOutOfRound(classSmellyBuscar.getListaTecnicas());
+				predictionRound.setFalseForAllOutOfRound();
+				if (predictionRound.isAnyoneOutOfRound()) {
 					writeNegativeToCsvFiles(classSmellyBuscar);
 				}
+				confusionMatrices.processPredictionRound(predictionRound);
 				
 			}
 		}
@@ -368,39 +367,43 @@ public class SmellRefactoredClass {
 	
 	
 	private void computeTruePositive(ArrayList<RefactoringData> listRefactoring, String typeSmell,
-			HashSet<String> targetTefactoringTypes, ConfusionMatrixTechniques confusionMatrices) {
+			HashSet<String> targetTefactoringTypes, ConfusionMatrixPredictors confusionMatrices) throws Exception {
 		for (RefactoringData refactoring : listRefactoring) {
 			if ( (!this.getClassRenameRefactoringTypes().contains(refactoring.getRefactoringType())) && (!targetTefactoringTypes.contains(refactoring.getRefactoringType())) ) {
 				continue;
 			}
+			PredictionRound predictionRound = confusionMatrices.newRound();
+			predictionRound.setCondition(true);
 			if (targetTefactoringTypes.contains(refactoring.getRefactoringType())) {
 				ClassDataSmelly classSmell = obterSmellPreviousCommit(refactoring.getCommit(), refactoring.getNomeClasse(), typeSmell);
 				if (classSmell != null) {
-					confusionMatrices.incTruePositiveForTechniques(classSmell.getListaTecnicas());
+					predictionRound.setTrue(classSmell.getListaTecnicas());
 					writeTruePositiveToCsvFiles(refactoring, classSmell);
 				}
 			}
+			predictionRound.setNullForAllOutOfRound();
+			confusionMatrices.processPredictionRound(predictionRound);
 		}
 	}
 	private void computeFalseNegative(ArrayList<RefactoringData> listRefactoring, String typeSmell,
-			HashSet<String> targetTefactoringTypes, ConfusionMatrixTechniques confusionMatrices) {
+			HashSet<String> targetTefactoringTypes, ConfusionMatrixPredictors confusionMatrices) throws Exception {
 		for (RefactoringData refactoring : listRefactoring) {
 			if ( (!this.getClassRenameRefactoringTypes().contains(refactoring.getRefactoringType())) && (!targetTefactoringTypes.contains(refactoring.getRefactoringType())) ) {
 				continue;
 			}
-			confusionMatrices.resetRound();
+			PredictionRound predictionRound = confusionMatrices.newRound();
+			predictionRound.setCondition(true);
 			if (targetTefactoringTypes.contains(refactoring.getRefactoringType())) {
 				ClassDataSmelly classSmell = obterSmellPreviousCommit(refactoring.getCommit(), refactoring.getNomeClasse(), typeSmell);
 				if (classSmell != null) {
-					confusionMatrices.putInRoundWithoutInc(classSmell.getListaTecnicas());
-					confusionMatrices.incFalseNegativeForAllTechniquesOutOfRound();
-					// confusionMatrices.incTruePositiveForTechniques(classSmell.getListaTecnicas());
-					// writeTruePositiveToCsvFiles(refactoring, classSmell);
+					predictionRound.setNull(classSmell.getListaTecnicas());
+					predictionRound.setFalseForAllOutOfRound();
 				} else {
-					confusionMatrices.incFalseNegativeForAllTechniquesOutOfRound();
-					// writeFalseNegativeToCsvFiles(refactoring);
+					predictionRound.setFalseForAllOutOfRound();
 				}
 			}
+			predictionRound.setNullForAllOutOfRound();
+			confusionMatrices.processPredictionRound(predictionRound);
 		}
 	}
 	
@@ -458,19 +461,6 @@ public class SmellRefactoredClass {
 			"");
 		pmResultSmellRefactoredClassesMachineLearning.write(classBuscar.getClassDesignRole(),
 			classBuscar.getLinesOfCode(), "false", "");
-	}
-	
-	
-	private static int countPositivePredictionForTechnique(FilterSmellResult commitInitial, String smellType, String technique) {
-		int positivePrediction = 0; 
-		for (ClassDataSmelly classSmelly : commitInitial.getClassesSmell()) {
-			if (classSmelly.getSmell().contains(smellType)) {
-				if (classSmelly.getListaTecnicas().contains(technique)) {
-					positivePrediction++;
-				}
-			}
-		}
-		return positivePrediction;
 	}
 	
 }
