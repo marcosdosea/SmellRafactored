@@ -43,7 +43,7 @@ public class CommitSmell {
 		pmResultSmellRefactoredCommit = new CSVFile(resultFileName + "-smellRefactored-commit.csv", false);
 	}
 	
-	public FilterSmellResult obterSmellsPreviousCommit(String commitId) throws Exception {
+	public FilterSmellResult obterSmellsPreviousCommit(String commitId) {
 		CommitData previousCommit = null;
 		boolean achouCommit = false;
 		for (CommitData commit : commitsWithRefactoringMergedIntoMaster) {
@@ -53,11 +53,15 @@ public class CommitSmell {
 				break;
 			}
 		}
-		FilterSmellResult smellsPreviousCommit;
-		if (achouCommit) {
-			smellsPreviousCommit = obterSmellsCommit(previousCommit.getId());
-		} else {
-			smellsPreviousCommit = obterSmellsCommit(commitId);
+		FilterSmellResult smellsPreviousCommit = null;
+		try {
+			if (achouCommit) {
+				smellsPreviousCommit = obterSmellsCommit(previousCommit.getId());
+			} else {
+				smellsPreviousCommit = obterSmellsCommit(commitId);
+			}
+		} catch (Exception e) {
+			logger.info(e.getMessage());
 		}
 		return smellsPreviousCommit;
 	}

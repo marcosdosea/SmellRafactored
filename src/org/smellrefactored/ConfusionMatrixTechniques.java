@@ -34,6 +34,9 @@ public class ConfusionMatrixTechniques {
 		this.subtitles.add(subtitle);
 	}
 	
+	
+	
+	
 	public void resetRound() {
 		techniquesInRound.clear();
 	}
@@ -56,6 +59,15 @@ public class ConfusionMatrixTechniques {
 		}
 	}
 	
+	public void incFalsePositiveForAllTechniqueOutOfRound() {
+		for (String technique: confusionMatrices.keySet()) {
+			if (!techniquesInRound.contains(technique)) {
+				techniquesInRound.add(technique);
+				confusionMatrices.get(technique).incFalsePositive();
+			}
+		}
+	}
+	
 	public void incTrueNegativeForAllTechniquesOutOfRoundExcept(HashSet<String> exceptTechniques) {
 		for (String technique: confusionMatrices.keySet()) {
 			if (!techniquesInRound.contains(technique)) {
@@ -66,6 +78,17 @@ public class ConfusionMatrixTechniques {
 			}
 		}
 	}
+	
+	
+	public void incTrueNegativeForAllTechniquesOutOfRound() {
+		for (String technique: confusionMatrices.keySet()) {
+			if (!techniquesInRound.contains(technique)) {
+				techniquesInRound.add(technique);
+				confusionMatrices.get(technique).incTrueNegative();
+			}
+		}
+	}
+
 	
 	public void incFalseNegativeForAllTechniquesOutOfRoundExcept(HashSet<String> exceptTechniques) {
 		for (String technique: confusionMatrices.keySet()) {
@@ -78,15 +101,44 @@ public class ConfusionMatrixTechniques {
 		}
 	}
 	
-	/*
-	public void putInRound(HashSet<String> techniques) {
-		for (String technique: techniques) {
+
+	public void incFalseNegativeForAllTechniquesOutOfRound() {
+		for (String technique: confusionMatrices.keySet()) {
 			if (!techniquesInRound.contains(technique)) {
-					techniquesInRound.add(technique);
+				techniquesInRound.add(technique);
+				confusionMatrices.get(technique).incFalseNegative();
 			}
 		}
 	}
-	*/
+
+	
+	public boolean hasTechniqueOutOfRound() {
+		return (confusionMatrices.size() > 0) && (techniquesInRound.size() < confusionMatrices.size());
+	}
+
+	public boolean hasTechniqueInRound() {
+		return (techniquesInRound.size() > 0);
+	}
+
+	
+	public void putInRoundWithoutInc(HashSet<String> techniques) {
+		for (String technique: techniques) {
+			if (!techniquesInRound.contains(technique)) {
+				techniquesInRound.add(technique);
+			}
+		}
+	}
+	
+	public void putAllTechniquesInRoundWithoutIncExcept(HashSet<String> exceptTechniques) {
+		for (String technique: confusionMatrices.keySet()) {
+			if (!techniquesInRound.contains(technique)) {
+				if (!exceptTechniques.contains(technique)) {
+					techniquesInRound.add(technique);
+				}
+			}
+		}
+	}
+	
 	
 	public void incFalseNegativeForAllTechniques() {
 		commonFalseNegative++;
@@ -102,14 +154,35 @@ public class ConfusionMatrixTechniques {
 		}
 	}
 	
-	public boolean hasTechniqueOutOfRound() {
-		return (confusionMatrices.size() > 0) && (techniquesInRound.size() < confusionMatrices.size());
+	public void incTruePositiveForTechniques(HashSet<String> techniques) {
+		for (String technique: techniques) {
+			confusionMatrices.get(technique).incTruePositive();
+		}
 	}
 
-	public boolean hasTechniqueInRound() {
-		return (techniquesInRound.size() > 0);
+	public void incFalseNegativeForAllTechniquesExcept(HashSet<String> exceptTechniques) {
+		for (String technique: confusionMatrices.keySet()) {
+			if (!exceptTechniques.contains(technique)) {
+				confusionMatrices.get(technique).incFalseNegative();
+			}
+		}
+	}
+	
+	public void incFalsePositiveForTechniques(HashSet<String> techniques) {
+		for (String technique: techniques) {
+			confusionMatrices.get(technique).incFalsePositive();
+		}
 	}
 
+		
+	public void incTrueNegativeForAllTechniquesExcept(HashSet<String> exceptTechniques) {
+		for (String technique: confusionMatrices.keySet()) {
+			if (!exceptTechniques.contains(technique)) {
+				confusionMatrices.get(technique).incTrueNegative();
+			}
+		}
+	}
+	
 	public void setRealPositiveValidation(float value) {
 		this.realPositiveValidation = value;
 	}
@@ -131,19 +204,21 @@ public class ConfusionMatrixTechniques {
 				persistenceMechanism.write("Warning (" + technique + ") = ", "Real positive(" + confusionMatrices.get(technique).getRealPositive() + ") differ from expected(" + this.realPositiveValidation + ").");
 			}
 		}
-		/* Conferir resultado da contagem de preditivos negativos
+		// Conferir resultado da contagem de preditivos negativos
 		for (String technique: confusionMatrices.keySet()) {
 			if ( (this.preditiveValidation!=null) && ( (confusionMatrices.get(technique).getPredictedPositive() + confusionMatrices.get(technique).getPredictedNegative()) != this.preditiveValidation) ) {
 				float predictionCount = confusionMatrices.get(technique).getPredictedPositive() + confusionMatrices.get(technique).getPredictedNegative();
 				persistenceMechanism.write("Warning (" + technique + ") = ", "Prediction count (" + predictionCount + ") differ from expected(" + this.preditiveValidation + ").");
 			}
 		}
-		*/
 
 		
-		
-		persistenceMechanism.write("Common True Negative = ", commonTrueNegative);
-		persistenceMechanism.write("Common False Negative = ", commonFalseNegative);
+		if (commonTrueNegative > 0) {
+			persistenceMechanism.write("Common True Negative = ", commonTrueNegative);
+		}
+		if (commonFalseNegative > 0) {
+			persistenceMechanism.write("Common False Negative = ", commonFalseNegative);
+		}
 
 		for (String technique: confusionMatrices.keySet()) {
 			persistenceMechanism.write("Sample Size (" + technique + ") = ", confusionMatrices.get(technique).getSampleSize());
