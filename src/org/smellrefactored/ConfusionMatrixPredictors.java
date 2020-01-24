@@ -19,7 +19,7 @@ public class ConfusionMatrixPredictors {
 	private LinkedHashMap<String, ConfusionMatrix> confusionMatrices;
 	private PredictionRound predictionRound = null;
 
-	private String validationMessagePrefix = "WARNING: ";
+	private String validationMessagePrefix = "? ";
 	private Integer validationRealPositive = null;
 	private Integer validationPreditive = null;
 	private LinkedHashMap<String, Integer> validationPositivePrediction = new LinkedHashMap<String, Integer>();
@@ -248,6 +248,8 @@ public class ConfusionMatrixPredictors {
 	
 	
 	
+	
+	
 	public void writeToCsvFile(PersistenceMechanism persistenceMechanism) {
 		
 		persistenceMechanism.write(title.toUpperCase());
@@ -271,7 +273,11 @@ public class ConfusionMatrixPredictors {
 			persistenceMechanism.write("Common False Negative = ", commonFalseNegative);
 		}
 
-		
+		/*
+		for (String predictor: confusionMatrices.keySet()) {
+			persistenceMechanism.write("Predicted Size (" + predictor + ") = ", confusionMatrices.get(predictor).getPredictedSize() );
+		}
+		*/
 		
 		for (String predictor: confusionMatrices.keySet()) {
 			persistenceMechanism.write("Sample Size (" + predictor + ") = ", confusionMatrices.get(predictor).getSampleSize() );

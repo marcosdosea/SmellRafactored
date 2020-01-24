@@ -67,7 +67,7 @@ public class SmellRefactoredManager {
 		gitService = new GitServiceImpl();
 		commitsWithRefactoringMergedIntoMaster = new ArrayList<CommitData>();
 
-		fileRefactoringName = resultFileName + "-refactoring.csv";
+		fileRefactoringName = resultFileName + "-refactoring-" + initialCommit + "-" + finalCommit + ".csv";
 		
 		prepareSmellRefactored();
 	}

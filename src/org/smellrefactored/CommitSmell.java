@@ -66,7 +66,7 @@ public class CommitSmell {
 			if (achouCommit) {
 				smellsPreviousCommit = obterSmellsCommit(previousCommit.getId());
 			} else {
-				smellsPreviousCommit = obterSmellsCommit(commitId);
+				// smellsPreviousCommit = obterSmellsCommit(commitId);
 			}
 		} catch (Exception e) {
 			logger.info(e.getMessage());
