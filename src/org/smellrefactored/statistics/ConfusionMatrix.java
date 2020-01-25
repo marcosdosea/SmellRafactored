@@ -1,4 +1,4 @@
-package org.smellrefactored;
+package org.smellrefactored.statistics;
 
 public class ConfusionMatrix {
 

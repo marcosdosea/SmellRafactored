@@ -1,4 +1,4 @@
-package org.smellrefactored;
+package org.smellrefactored.statistics;
 
 import java.util.ArrayList;
 import java.util.HashSet;

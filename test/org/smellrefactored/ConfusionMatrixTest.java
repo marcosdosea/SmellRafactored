@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.smellrefactored.statistics.ConfusionMatrix;
 
 public class ConfusionMatrixTest {
 

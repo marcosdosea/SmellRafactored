@@ -14,6 +14,8 @@ import org.repodriller.persistence.PersistenceMechanism;
 import org.repodriller.persistence.csv.CSVFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smellrefactored.statistics.ConfusionMatrixPredictors;
+import org.smellrefactored.statistics.PredictionRound;
 
 public class SmellRefactoredMethod {
 

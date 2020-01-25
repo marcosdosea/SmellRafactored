@@ -6,16 +6,16 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 
 import org.designroleminer.smelldetector.model.ClassDataSmelly;
 import org.designroleminer.smelldetector.model.FilterSmellResult;
-import org.designroleminer.smelldetector.model.LimiarTecnica;
 import org.refactoringminer.api.RefactoringType;
 import org.repodriller.persistence.PersistenceMechanism;
 import org.repodriller.persistence.csv.CSVFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smellrefactored.statistics.ConfusionMatrixPredictors;
+import org.smellrefactored.statistics.PredictionRound;
 
 public class SmellRefactoredClass {
 

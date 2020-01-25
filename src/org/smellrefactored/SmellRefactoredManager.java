@@ -24,6 +24,8 @@ import org.refactoringminer.api.GitService;
 import org.refactoringminer.util.GitServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smellrefactored.refactoringminer.wrapper.RefactoringMinerWrapperManager;
+import org.smellrefactored.refactoringminer.wrapper.RefactoringMinerWrapperDto;
 
 public class SmellRefactoredManager {
 
@@ -67,9 +69,15 @@ public class SmellRefactoredManager {
 
 	private void prepareSmellRefactored() throws Exception {
 		
-		RefactoringMinerWrapper refactoringMinerWrapper = new RefactoringMinerWrapper(urlRepository, localFolder, initialCommit, finalCommit, resultBaseFileName);
-		listRefactoring = refactoringMinerWrapper.getListRefactoring();
-		HashSet<String> commitsWithRefactorings = refactoringMinerWrapper.getCommitsWithRefactorings();
+		RefactoringMinerWrapperManager refactoringMinerWrapperManager = new RefactoringMinerWrapperManager(urlRepository, localFolder, initialCommit, finalCommit, resultBaseFileName);
+
+		// List<RefactoringMinerWrapperDto> refactoringDtoList = refactoringMinerWrapperManager.getRefactoringDtoListWithoutCache();
+		// List<RefactoringMinerWrapperDto> refactoringDtoList = refactoringMinerWrapperManager.getRefactoringDtoListUsingCsvCache();
+		List<RefactoringMinerWrapperDto> refactoringDtoList = refactoringMinerWrapperManager.getRefactoringDtoListUsingJsonCache();
+
+		listRefactoring = getRefactoringDataListFromRefactoringList(refactoringDtoList);
+		HashSet<String> commitsWithRefactorings = refactoringMinerWrapperManager.getCommitsWithRefactoringsFromRefactoringList(refactoringDtoList);
+
 		logger.info("Total de refactorings encontrados: " + listRefactoring.size());
 		
 		
@@ -80,6 +88,8 @@ public class SmellRefactoredManager {
 		commitSmell = new CommitSmell(gitService, repo, commitsWithRefactoringMergedIntoMaster, localFolder, listaLimiarTecnica, resultBaseFileName);
 	}
 
+	
+	
 	private ArrayList<CommitData> getCommitsWithRefactoringMergedIntoMaster(HashSet<String> commitsWithRefactorings)
 			throws Exception, GitAPIException, NoHeadException, MissingObjectException, IncorrectObjectTypeException,
 			IOException, AmbiguousObjectException {
@@ -165,6 +175,87 @@ public class SmellRefactoredManager {
 		}
 		return realPositive;
 	}
+
+	
+	
+	
+	private ArrayList<RefactoringData> getRefactoringDataListFromRefactoringList(List<RefactoringMinerWrapperDto> refactoringDtoList) {
+		ArrayList<RefactoringData> refactoringDataList = new ArrayList<RefactoringData>(); 
+		for (RefactoringMinerWrapperDto refactoringDto : refactoringDtoList) {
+			if (refactoringDto != null) {
+				RefactoringData refactoringData = newRefactoringData(refactoringDto);
+				refactoringDataList.add(refactoringData);
+			}
+		}
+    return (refactoringDataList);
+	}
+	
+	private static RefactoringData newRefactoringData(RefactoringMinerWrapperDto refactoringDto) {
+		RefactoringData result = new RefactoringData();
+		result.setCommit(refactoringDto.commitId);
+		result.setRefactoringName(refactoringDto.name);
+		result.setRefactoringType(refactoringDto.type.toString());
+		if ( (refactoringDto.leftSide != null) && (refactoringDto.leftSide.size()>0) )  {
+			result.setLeftSide(refactoringDto.leftSide.get(0).getCodeElement());
+		}
+		if ( (refactoringDto.rightSide != null) && (refactoringDto.rightSide.size()>0) ) {
+			result.setRightSide(refactoringDto.rightSide.get(0).getCodeElement());
+		}
+		result.setInvolvedClassesBefore(refactoringDto.involvedClassesBefore.toString());
+		result.setInvolvedClassesAfter(refactoringDto.involvedClassesAfter.toString());
+		completRefactoringData(result);
+		return result;
+	}
+
+	
+	private static void completRefactoringData(RefactoringData result) {
+		if (result.getRefactoringType().contains("VARIABLE")) {
+			result.setNomeClasse(getClassNameFromInvolvedClassesBefore(result));
+		} else if (result.getRefactoringType().contains("ATTRIBUTE")) {
+			result.setNomeClasse(getClassNameFromInvolvedClassesBefore(result));
+		} else if (result.getRefactoringType().contains("PARAMETER")) {
+			result.setNomeClasse(getClassNameFromInvolvedClassesBefore(result));
+		} else if (result.getRefactoringType().contains("RETURN_TYPE")) {
+			result.setNomeClasse(getClassNameFromInvolvedClassesBefore(result));
+		} else if (result.getRefactoringType().contains("OPERATION")) {
+			result.setNomeClasse(getClassNameFromInvolvedClassesBefore(result));
+			result.setNomeMetodo(SmellRefactoredMethod.extrairNomeMetodo(result.getLeftSide()));
+		} else if (result.getRefactoringType().contains("METHOD")) {
+			result.setNomeClasse(getClassNameFromInvolvedClassesBefore(result));
+			result.setNomeMetodo(SmellRefactoredMethod.extrairNomeMetodo(result.getLeftSide()));
+		} else  if (result.getRefactoringType().contains("EXTRACT_SUPERCLASS")) {
+			result.setNomeClasse(result.getLeftSide());
+		} else if (result.getRefactoringType().contains("CLASS")) {
+			result.setNomeClasse(getClassNameFromInvolvedClassesBefore(result));
+		} else if (result.getRefactoringType().contains("PACKAGE")) {
+			/// @TODO: to implement
+		} else if (result.getRefactoringType().contains("FOLDER")) {
+			/// @TODO: to implement
+		}
+		if (result.getNomeClasse() == null) {
+			// logger.error("Classe Name is NULL (line:" + line[0] + ", " + line[1] + ", " + line[2] + ", " + line[3] + ", " + line[4] + ", " + line[5] + ", " + line[6] + ")");
+		}
+		if (result.getNomeClasse() != null) {
+			if (result.getNomeClasse() != "") {
+				result.setClassDesignRole( getDesignRoleByClassName( result.getNomeClasse()) );
+			}
+		}
+	}
+	
+	private static String getClassNameFromInvolvedClassesBefore(RefactoringData refactoringData) {
+		return refactoringData.getInvolvedClassesBefore().replace("[", "").replace("]", "");
+	}
+	
+	private static String getDesignRoleByClassName(String className) {
+		/// @TODO: refinar detecção de DesignRole 
+		// DesignRole designRole = new DesignRole();
+		String result = ""; /// = designRole.findDefaultDesignRole(className); // private method in DesignRole 
+		if (result=="") {
+			result = "Undefined";
+		}
+		return result.toUpperCase();
+	}
+	
 	
 	
 	

@@ -22,6 +22,8 @@ public class RefactoringData implements Comparable<RefactoringData> {
 	private String involvedClassesBefore;
 	private String shortMessage;
 	private String fullMessage;
+	
+	
 	private int numberOfClasses;
 	private int numberOfMethods;
 	private int systemLOC;
