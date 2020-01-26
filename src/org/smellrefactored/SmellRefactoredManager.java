@@ -29,6 +29,9 @@ import org.smellrefactored.refactoringminer.wrapper.RefactoringMinerWrapperDto;
 
 public class SmellRefactoredManager {
 
+	
+	final boolean USE_SMELLS_COMMIT_CACHE = false; 
+	
 	static Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
 
 	private String urlRepository;
@@ -72,7 +75,6 @@ public class SmellRefactoredManager {
 		RefactoringMinerWrapperManager refactoringMinerWrapperManager = new RefactoringMinerWrapperManager(urlRepository, localFolder, initialCommit, finalCommit, resultBaseFileName);
 
 		// List<RefactoringMinerWrapperDto> refactoringDtoList = refactoringMinerWrapperManager.getRefactoringDtoListWithoutCache();
-		// List<RefactoringMinerWrapperDto> refactoringDtoList = refactoringMinerWrapperManager.getRefactoringDtoListUsingCsvCache();
 		List<RefactoringMinerWrapperDto> refactoringDtoList = refactoringMinerWrapperManager.getRefactoringDtoListUsingJsonCache();
 
 		listRefactoring = getRefactoringDataListFromRefactoringList(refactoringDtoList);
@@ -86,11 +88,12 @@ public class SmellRefactoredManager {
 		ArrayList<CommitData> commitsWithRefactoringMergedIntoMaster = getCommitsWithRefactoringMergedIntoMaster(commitsWithRefactorings);
 
 		commitSmell = new CommitSmell(gitService, repo, commitsWithRefactoringMergedIntoMaster, localFolder, listaLimiarTecnica, resultBaseFileName);
+		commitSmell.useCache(USE_SMELLS_COMMIT_CACHE); 
 	}
 
 	
 	
-	private ArrayList<CommitData> getCommitsWithRefactoringMergedIntoMaster(HashSet<String> commitsWithRefactorings)
+	private ArrayList<CommitData> getCommitsWithRefactoringMergedIntoMaster(HashSet<String> refactoringCommitIds)
 			throws Exception, GitAPIException, NoHeadException, MissingObjectException, IncorrectObjectTypeException,
 			IOException, AmbiguousObjectException {
 		// Filtra os commits com refactoring cujo commit feito no master ou pull request
@@ -126,28 +129,52 @@ public class SmellRefactoredManager {
 		git.close();
 		
 		
-		// @TODO: Verificar: o código abaixo estava apenas implementado para análise de classes
-		ArrayList<CommitData> commitsWithRefactoringMergedIntoMaster = new ArrayList<CommitData>();
-		Collections.sort(commitsMergedIntoMaster);
+
 		Collections.sort(commitsNotMergedIntoMaster);
+		Collections.sort(commitsMergedIntoMaster);
+
+		
+		getChainedOrderedCommitsMergedIntoMaster();
+
+		
+		ArrayList<CommitData> commitsWithRefactoringMergedIntoMaster = commitsWithRefactoringMergedIntoMasterFromRefactoringCommitIds(
+				refactoringCommitIds);
+		
+		
+		return commitsWithRefactoringMergedIntoMaster;
+	}
+
+
+	private ArrayList<CommitData> commitsWithRefactoringMergedIntoMasterFromRefactoringCommitIds(
+			HashSet<String> refactoringCommitIds) {
+		ArrayList<CommitData> commitsWithRefactoringMergedIntoMaster = new ArrayList<CommitData>();
+		Iterator<CommitData> it = commitsMergedIntoMaster.iterator();
+		while (it.hasNext()) {
+			CommitData commit = it.next();
+			if (refactoringCommitIds.contains(commit.getId())) {
+				commitsWithRefactoringMergedIntoMaster.add(commit);
+			}
+		}
+		return commitsWithRefactoringMergedIntoMaster;
+	}
+
+
+	private void getChainedOrderedCommitsMergedIntoMaster() {
 		Iterator<CommitData> it = commitsMergedIntoMaster.iterator();
 		CommitData previousCommit = null;
 		while (it.hasNext()) {
 			CommitData commit = it.next();
 			commit.setPrevious(previousCommit);
-			previousCommit = new CommitData();
-			previousCommit.setDate(commit.getDate());
-			previousCommit.setFullMessage(commit.getFullMessage());
-			previousCommit.setShortMessage(commit.getShortMessage());
-			previousCommit.setId(commit.getId());
-			if (commitsWithRefactorings.contains(commit.getId())) {
-				commitsWithRefactoringMergedIntoMaster.add(commit);
+			if (previousCommit!=null) {
+				previousCommit.setNext(commit);
 			}
+			previousCommit = commit; 
 		}
-		// Fim do bloco de código a verificar
-		return commitsWithRefactoringMergedIntoMaster;
 	}
 
+	
+	
+	
 	
 	public void getSmellRefactoredMethods() {
 		try {
@@ -190,23 +217,33 @@ public class SmellRefactoredManager {
     return (refactoringDataList);
 	}
 	
-	private static RefactoringData newRefactoringData(RefactoringMinerWrapperDto refactoringDto) {
+	private RefactoringData newRefactoringData(RefactoringMinerWrapperDto refactoringDto) {
 		RefactoringData result = new RefactoringData();
 		result.setCommit(refactoringDto.commitId);
 		result.setRefactoringName(refactoringDto.name);
 		result.setRefactoringType(refactoringDto.type.toString());
 		if ( (refactoringDto.leftSide != null) && (refactoringDto.leftSide.size()>0) )  {
+			result.setFileNameBefore(makeFilePathCompatibleWithDesignRoleSmell(refactoringDto.leftSide.get(0).getFilePath()));
 			result.setLeftSide(refactoringDto.leftSide.get(0).getCodeElement());
 		}
 		if ( (refactoringDto.rightSide != null) && (refactoringDto.rightSide.size()>0) ) {
+			result.setFileNameAfter(makeFilePathCompatibleWithDesignRoleSmell(refactoringDto.rightSide.get(0).getFilePath()));
 			result.setRightSide(refactoringDto.rightSide.get(0).getCodeElement());
 		}
 		result.setInvolvedClassesBefore(refactoringDto.involvedClassesBefore.toString());
 		result.setInvolvedClassesAfter(refactoringDto.involvedClassesAfter.toString());
+
+		
 		completRefactoringData(result);
 		return result;
 	}
 
+	
+	private String makeFilePathCompatibleWithDesignRoleSmell(String filePath) {
+		String newFilePath = this.localFolder + "\\" + filePath.replace("/","\\");
+		newFilePath = newFilePath.replace("\\\\", "\\");
+		return (newFilePath);
+	}
 	
 	private static void completRefactoringData(RefactoringData result) {
 		if (result.getRefactoringType().contains("VARIABLE")) {

@@ -17,7 +17,7 @@ public class RefactoringMinerWrapperCacheJson implements RefactoringMinerWrapper
 	
 	public RefactoringMinerWrapperCacheJson(String resultBaseFileName) {
 		String fileRefactoringVersion = "1";
-		this.cacheFileName = resultBaseFileName + "-v" + fileRefactoringVersion + ".json";
+		this.cacheFileName = resultBaseFileName + "-cache-v" + fileRefactoringVersion + ".json";
 	}
 
 	public boolean hasCache() {
@@ -39,8 +39,8 @@ public class RefactoringMinerWrapperCacheJson implements RefactoringMinerWrapper
 		}
 		refactoringFileHandler.append("]");
 		refactoringFileHandler.close();
-		File tempfile =new File(fileRefactoringNameTemp);
-		File newfile =new File(this.cacheFileName);
+		File tempfile = new File(fileRefactoringNameTemp);
+		File newfile = new File(this.cacheFileName);
 		tempfile.renameTo(newfile);
 	}
 

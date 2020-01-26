@@ -55,17 +55,6 @@ public class RefactoringMinerWrapperManager {
 		return (refactoringDtoList);
 	}
 
-	public List<RefactoringMinerWrapperDto> getRefactoringDtoListUsingCsvCache() throws Exception {
-		List<RefactoringMinerWrapperDto> refactoringDtoList;
-		RefactoringMinerWrapperCacheCsv cacheCsv = new RefactoringMinerWrapperCacheCsv(resultBaseFileName);
-		if (!cacheCsv.hasCache()) {
-			refactoringDtoList = this.getRefactoringDtoListFromRefactoringMiner();
-			cacheCsv.saveRefactoringDtoListToFile(refactoringDtoList);
-		}
-		refactoringDtoList = cacheCsv.getRefactoringDtoListFromFile();
-		return (refactoringDtoList);
-	}
-
 	private List<RefactoringMinerWrapperDto> getRefactoringDtoListFromRefactoringMiner() throws Exception {
 		final List<RefactoringMinerWrapperDto> refactoringDtoList = new ArrayList<RefactoringMinerWrapperDto>();
 		GitHistoryRefactoringMiner miner = new GitHistoryRefactoringMinerImpl();
