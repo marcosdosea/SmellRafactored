@@ -1,0 +1,561 @@
+RELATORIO COMPLETO SISTEMA
+Numero de Refatoracoes em Metodos e Nao Metodos:,1560
+Numero de Refatoracoes relacionadas a operacoes em Metodos:,479,"[EXTRACT_OPERATION, PUSH_DOWN_OPERATION, MOVE_CLASS, MOVE_OPERATION, RENAME_CLASS, MOVE_AND_INLINE_OPERATION, MOVE_RENAME_CLASS, EXTRACT_AND_MOVE_OPERATION, PULL_UP_OPERATION, MOVE_AND_RENAME_OPERATION, CHANGE_METHOD_SIGNATURE, RENAME_METHOD]"
+Numero de Refatoracoes relacionadas a rename em Classes:,202,"[MOVE_CLASS, RENAME_CLASS, MOVE_RENAME_CLASS]"
+Numero de Refatoracoes relacionadas a rename em Metodos:,211,"[PUSH_DOWN_OPERATION, MOVE_OPERATION, MOVE_AND_INLINE_OPERATION, EXTRACT_AND_MOVE_OPERATION, PULL_UP_OPERATION, MOVE_AND_RENAME_OPERATION, RENAME_METHOD]"
+Numero de refatoracoes relacionadas a Metodo Longo:,66,[EXTRACT_OPERATION]
+Numero de refatoracoes relacionadas a Muitos Desvios:,66,[EXTRACT_OPERATION]
+Numero de refatoracoes relacionadas a Alto Acoplamento Efferent:,113,"[EXTRACT_OPERATION, MOVE_OPERATION, MOVE_AND_RENAME_OPERATION]"
+Numero de refatoracoes relacionadas a Muitos Parametros:,66,"[EXTRACT_OPERATION, CHANGE_METHOD_SIGNATURE]"
+Numero de refatoracoes do tipo EXTRACT_OPERATION:,66
+Numero de refatoracoes do tipo PUSH_DOWN_OPERATION:,0
+Numero de refatoracoes do tipo MOVE_CLASS:,120
+Numero de refatoracoes do tipo MOVE_OPERATION:,37
+Numero de refatoracoes do tipo RENAME_CLASS:,33
+Numero de refatoracoes do tipo MOVE_AND_INLINE_OPERATION:,1
+Numero de refatoracoes do tipo MOVE_RENAME_CLASS:,49
+Numero de refatoracoes do tipo EXTRACT_AND_MOVE_OPERATION:,10
+Numero de refatoracoes do tipo PULL_UP_OPERATION:,3
+Numero de refatoracoes do tipo MOVE_AND_RENAME_OPERATION:,10
+Numero de refatoracoes do tipo CHANGE_METHOD_SIGNATURE:,0
+Numero de refatoracoes do tipo RENAME_METHOD:,150
+Numero Metodos Smell Commit Inicial:,435
+Numero Metodos NOT Smell Commit Inicial:,1747
+
+METODO LONGO [EXTRACT_OPERATION]
+? Positive Predictions (V) found differ from expected,99,80
+? Positive Predictions (X) found differ from expected,12,11
+? Positive Predictions (D) found differ from expected,17,14
+Sample Size (A) = ,1893
+Sample Size (V) = ,1893
+Sample Size (X) = ,1893
+Sample Size (D) = ,1893
+Sample Size (R) = ,1893
+True Negative (A) = ,1816
+True Negative (V) = ,1747
+True Negative (X) = ,1816
+True Negative (D) = ,1813
+True Negative (R) = ,1816
+False Negative (A) = ,66
+False Negative (V) = ,47
+False Negative (X) = ,65
+False Negative (D) = ,63
+False Negative (R) = ,66
+True Positive (A) = ,0
+True Positive (V) = ,19
+True Positive (X) = ,1
+True Positive (D) = ,3
+True Positive (R) = ,0
+False Positive (A) = ,11
+False Positive (V) = ,80
+False Positive (X) = ,11
+False Positive (D) = ,14
+False Positive (R) = ,11
+Accuracy (A) = ,0.9593238
+Accuracy (V) = ,0.93291074
+Accuracy (X) = ,0.9598521
+Accuracy (D) = ,0.9593238
+Accuracy (R) = ,0.9593238
+Precision (A) = ,0.0
+Precision (V) = ,0.1919192
+Precision (X) = ,0.083333336
+Precision (D) = ,0.1764706
+Precision (R) = ,0.0
+Recall (A) = ,0.0
+Recall (V) = ,0.28787878
+Recall (X) = ,0.015151516
+Recall (D) = ,0.045454547
+Recall (R) = ,0.0
+F-measure (A) = ,NaN
+F-measure (V) = ,0.23030303
+F-measure (X) = ,0.025641028
+F-measure (D) = ,0.07228916
+F-measure (R) = ,NaN
+Matthews Correlation Coefficient (A) = ,-0.01453079
+Matthews Correlation Coefficient (V) = ,0.20112427
+Matthews Correlation Coefficient (X) = ,0.02110382
+Matthews Correlation Coefficient (D) = ,0.0734847
+Matthews Correlation Coefficient (R) = ,-0.01453079
+Kappa (A) = ,-0.010061646
+Kappa (V) = ,0.19669434
+Kappa (X) = ,0.015075744
+Kappa (D) = ,0.058846813
+Kappa (R) = ,-0.010061646
+
+MUITOS DESVIOS [EXTRACT_OPERATION]
+? Positive Predictions (V) found differ from expected,87,76
+? Positive Predictions (D) found differ from expected,19,17
+Sample Size (A) = ,1889
+Sample Size (V) = ,1889
+Sample Size (X) = ,1889
+Sample Size (D) = ,1889
+Sample Size (R) = ,1889
+True Negative (A) = ,1805
+True Negative (V) = ,1747
+True Negative (X) = ,1805
+True Negative (D) = ,1806
+True Negative (R) = ,1810
+False Negative (A) = ,66
+False Negative (V) = ,55
+False Negative (X) = ,66
+False Negative (D) = ,64
+False Negative (R) = ,66
+True Positive (A) = ,0
+True Positive (V) = ,11
+True Positive (X) = ,0
+True Positive (D) = ,2
+True Positive (R) = ,0
+False Positive (A) = ,18
+False Positive (V) = ,76
+False Positive (X) = ,18
+False Positive (D) = ,17
+False Positive (R) = ,13
+Accuracy (A) = ,0.955532
+Accuracy (V) = ,0.9306511
+Accuracy (X) = ,0.955532
+Accuracy (D) = ,0.9571202
+Accuracy (R) = ,0.95817894
+Precision (A) = ,0.0
+Precision (V) = ,0.12643678
+Precision (X) = ,0.0
+Precision (D) = ,0.10526316
+Precision (R) = ,0.0
+Recall (A) = ,0.0
+Recall (V) = ,0.16666667
+Recall (X) = ,0.0
+Recall (D) = ,0.030303031
+Recall (R) = ,0.0
+F-measure (A) = ,NaN
+F-measure (V) = ,0.14379086
+F-measure (X) = ,NaN
+F-measure (D) = ,0.047058824
+F-measure (R) = ,NaN
+Matthews Correlation Coefficient (A) = ,-0.018662851
+Matthews Correlation Coefficient (V) = ,0.10948607
+Matthews Correlation Coefficient (X) = ,-0.018662851
+Matthews Correlation Coefficient (D) = ,0.03860348
+Matthews Correlation Coefficient (R) = ,-0.015839225
+Kappa (A) = ,-0.015201163
+Kappa (V) = ,0.10836169
+Kappa (X) = ,-0.015201163
+Kappa (D) = ,0.03193754
+Kappa (R) = ,-0.011632517
+
+"ALTO ACOPLAMENTO EFFERENT [EXTRACT_OPERATION, MOVE_OPERATION, MOVE_AND_RENAME_OPERATION]"
+? Positive Predictions (A) found differ from expected,42,29
+? Positive Predictions (V) found differ from expected,126,106
+? Positive Predictions (X) found differ from expected,37,25
+? Positive Predictions (D) found differ from expected,30,18
+? Positive Predictions (R) found differ from expected,26,18
+Sample Size (A) = ,1966
+Sample Size (V) = ,1966
+Sample Size (X) = ,1966
+Sample Size (D) = ,1966
+Sample Size (R) = ,1966
+True Negative (A) = ,1824
+True Negative (V) = ,1747
+True Negative (X) = ,1828
+True Negative (D) = ,1835
+True Negative (R) = ,1835
+False Negative (A) = ,100
+False Negative (V) = ,93
+False Negative (X) = ,101
+False Negative (D) = ,101
+False Negative (R) = ,105
+True Positive (A) = ,13
+True Positive (V) = ,20
+True Positive (X) = ,12
+True Positive (D) = ,12
+True Positive (R) = ,8
+False Positive (A) = ,29
+False Positive (V) = ,106
+False Positive (X) = ,25
+False Positive (D) = ,18
+False Positive (R) = ,18
+Accuracy (A) = ,0.9343845
+Accuracy (V) = ,0.8987793
+Accuracy (X) = ,0.93591046
+Accuracy (D) = ,0.939471
+Accuracy (R) = ,0.9374364
+Precision (A) = ,0.30952382
+Precision (V) = ,0.15873016
+Precision (X) = ,0.3243243
+Precision (D) = ,0.4
+Precision (R) = ,0.30769232
+Recall (A) = ,0.11504425
+Recall (V) = ,0.17699115
+Recall (X) = ,0.10619469
+Recall (D) = ,0.10619469
+Recall (R) = ,0.07079646
+F-measure (A) = ,0.16774194
+F-measure (V) = ,0.16736402
+F-measure (X) = ,0.16
+F-measure (D) = ,0.16783217
+F-measure (R) = ,0.11510792
+Matthews Correlation Coefficient (A) = ,0.15999621
+Matthews Correlation Coefficient (V) = ,0.11383899
+Matthews Correlation Coefficient (X) = ,0.158783
+Matthews Correlation Coefficient (D) = ,0.183191
+Matthews Correlation Coefficient (R) = ,0.1244532
+Kappa (A) = ,0.14098425
+Kappa (V) = ,0.113648295
+Kappa (X) = ,0.13548638
+Kappa (D) = ,0.14726754
+Kappa (R) = ,0.095662355
+
+ALTO ACOPLAMENTO EFFERENT [EXTRACT_OPERATION]
+? Positive Predictions (A) found differ from expected,42,29
+? Positive Predictions (V) found differ from expected,126,106
+? Positive Predictions (X) found differ from expected,37,25
+? Positive Predictions (D) found differ from expected,30,18
+? Positive Predictions (R) found differ from expected,26,18
+Sample Size (A) = ,1919
+Sample Size (V) = ,1919
+Sample Size (X) = ,1919
+Sample Size (D) = ,1919
+Sample Size (R) = ,1919
+True Negative (A) = ,1824
+True Negative (V) = ,1747
+True Negative (X) = ,1828
+True Negative (D) = ,1835
+True Negative (R) = ,1835
+False Negative (A) = ,53
+False Negative (V) = ,46
+False Negative (X) = ,54
+False Negative (D) = ,54
+False Negative (R) = ,58
+True Positive (A) = ,13
+True Positive (V) = ,20
+True Positive (X) = ,12
+True Positive (D) = ,12
+True Positive (R) = ,8
+False Positive (A) = ,29
+False Positive (V) = ,106
+False Positive (X) = ,25
+False Positive (D) = ,18
+False Positive (R) = ,18
+Accuracy (A) = ,0.95726943
+Accuracy (V) = ,0.9207921
+Accuracy (X) = ,0.95883274
+Accuracy (D) = ,0.9624805
+Accuracy (R) = ,0.96039605
+Precision (A) = ,0.30952382
+Precision (V) = ,0.15873016
+Precision (X) = ,0.3243243
+Precision (D) = ,0.4
+Precision (R) = ,0.30769232
+Recall (A) = ,0.1969697
+Recall (V) = ,0.3030303
+Recall (X) = ,0.18181819
+Recall (D) = ,0.18181819
+Recall (R) = ,0.121212125
+F-measure (A) = ,0.24074076
+F-measure (V) = ,0.20833334
+F-measure (X) = ,0.23300971
+F-measure (D) = ,0.25
+F-measure (R) = ,0.17391305
+Matthews Correlation Coefficient (A) = ,0.22583808
+Matthews Correlation Coefficient (V) = ,0.18086797
+Matthews Correlation Coefficient (X) = ,0.22307537
+Matthews Correlation Coefficient (D) = ,0.25282764
+Matthews Correlation Coefficient (R) = ,0.1757581
+Kappa (A) = ,0.21987306
+Kappa (V) = ,0.17090783
+Kappa (X) = ,0.21357797
+Kappa (D) = ,0.23352495
+Kappa (R) = ,0.15753572
+
+ALTO ACOPLAMENTO EFFERENT [MOVE_OPERATION]
+Sample Size (A) = ,1890
+Sample Size (V) = ,1890
+Sample Size (X) = ,1890
+Sample Size (D) = ,1890
+Sample Size (R) = ,1890
+True Negative (A) = ,1824
+True Negative (V) = ,1747
+True Negative (X) = ,1828
+True Negative (D) = ,1835
+True Negative (R) = ,1835
+False Negative (A) = ,37
+False Negative (V) = ,37
+False Negative (X) = ,37
+False Negative (D) = ,37
+False Negative (R) = ,37
+True Positive (A) = ,0
+True Positive (V) = ,0
+True Positive (X) = ,0
+True Positive (D) = ,0
+True Positive (R) = ,0
+False Positive (A) = ,29
+False Positive (V) = ,106
+False Positive (X) = ,25
+False Positive (D) = ,18
+False Positive (R) = ,18
+Accuracy (A) = ,0.96507937
+Accuracy (V) = ,0.92433864
+Accuracy (X) = ,0.96719575
+Accuracy (D) = ,0.97089946
+Accuracy (R) = ,0.97089946
+Precision (A) = ,0.0
+Precision (V) = ,0.0
+Precision (X) = ,0.0
+Precision (D) = ,0.0
+Precision (R) = ,0.0
+Recall (A) = ,0.0
+Recall (V) = ,0.0
+Recall (X) = ,0.0
+Recall (D) = ,0.0
+Recall (R) = ,0.0
+F-measure (A) = ,NaN
+F-measure (V) = ,NaN
+F-measure (X) = ,NaN
+F-measure (D) = ,NaN
+F-measure (R) = ,NaN
+Matthews Correlation Coefficient (A) = ,-0.017639609
+Matthews Correlation Coefficient (V) = ,-0.034444403
+Matthews Correlation Coefficient (X) = ,-0.016360393
+Matthews Correlation Coefficient (D) = ,-0.013856275
+Matthews Correlation Coefficient (R) = ,-0.013856275
+Kappa (A) = ,-0.017504586
+Kappa (V) = ,-0.029890163
+Kappa (X) = ,-0.016040985
+Kappa (D) = ,-0.012980061
+Kappa (R) = ,-0.012980061
+
+ALTO ACOPLAMENTO EFFERENT [MOVE_AND_RENAME_OPERATION]
+Sample Size (A) = ,1863
+Sample Size (V) = ,1863
+Sample Size (X) = ,1863
+Sample Size (D) = ,1863
+Sample Size (R) = ,1863
+True Negative (A) = ,1824
+True Negative (V) = ,1747
+True Negative (X) = ,1828
+True Negative (D) = ,1835
+True Negative (R) = ,1835
+False Negative (A) = ,10
+False Negative (V) = ,10
+False Negative (X) = ,10
+False Negative (D) = ,10
+False Negative (R) = ,10
+True Positive (A) = ,0
+True Positive (V) = ,0
+True Positive (X) = ,0
+True Positive (D) = ,0
+True Positive (R) = ,0
+False Positive (A) = ,29
+False Positive (V) = ,106
+False Positive (X) = ,25
+False Positive (D) = ,18
+False Positive (R) = ,18
+Accuracy (A) = ,0.979066
+Accuracy (V) = ,0.93773484
+Accuracy (X) = ,0.9812131
+Accuracy (D) = ,0.98497045
+Accuracy (R) = ,0.98497045
+Precision (A) = ,0.0
+Precision (V) = ,0.0
+Precision (X) = ,0.0
+Precision (D) = ,0.0
+Precision (R) = ,0.0
+Recall (A) = ,0.0
+Recall (V) = ,0.0
+Recall (X) = ,0.0
+Recall (D) = ,0.0
+Recall (R) = ,0.0
+F-measure (A) = ,NaN
+F-measure (V) = ,NaN
+F-measure (X) = ,NaN
+F-measure (D) = ,NaN
+F-measure (R) = ,NaN
+Matthews Correlation Coefficient (A) = ,-0.009237653
+Matthews Correlation Coefficient (V) = ,-0.018043855
+Matthews Correlation Coefficient (X) = ,-0.008567607
+Matthews Correlation Coefficient (D) = ,-0.0072560515
+Matthews Correlation Coefficient (R) = ,-0.0072560515
+Kappa (A) = ,-0.00804799
+Kappa (V) = ,-0.009907307
+Kappa (X) = ,-0.0077275997
+Kappa (D) = ,-0.0069525144
+Kappa (R) = ,-0.0069525144
+
+"MUITOS PARAMETROS [EXTRACT_OPERATION, CHANGE_METHOD_SIGNATURE]"
+? Positive Predictions (A) found differ from expected,116,112
+? Positive Predictions (V) found differ from expected,184,173
+? Positive Predictions (X) found differ from expected,116,112
+? Positive Predictions (D) found differ from expected,62,59
+? Positive Predictions (R) found differ from expected,89,85
+Sample Size (A) = ,1986
+Sample Size (V) = ,1986
+Sample Size (X) = ,1986
+Sample Size (D) = ,1986
+Sample Size (R) = ,1986
+True Negative (A) = ,1808
+True Negative (V) = ,1747
+True Negative (X) = ,1808
+True Negative (D) = ,1861
+True Negative (R) = ,1835
+False Negative (A) = ,62
+False Negative (V) = ,55
+False Negative (X) = ,62
+False Negative (D) = ,63
+False Negative (R) = ,62
+True Positive (A) = ,4
+True Positive (V) = ,11
+True Positive (X) = ,4
+True Positive (D) = ,3
+True Positive (R) = ,4
+False Positive (A) = ,112
+False Positive (V) = ,173
+False Positive (X) = ,112
+False Positive (D) = ,59
+False Positive (R) = ,85
+Accuracy (A) = ,0.9123867
+Accuracy (V) = ,0.8851964
+Accuracy (X) = ,0.9123867
+Accuracy (D) = ,0.93856996
+Accuracy (R) = ,0.9259819
+Precision (A) = ,0.03448276
+Precision (V) = ,0.05978261
+Precision (X) = ,0.03448276
+Precision (D) = ,0.048387095
+Precision (R) = ,0.04494382
+Recall (A) = ,0.060606062
+Recall (V) = ,0.16666667
+Recall (X) = ,0.060606062
+Recall (D) = ,0.045454547
+Recall (R) = ,0.060606062
+F-measure (A) = ,0.04395604
+F-measure (V) = ,0.088
+F-measure (X) = ,0.04395604
+F-measure (D) = ,0.046875
+F-measure (R) = ,0.051612902
+Matthews Correlation Coefficient (A) = ,0.0017370812
+Matthews Correlation Coefficient (V) = ,0.04733173
+Matthews Correlation Coefficient (X) = ,0.0017370812
+Matthews Correlation Coefficient (D) = ,0.015177165
+Matthews Correlation Coefficient (R) = ,0.014152041
+Kappa (A) = ,0.0016639986
+Kappa (V) = ,0.041091833
+Kappa (X) = ,0.0016639986
+Kappa (D) = ,0.0151686715
+Kappa (R) = ,0.013982538
+
+MUITOS PARAMETROS [EXTRACT_OPERATION]
+? Positive Predictions (A) found differ from expected,116,112
+? Positive Predictions (V) found differ from expected,184,173
+? Positive Predictions (X) found differ from expected,116,112
+? Positive Predictions (D) found differ from expected,62,59
+? Positive Predictions (R) found differ from expected,89,85
+Sample Size (A) = ,1986
+Sample Size (V) = ,1986
+Sample Size (X) = ,1986
+Sample Size (D) = ,1986
+Sample Size (R) = ,1986
+True Negative (A) = ,1808
+True Negative (V) = ,1747
+True Negative (X) = ,1808
+True Negative (D) = ,1861
+True Negative (R) = ,1835
+False Negative (A) = ,62
+False Negative (V) = ,55
+False Negative (X) = ,62
+False Negative (D) = ,63
+False Negative (R) = ,62
+True Positive (A) = ,4
+True Positive (V) = ,11
+True Positive (X) = ,4
+True Positive (D) = ,3
+True Positive (R) = ,4
+False Positive (A) = ,112
+False Positive (V) = ,173
+False Positive (X) = ,112
+False Positive (D) = ,59
+False Positive (R) = ,85
+Accuracy (A) = ,0.9123867
+Accuracy (V) = ,0.8851964
+Accuracy (X) = ,0.9123867
+Accuracy (D) = ,0.93856996
+Accuracy (R) = ,0.9259819
+Precision (A) = ,0.03448276
+Precision (V) = ,0.05978261
+Precision (X) = ,0.03448276
+Precision (D) = ,0.048387095
+Precision (R) = ,0.04494382
+Recall (A) = ,0.060606062
+Recall (V) = ,0.16666667
+Recall (X) = ,0.060606062
+Recall (D) = ,0.045454547
+Recall (R) = ,0.060606062
+F-measure (A) = ,0.04395604
+F-measure (V) = ,0.088
+F-measure (X) = ,0.04395604
+F-measure (D) = ,0.046875
+F-measure (R) = ,0.051612902
+Matthews Correlation Coefficient (A) = ,0.0017370812
+Matthews Correlation Coefficient (V) = ,0.04733173
+Matthews Correlation Coefficient (X) = ,0.0017370812
+Matthews Correlation Coefficient (D) = ,0.015177165
+Matthews Correlation Coefficient (R) = ,0.014152041
+Kappa (A) = ,0.0016639986
+Kappa (V) = ,0.041091833
+Kappa (X) = ,0.0016639986
+Kappa (D) = ,0.0151686715
+Kappa (R) = ,0.013982538
+
+MUITOS PARAMETROS [CHANGE_METHOD_SIGNATURE]
+Sample Size (A) = ,1920
+Sample Size (V) = ,1920
+Sample Size (X) = ,1920
+Sample Size (D) = ,1920
+Sample Size (R) = ,1920
+True Negative (A) = ,1808
+True Negative (V) = ,1747
+True Negative (X) = ,1808
+True Negative (D) = ,1861
+True Negative (R) = ,1835
+False Negative (A) = ,0
+False Negative (V) = ,0
+False Negative (X) = ,0
+False Negative (D) = ,0
+False Negative (R) = ,0
+True Positive (A) = ,0
+True Positive (V) = ,0
+True Positive (X) = ,0
+True Positive (D) = ,0
+True Positive (R) = ,0
+False Positive (A) = ,112
+False Positive (V) = ,173
+False Positive (X) = ,112
+False Positive (D) = ,59
+False Positive (R) = ,85
+Accuracy (A) = ,0.94166666
+Accuracy (V) = ,0.90989584
+Accuracy (X) = ,0.94166666
+Accuracy (D) = ,0.9692708
+Accuracy (R) = ,0.9557292
+Precision (A) = ,0.0
+Precision (V) = ,0.0
+Precision (X) = ,0.0
+Precision (D) = ,0.0
+Precision (R) = ,0.0
+Recall (A) = ,NaN
+Recall (V) = ,NaN
+Recall (X) = ,NaN
+Recall (D) = ,NaN
+Recall (R) = ,NaN
+F-measure (A) = ,NaN
+F-measure (V) = ,NaN
+F-measure (X) = ,NaN
+F-measure (D) = ,NaN
+F-measure (R) = ,NaN
+Matthews Correlation Coefficient (A) = ,NaN
+Matthews Correlation Coefficient (V) = ,NaN
+Matthews Correlation Coefficient (X) = ,NaN
+Matthews Correlation Coefficient (D) = ,NaN
+Matthews Correlation Coefficient (R) = ,NaN
+Kappa (A) = ,0.0
+Kappa (V) = ,0.0
+Kappa (X) = ,0.0
+Kappa (D) = ,0.0
+Kappa (R) = ,0.0

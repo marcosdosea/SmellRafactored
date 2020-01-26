@@ -8,6 +8,7 @@ public class CommitData implements Comparable<CommitData> {
 	private String fullMessage;
 	private Date date;
 	private CommitData previous;
+	private CommitData next;
 
 	public String getId() {
 		return id;
@@ -47,6 +48,14 @@ public class CommitData implements Comparable<CommitData> {
 
 	public void setPrevious(CommitData previous) {
 		this.previous = previous;
+	}
+	
+	public CommitData getNext() {
+		return next;
+	}
+
+	public void setNext(CommitData next) {
+		this.next = next;
 	}
 	
 	public int compareTo(CommitData o) {

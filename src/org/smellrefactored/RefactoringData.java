@@ -22,10 +22,15 @@ public class RefactoringData implements Comparable<RefactoringData> {
 	private String involvedClassesBefore;
 	private String shortMessage;
 	private String fullMessage;
+	
+	
 	private int numberOfClasses;
 	private int numberOfMethods;
 	private int systemLOC;
 	private Date commitDate;
+
+	private String fileNameBefore;
+	private String fileNameAfter;
 
 	private String nomeClasse;
 	private String nomeMetodo;
@@ -37,6 +42,26 @@ public class RefactoringData implements Comparable<RefactoringData> {
 	private String smell;
 	private String classDesignRole;
 
+	
+	
+	public String getFileNameBefore() {
+		return fileNameBefore;
+	}
+
+	public void setFileNameBefore(String fileNameBefore) {
+		this.fileNameBefore = fileNameBefore;
+	}
+
+	public String getFileNameAfter() {
+		return fileNameAfter;
+	}
+
+	public void setFileNameAfter(String fileNameAfter) {
+		this.fileNameAfter = fileNameAfter;
+	}
+
+	
+	
 	public String getNomeClasse() {
 		return nomeClasse;
 	}
