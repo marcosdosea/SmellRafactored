@@ -19,6 +19,7 @@ public class ConfusionMatrixPredictors {
 	private LinkedHashMap<String, ConfusionMatrix> confusionMatrices;
 	private PredictionRound predictionRound = null;
 
+	private boolean enableValidations = false;
 	private String validationMessagePrefix = "? ";
 	private Integer validationRealPositive = null;
 	private Integer validationPreditive = null;
@@ -247,6 +248,9 @@ public class ConfusionMatrixPredictors {
 		}
 	
 	
+	public void enableValidations(boolean onOff) {
+		this.enableValidations = onOff;
+	}
 	
 	
 	
@@ -258,8 +262,9 @@ public class ConfusionMatrixPredictors {
 			persistenceMechanism.write(subtitleLine);
 		}
 		
-		this.writeValidationToCsvFile(persistenceMechanism);
-		
+		if (this.enableValidations) {
+			this.writeValidationToCsvFile(persistenceMechanism);
+		}
 
 		for (String fieldLabel: this.otherFields.keySet()) {
 			persistenceMechanism.write(fieldLabel + " = ", this.otherFields.get(fieldLabel));

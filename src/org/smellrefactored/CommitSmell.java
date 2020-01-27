@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -29,6 +30,8 @@ public class CommitSmell {
 
 	static Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
 	
+	private Date startAt = new Date();
+	
 	private GitService gitService;
 	private Repository repo;
 	private ArrayList<CommitData> commitsWithRefactoringMergedIntoMaster;
@@ -36,7 +39,7 @@ public class CommitSmell {
 	private List<LimiarTecnica> listaLimiarTecnica;
 	String resultFileName;
 	
-	private boolean usingCache = false;
+	private boolean usingOldCache = false;
 	
 	private LinkedHashMap<String, LimiarTecnica> techniquesThresholds;
 	
@@ -61,14 +64,14 @@ public class CommitSmell {
 		pmResultSmellRefactoredCommit = new CSVFile(resultFileName + "-smellRefactored-commit.csv", false);
 	}
 	
-	public void useCache(boolean onOff) {
-		this.usingCache = onOff;
-		if (this.usingCache) {
-			logger.warn("The smells commit CACHE was turned ON.");
-			logger.warn("Use smells commit cache only to speed of maintenance and development on this project.");
+	public void useOldCache(boolean onOff) {
+		this.usingOldCache = onOff;
+		if (this.usingOldCache) {
+			logger.warn("The smells commit OLD CACHE was turned ON.");
+			logger.warn("Use smells commit OLD cache only to speed of maintenance and development on this project.");
 			logger.warn("Clear the cache whenever the weather is cloudy ;)");
 		} else {
-			logger.info("The smells commit CACHE was turned OFF.");
+			logger.info("The smells commit OLD CACHE was turned OFF.");
 		}
 	}
 	
@@ -97,28 +100,35 @@ public class CommitSmell {
 	
 	public FilterSmellResult obterSmellsCommit(String commitId) throws Exception {
 		FilterSmellResult smellsCommit;
-		if (usingCache) {
-			if (!cacheExists(commitId)) {
-				smellsCommit = getSmellsCommitFromGitRepository(commitId);
-				saveSmellsCommitToCache(smellsCommit);
-			}
+		if ( (cacheExists(commitId)) && (usingOldCache || isRecentCache(commitId)) ) {
 			smellsCommit = getSmellsCommitFromCache(commitId);
 		} else {
 			smellsCommit = getSmellsCommitFromGitRepository(commitId);
+			saveSmellsCommitToCache(smellsCommit);
 		}
 		return (smellsCommit);
 	}
 
+	private boolean isRecentCache(String commitId) throws Exception {
+		String cacheFileName = getCacheFileName(commitId);
+		File cacheFile = new File(cacheFileName);
+		return (this.startAt.before(new Date(cacheFile.lastModified()))); 
+	}
 	private boolean cacheExists(String commitId) throws Exception {
 		String cacheFileName = getCacheFileName(commitId);
 		File cacheFile = new File(cacheFileName);
 		return (cacheFile.exists());
 	}
 	private void saveSmellsCommitToCache(FilterSmellResult smellsCommit) throws Exception {
-		logger.info("Saving smells to cache for commit " + smellsCommit.getCommitId() + "...");
 		Gson gson = new Gson();
 		String cacheFileName = getCacheFileName(smellsCommit.getCommitId());
+		File existingFile = new File(cacheFileName);
+		if (existingFile.exists()) {
+			logger.info("Erasing old cache for commit " + smellsCommit.getCommitId() + "...");
+			existingFile.delete();
+		}
 		String cacheFileNameTemp = cacheFileName.replace(".json", ".temp");
+		logger.info("Saving smells to cache for commit " + smellsCommit.getCommitId() + "...");
 		FileWriter cacheFileHandler = new FileWriter(cacheFileNameTemp);
 		cacheFileHandler.append(gson.toJson(smellsCommit));
 		cacheFileHandler.close();

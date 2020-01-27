@@ -14,12 +14,18 @@ import org.repodriller.persistence.PersistenceMechanism;
 import org.repodriller.persistence.csv.CSVFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smellrefactored.statistics.ConfusionMatrix;
 import org.smellrefactored.statistics.ConfusionMatrixPredictors;
 import org.smellrefactored.statistics.PredictionRound;
 
 public class SmellRefactoredMethod {
 
-	final private boolean ANALYZE_EACH_REFACTORING_TYPE_BY_SMELL = true;
+	final private boolean ANALYZE_EACH_REFACTORING_TYPE_BY_SMELL = true; // Increases processing time.
+	
+	final private boolean ENABLE_REDUNDANT_VERIFICATION_FOR_DEBUG = false; // Increases processing time.
+	
+	final private boolean IGNORE_REPEATED_PREDICION_ON_NEXT_COMMIT = true; // Increases processing time.
+	
 	
 	private HashSet<String> getLongMethodRefactoringTypes() {
 		HashSet<String> refactoringTypes = new HashSet<String>();
@@ -110,9 +116,9 @@ public class SmellRefactoredMethod {
 		refactoringTypes.add(RefactoringType.PUSH_DOWN_OPERATION.toString());
 		refactoringTypes.add(RefactoringType.EXTRACT_AND_MOVE_OPERATION.toString());
 		refactoringTypes.add(RefactoringType.MOVE_AND_INLINE_OPERATION.toString());
-		/// refactoringTypes.add(RefactoringType.RENAME_CLASS.toString());
-		/// refactoringTypes.add(RefactoringType.MOVE_CLASS.toString());
-		/// refactoringTypes.add(RefactoringType.MOVE_RENAME_CLASS.toString());
+		refactoringTypes.add(RefactoringType.RENAME_CLASS.toString());
+		refactoringTypes.add(RefactoringType.MOVE_CLASS.toString());
+		refactoringTypes.add(RefactoringType.MOVE_RENAME_CLASS.toString());
 		/// refactoringTypes.add(RefactoringType.MOVE_SOURCE_FOLDER.toString());
 		/// refactoringTypes.add(RefactoringType.RENAME_PACKAGE.toString());
 		return refactoringTypes;
@@ -227,10 +233,10 @@ public class SmellRefactoredMethod {
 			
 			pmResultEvaluationMethods.write("RELATORIO COMPLETO SISTEMA");
 			
-			pmResultEvaluationMethods.write("Numero de Refatoracoes em Metodos e Nao Metodos:", listRefactoringMergedIntoMaster.size());
-			pmResultEvaluationMethods.write("Numero de Refatoracoes relacionadas a operacoes em Metodos:", countRefactoringRelatedMethods, getMethodRefactoringTypes());
-			pmResultEvaluationMethods.write("Numero de Refatoracoes relacionadas a rename em Classes:", countRefactoringRelatedClassRenaming, getClassRenameRefactoringTypes());
-			pmResultEvaluationMethods.write("Numero de Refatoracoes relacionadas a rename em Metodos:", countRefactoringRelatedMethodRenaming, getMethodRenameRefactoringTypes());
+			pmResultEvaluationMethods.write("Numero total de refatoracoes detectadas:", listRefactoringMergedIntoMaster.size());
+			pmResultEvaluationMethods.write("Numero de refatoracoes relacionadas a operacoes em Metodos:", countRefactoringRelatedMethods, getMethodRefactoringTypes());
+			pmResultEvaluationMethods.write("Numero de refatoracoes relacionadas a rename em Classes:", countRefactoringRelatedClassRenaming, getClassRenameRefactoringTypes());
+			pmResultEvaluationMethods.write("Numero de refatoracoes relacionadas a rename em Metodos:", countRefactoringRelatedMethodRenaming, getMethodRenameRefactoringTypes());
 			pmResultEvaluationMethods.write("Numero de refatoracoes relacionadas a " + MethodDataSmelly.LONG_METHOD + ":", countRefactoringRelatedLongMethod, getLongMethodRefactoringTypes());
 			pmResultEvaluationMethods.write("Numero de refatoracoes relacionadas a " + MethodDataSmelly.COMPLEX_METHOD + ":", countRefactoringRelatedComplexMethod, getComplexMethodRefactoringTypes());
 			pmResultEvaluationMethods.write("Numero de refatoracoes relacionadas a " + MethodDataSmelly.HIGH_EFFERENT_COUPLING + ":", countRefactoringRelatedHighEfferentCoupling, getHighEfferentCouplingRefactoringTypes());
@@ -240,7 +246,6 @@ public class SmellRefactoredMethod {
 				pmResultEvaluationMethods.write("Numero de refatoracoes do tipo " + refactoringType + ":", refactoringsCounter.getOrDefault(refactoringType, 0));
 			}
 			
-
 			FilterSmellResult smellsCommitInitial = this.commitSmell.obterSmellsCommit(initialCommit);
 			pmResultEvaluationMethods.write("Numero Metodos Smell Commit Inicial:",
 					smellsCommitInitial.getMetodosSmell().size());
@@ -261,7 +266,7 @@ public class SmellRefactoredMethod {
 			evaluateInDetailSmellChangeOperation(MethodDataSmelly.MANY_PARAMETERS       , this.getManyParametersRefactoringTypes(), smellsCommitInitial, listRefactoringMergedIntoMaster);
 			
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			e.printStackTrace();
 		}
 	}
 
@@ -280,80 +285,29 @@ public class SmellRefactoredMethod {
 			ArrayList<RefactoringData> listRefactoring, String typeSmell, HashSet<String> targetTefactoringTypes) throws Exception {
 
 		ConfusionMatrixPredictors confusionMatrices = new ConfusionMatrixPredictors(typeSmell + " " + targetTefactoringTypes.toString(), this.commitSmell.getTechniquesThresholds().keySet());
+		confusionMatrices.enableValidations(!IGNORE_REPEATED_PREDICION_ON_NEXT_COMMIT);
 		
-		// TP e FN
+		// TP and FN
 		computeTruePositiveAndFalseNegative(listRefactoring, typeSmell, targetTefactoringTypes, confusionMatrices);
-		// FP
-/// @TODO: Bug esse método computa alguns falsos positivos a mais
-computeFalsePositive(commitInitial, listRefactoring, typeSmell, targetTefactoringTypes, confusionMatrices);
-		// TN
-        computeTrueNegativeCommon(commitInitial, listRefactoring, typeSmell, targetTefactoringTypes, confusionMatrices);
-		computeTrueNegativeIndividual(commitInitial, listRefactoring, typeSmell, targetTefactoringTypes, confusionMatrices);
-		
-		
-		int realPositive = SmellRefactoredManager.countRealPositive(refactoringsCounter, targetTefactoringTypes);
-		confusionMatrices.setValidationRealPositive(realPositive);
-		for (String technique : this.commitSmell.getTechniquesThresholds().keySet()) {
-			Integer positivePredictionExpected = countPositivePredictionForTechnique(commitInitial, typeSmell, technique);
-			confusionMatrices.setValidationPositivePrediction(technique, positivePredictionExpected);
-		}
+		// FP and TN
+		computeFalsePositiveAndTrueNegativeForAllTechniques(commitInitial, listRefactoring, typeSmell, targetTefactoringTypes, confusionMatrices);
+
+		/* 
+         * Warning: The validation of the confusion matrix by the total of positive predictions 
+         *          does not apply to the analysis of smells only from the initial commit.
+         * 
+		 * int realPositive = SmellRefactoredManager.countRealPositive(refactoringsCounter, targetTefactoringTypes);
+		 * confusionMatrices.setValidationRealPositive(realPositive);
+		 * for (String technique : this.commitSmell.getTechniquesThresholds().keySet()) {
+		 * 	Integer positivePredictionExpected = countPositivePredictionForTechnique(commitInitial, typeSmell, technique);
+		 * 	confusionMatrices.setValidationPositivePrediction(technique, positivePredictionExpected);
+		 * }
+		*/
 		
 		pmResultEvaluationMethods.write("");
 		confusionMatrices.writeToCsvFile(pmResultEvaluationMethods);
 	
 	}
-	
-	
-	private void computeTrueNegativeIndividual(FilterSmellResult commitInitial,
-			ArrayList<RefactoringData> listRefactoring, String smellType, HashSet<String> targetTefactoringTypes,
-			ConfusionMatrixPredictors confusionMatrices) throws Exception {
-		for (MethodDataSmelly methodSmelly : commitInitial.getMetodosSmell()) {
-			if (methodSmelly.getSmell().equals(smellType)) {
-				PredictionRound predictionRound = confusionMatrices.newRound();
-				predictionRound.setDefaultCondition(false);
-				for (RefactoringData refactoring : getRefactoringsForNextCommit(methodSmelly.getCommit(), methodSmelly.getDiretorioDaClasse(), methodSmelly.getNomeClasse(), methodSmelly.getNomeMetodo(), targetTefactoringTypes, true)) {
-					MethodDataSmelly methodSmell = getPreviousSmellCommitForMathodByRefactoring(refactoring, smellType);
-					if (methodSmell != null) {
-						predictionRound.setCondition(true);
-						predictionRound.setNull(methodSmell.getListaTecnicas());
-						predictionRound.setNullAllExcept(methodSmell.getListaTecnicas());
-					// writeTruePositiveToCsvFiles(methodRefactored, methodSmell);
-					}
-				}
-				predictionRound.setNullIfOutOfRound(methodSmelly.getListaTecnicas());
-				if (predictionRound.isAnyoneOutOfRound()) {
-					writeNegativeToCsvFiles(methodSmelly);
-				}
-				predictionRound.setFalseForAllOutOfRound();
-				confusionMatrices.processPredictionRound(predictionRound);
-			}
-		}
-	}
-	
-
-	
-	private void computeTrueNegativeCommon(FilterSmellResult commitInitial, ArrayList<RefactoringData> listRefactoring,
-			String smellType, HashSet<String> targetTefactoringTypes, ConfusionMatrixPredictors confusionMatrices) throws Exception {
-		for (MethodDataSmelly methodNotSmelly : commitInitial.getMetodosNotSmelly()) {
-			PredictionRound predictionRound = confusionMatrices.newRound();
-			predictionRound.setDefaultCondition(false);
-			for (RefactoringData refactoring : getRefactoringsForNextCommit(methodNotSmelly.getCommit(), methodNotSmelly.getDiretorioDaClasse(), methodNotSmelly.getNomeClasse(), methodNotSmelly.getNomeMetodo(), targetTefactoringTypes, true)) {
-				predictionRound.setCondition(true);
-				MethodDataSmelly methodSmell = getPreviousSmellCommitForMathodByRefactoring(refactoring, smellType);
-				if (methodSmell != null) {
-					predictionRound.setNullIfOutOfRound(methodSmell.getListaTecnicas());
-					break;
-				}
-			}
-			if (!predictionRound.getCondition()) {
-				predictionRound.setFalseForAllOutOfRound();
-				writeNegativeToCsvFiles(methodNotSmelly);
-			}
-			predictionRound.setNullForAllOutOfRound();
-			confusionMatrices.processPredictionRound(predictionRound);
-		}
-	}
-
 	
 	
 	private void computeTruePositiveAndFalseNegative(ArrayList<RefactoringData> listRefactoring, String typeSmell,
@@ -363,15 +317,18 @@ computeFalsePositive(commitInitial, listRefactoring, typeSmell, targetTefactorin
 				continue;
 			}
 			if (targetTefactoringTypes.contains(refactoring.getRefactoringType())) {
+				if ((ENABLE_REDUNDANT_VERIFICATION_FOR_DEBUG) && (!hasRefactoringsInCommit(refactoring.getCommit(), refactoring.getFileNameBefore(), refactoring.getNomeClasse(), refactoring.getNomeMetodo(), targetTefactoringTypes))) {
+					throw new Exception("Existing refactoring not found.");
+				} 
 				PredictionRound predictionRound = confusionMatrices.newRound();
 				predictionRound.setCondition(true);
-				MethodDataSmelly classSmell = getPreviousSmellCommitForMathodByRefactoring(refactoring, typeSmell);
-				if (classSmell != null) {
-					predictionRound.setTrue(classSmell.getListaTecnicas());
-					predictionRound.setFalseAllExcept(classSmell.getListaTecnicas());
-					writeTruePositiveToCsvFiles(refactoring, classSmell);
+				MethodDataSmelly methodSmell = getPreviousSmellCommitForMathodByRefactoring(refactoring, typeSmell);
+				if (methodSmell != null) {
+					predictionRound.setTrue(methodSmell.getListaTecnicas());
+					predictionRound.setFalseAllExcept(methodSmell.getListaTecnicas());
+					writeTruePositiveToCsvFiles(refactoring, methodSmell);
 					if (predictionRound.isAnyoneOutOfRound()) {
-						writeFalseNegativeToCsvFiles(refactoring, classSmell);
+						writeFalseNegativeToCsvFiles(refactoring, methodSmell);
 					}
 				} else {
 					predictionRound.setFalseForAllOutOfRound();
@@ -383,41 +340,121 @@ computeFalsePositive(commitInitial, listRefactoring, typeSmell, targetTefactorin
 		}
 	}
 	
-	private void computeFalsePositive(FilterSmellResult commitInitial,
-			ArrayList<RefactoringData> listRefactoring, String typeSmell, HashSet<String> targetTefactoringTypes,
+	private void computeFalsePositiveAndTrueNegativeForAllTechniques(FilterSmellResult commitInitial,
+			ArrayList<RefactoringData> listRefactoring, String smellType, HashSet<String> targetTefactoringTypes,
 			ConfusionMatrixPredictors confusionMatrices) throws Exception {
-		for (MethodDataSmelly methodSmelly : commitInitial.getMetodosSmell()) {
-			if (methodSmelly.getSmell().equals(typeSmell)) {
-				PredictionRound predictionRound = confusionMatrices.newRound();
-				predictionRound.setDefaultCondition(false);
-				if (methodSmelly.getSmell().equals(typeSmell)) {
-					if (hasRefactoringsInNextCommit(methodSmelly.getCommit(), methodSmelly.getDiretorioDaClasse(), methodSmelly.getNomeClasse(), methodSmelly.getNomeMetodo(), targetTefactoringTypes)) {
-						predictionRound.setCondition(true);
-						predictionRound.setNull(methodSmelly.getListaTecnicas());
-					} else {
-						predictionRound.setCondition(false);
-						predictionRound.setTrueIfOutOfRound(methodSmelly.getListaTecnicas());
+		for (String technique : confusionMatrices.getPredictores()) {
+			computeFalsePositiveBySmellAndTechnique(commitInitial, technique, smellType, targetTefactoringTypes, confusionMatrices.get(technique));
+			computeTrueNegativeBySmellAndTechnique(commitInitial, technique, smellType, targetTefactoringTypes, confusionMatrices.get(technique));
+			}
+	}
+	
+	private void computeFalsePositiveBySmellAndTechnique(FilterSmellResult commitInitial, String technique, String smellType, HashSet<String> targetTefactoringTypes, ConfusionMatrix confusionMtrix) throws Exception {
+		HashSet<MethodDataSmelly> smellyMethodsForSelectedTechniqueSmell = getSmellingMethodsBySmellAndTechnique(commitInitial, smellType, technique);
+		for (MethodDataSmelly methodSmelly : smellyMethodsForSelectedTechniqueSmell) {
+			if ( (ENABLE_REDUNDANT_VERIFICATION_FOR_DEBUG) && (!hasSmellPredictionForTechniqueInCommit(methodSmelly.getCommit(), smellType, technique, methodSmelly.getDiretorioDaClasse(), methodSmelly.getNomeClasse(), methodSmelly.getNomeMetodo())) ) {
+				throw new Exception("Existing method smelly not found (" + methodSmelly.getCommit() + " | " + smellType + " | " + technique + " | " + methodSmelly.getDiretorioDaClasse() + " | " + methodSmelly.getNomeClasse() + " | " + methodSmelly.getNomeMetodo() + ".");
+			} 
+			CommitData nextCommit = SmellRefactoredManager.getNextCommit(methodSmelly.getCommit(), commitsMergedIntoMaster);
+			if (nextCommit != null) {
+ 				if (!hasRefactoringsInCommit(nextCommit.getId(), methodSmelly.getDiretorioDaClasse(), methodSmelly.getNomeClasse(), methodSmelly.getNomeMetodo(), targetTefactoringTypes)) {
+ 					boolean ignoreCurrentPrediction = false;
+ 					if (IGNORE_REPEATED_PREDICION_ON_NEXT_COMMIT) {
+ 						ignoreCurrentPrediction = hasSmellPredictionForTechniqueInCommit(nextCommit.getId(), smellType, technique, methodSmelly.getDiretorioDaClasse(), methodSmelly.getNomeClasse(), methodSmelly.getNomeMetodo()); 
+ 					}
+					if (!ignoreCurrentPrediction) {
+						confusionMtrix.incFalsePositive();
+						writeNegativeToCsvFiles(methodSmelly);
 					}
 				}
-				predictionRound.setNullForAllOutOfRound();
-				confusionMatrices.processPredictionRound(predictionRound);
+			} else {
+				confusionMtrix.incFalsePositive();
+				writeNegativeToCsvFiles(methodSmelly);
 			}
 		}
 	}
-				
+	
+	private boolean hasSmellPredictionForTechniqueInCommit(String commitId, String smellType, String technique, String filePath, String className, String methodName) throws Exception {
+		boolean result = false;
+		FilterSmellResult smellsInCommit = this.commitSmell.obterSmellsCommit(commitId);
+		if (smellsInCommit != null) {
+			for(MethodDataSmelly smellInCommit: smellsInCommit.getMetodosSmell() ) {
+				if (smellInCommit.getSmell().contains(smellType)) {
+					if ( (smellInCommit.getDiretorioDaClasse().equals(filePath))
+							&& (smellInCommit.getNomeClasse().equals(className))
+							&& (smellInCommit.getNomeMetodo().equals(methodName)) ) {
+						if (smellInCommit.getListaTecnicas().contains(technique)) {
+							result = true;
+						}
+					}
+				}
+			}
+		}
+		return (result);
+	}
+	
+	
+	private void computeTrueNegativeBySmellAndTechnique(FilterSmellResult commitInitial, String technique, String smellType, HashSet<String> targetTefactoringTypes, ConfusionMatrix confusionMtrix) throws Exception {
+		HashSet<MethodDataSmelly> notSmellyMethodsForSelectedTechniqueSmell = getNotSmellingMethodsBySmellAndTechnique(commitInitial, smellType, technique); 
+		for (MethodDataSmelly methodNotSmelly : notSmellyMethodsForSelectedTechniqueSmell) {
+			CommitData nextCommit = SmellRefactoredManager.getNextCommit(methodNotSmelly.getCommit(), commitsMergedIntoMaster);
+			if (nextCommit != null) {
+				if (!hasRefactoringsInCommit(nextCommit.getId(), methodNotSmelly.getDiretorioDaClasse(), methodNotSmelly.getNomeClasse(), methodNotSmelly.getNomeMetodo(), targetTefactoringTypes)) {
+					confusionMtrix.incTrueNegative();
+					writeNegativeToCsvFiles(methodNotSmelly);
+				}
+			} else {
+				confusionMtrix.incTrueNegative();
+				writeNegativeToCsvFiles(methodNotSmelly);
+			}	
+		}
+	}
+	
+	private HashSet<MethodDataSmelly> getSmellingMethodsBySmellAndTechnique(FilterSmellResult commitInitial, String smellType, String selectedTechnique) {
+		HashSet<MethodDataSmelly> result =  new HashSet<MethodDataSmelly>();
+		for (MethodDataSmelly methodSmelly : commitInitial.getMetodosSmell()) {
+			if (methodSmelly.getSmell().equals(smellType)) {
+				if (methodSmelly.getListaTecnicas().contains(selectedTechnique)) {
+					result.add(methodSmelly);
+				}
+			}
+		}
+		return (result);
+	}
+
+	private HashSet<MethodDataSmelly> getNotSmellingMethodsBySmellAndTechnique(FilterSmellResult commitInitial, String smellType, String selectedTechnique) {
+		HashSet<MethodDataSmelly> result =  new HashSet<MethodDataSmelly>();
+		result.addAll(commitInitial.getMetodosNotSmelly());
+		for (MethodDataSmelly methodSmelly : commitInitial.getMetodosSmell()) {
+			if (methodSmelly.getSmell().equals(smellType)) {
+				if (!methodSmelly.getListaTecnicas().contains(selectedTechnique)) {
+					result.add(methodSmelly);
+				}
+			}
+		}
+		return (result);
+	}
+
 	
 	
 	
-	public MethodDataSmelly getPreviousSmellCommitForMathodByRefactoring(RefactoringData refactoring, String smellType) {
+	public MethodDataSmelly getPreviousSmellCommitForMathodByRefactoring(RefactoringData refactoring, String smellType) throws Exception {
 		MethodDataSmelly result = null;
-		FilterSmellResult smellsPreviousCommit = this.commitSmell.obterSmellsPreviousCommit(refactoring.getCommit());
-		if (smellsPreviousCommit != null) {
-			for (MethodDataSmelly methodSmell : smellsPreviousCommit.getMetodosSmell()) {
-				if (methodSmell.getSmell().equals(smellType)) {
-					if ( (methodSmell.getDiretorioDaClasse().equals(refactoring.getFileNameAfter())) 
-					        && methodSmell.getNomeClasse().equals(refactoring.getNomeClasse()) 
-							&& methodSmell.getNomeMetodo().equals(refactoring.getNomeMetodo()) ) {				
-						result = methodSmell;
+		CommitData commit = SmellRefactoredManager.getCommitById(refactoring.getCommit(), commitsMergedIntoMaster);
+		if (commit == null ) {
+			throw new Exception("Refactor Commit does not exist in the list of commits.");
+		}
+		CommitData previousCommit = commit.getPrevious();
+		if (previousCommit != null) {
+			FilterSmellResult smellsPreviousCommit = this.commitSmell.obterSmellsCommit(previousCommit.getId());
+			if (smellsPreviousCommit != null) {
+				for (MethodDataSmelly methodSmell : smellsPreviousCommit.getMetodosSmell()) {
+					if (methodSmell.getSmell().equals(smellType)) {
+						if ( (methodSmell.getDiretorioDaClasse().equals(refactoring.getFileNameBefore())) 
+								&& methodSmell.getNomeClasse().equals(refactoring.getNomeClasse()) 
+								&& methodSmell.getNomeMetodo().equals(refactoring.getNomeMetodo()) ) {				
+							result = methodSmell;
+						}
 					}
 				}
 			}
@@ -425,6 +462,116 @@ computeFalsePositive(commitInitial, listRefactoring, typeSmell, targetTefactorin
 		return result;
 	}
 
+	private int countPositivePredictionForTechnique(FilterSmellResult commitInitial, String smellType, String technique) {
+		HashSet<MethodDataSmelly> smellyMethods = getSmellingMethodsBySmellAndTechnique(commitInitial, smellType, technique);
+		return (smellyMethods.size());
+	}
+	
+	
+	
+		
+	
+	public static String extrairNomeMetodo(String rightSide) {
+		int methodNameEnd = rightSide.indexOf("(");
+		String partialMethodName = rightSide.substring(0, methodNameEnd);
+		int methodNameBegin = partialMethodName.lastIndexOf(" ") + 1;
+		return partialMethodName.substring(methodNameBegin);
+	}
+
+	
+	private boolean isSameClassRefactored(String className, RefactoringData refactoring) {
+		// boolean isClassInvolvementBefore = refactoring.getInvolvedClassesBefore().contains(className);
+		// boolean isClassInvolvementAfter  = refactoring.getInvolvedClassesAfter().contains(className);
+		// boolean isClassInvolvement  = (isClassInvolvementBefore || isClassInvolvementAfter);
+		boolean isClassSameName = ( (refactoring.getNomeClasse()!=null) && (refactoring.getNomeClasse().equals(className)) );
+		return (isClassSameName);
+	}
+
+	private boolean isSameMethodRefactored(String className, String methodName, RefactoringData refactoring) {
+		boolean isClassSameName = isSameClassRefactored(className, refactoring);
+
+		// boolean isMethodLeftSide = refactoring.getLeftSide().contains(methodName);
+		// boolean isMethodRightSide = refactoring.getRightSide().contains(methodName);
+		// boolean isMethodSide = (isMethodLeftSide || isMethodRightSide);
+		boolean isMethodSameName = ( (refactoring.getNomeMetodo()!=null) && (refactoring.getNomeMetodo().equals(methodName)) );
+
+		return (isClassSameName && isMethodSameName);
+	}
+	
+
+	private boolean hasRefactoringsInCommit(String commitId, String originalFilePath, String originalClassName, String originalMethodName, HashSet<String> targetTefactoringTypes) {
+		ArrayList<RefactoringData> refactoringsForCommit = getRefactoringsInCommit(commitId, originalFilePath, originalClassName, originalMethodName, targetTefactoringTypes);
+		return (refactoringsForCommit.size()>0);		 
+	}
+
+	private ArrayList<RefactoringData> getRefactoringsInCommit(String commitId, String originalFilePath, String originalClassName, String originalMethodName, HashSet<String> targetTefactoringTypes) {
+		ArrayList<RefactoringData> result = new ArrayList<RefactoringData>(); 
+		String filePath = originalFilePath;
+		String className = originalClassName;
+		String methodName = originalMethodName;
+		boolean renamedMethod;
+		Date dateCommitRenamed = null;
+		do {
+			renamedMethod = false;
+			String pathRenamedName = null;
+			String classRenamedName = null;
+			String methodRenamedName = null;
+			for (RefactoringData refactoring : listRefactoring) {
+				if (!refactoring.getCommit().equals(commitId)) {
+					continue;
+				}
+				if ( (!this.getMethodRenameRefactoringTypes().contains(refactoring.getRefactoringType())) && (!targetTefactoringTypes.contains(refactoring.getRefactoringType())) ) {
+					continue;
+				}
+				if (!refactoring.getFileNameBefore().equals(filePath)) {
+					continue;
+				}
+				if (!isSameClassRefactored(className, refactoring)) {
+					continue;
+				}
+				if (this.getClassRenameRefactoringTypes().contains(refactoring.getRefactoringType())) {
+					if ((dateCommitRenamed == null) || ( (dateCommitRenamed != null)
+							&& (dateCommitRenamed.compareTo(refactoring.getCommitDate()) < 0)) ) {
+						renamedMethod = true;
+						// Change it
+						dateCommitRenamed = refactoring.getCommitDate();
+						pathRenamedName = refactoring.getFileNameBefore();
+						classRenamedName = refactoring.getRightSide();
+						// Do not change
+						methodRenamedName = methodName;
+					}
+				}
+				if (!isSameMethodRefactored(className, methodName, refactoring)) {
+					continue;
+				}
+				if (targetTefactoringTypes.contains(refactoring.getRefactoringType())) {
+					result.add(refactoring);
+				}
+				if (this.getMethodRenameRefactoringTypes().contains(refactoring.getRefactoringType())) {
+					if ((dateCommitRenamed == null) || ( (dateCommitRenamed != null)
+							&& (dateCommitRenamed.compareTo(refactoring.getCommitDate()) < 0)) ) {
+						renamedMethod = true;
+						// Do not change
+						pathRenamedName = filePath;
+						classRenamedName = className;
+						// Change it
+						dateCommitRenamed = refactoring.getCommitDate();
+						methodRenamedName = extrairNomeMetodo(refactoring.getRightSide());
+					}
+				}
+			}
+			if (renamedMethod) {
+				filePath = pathRenamedName;
+				className = classRenamedName;
+				methodName = methodRenamedName;
+			} else {
+				dateCommitRenamed = null;
+			}
+		} while (renamedMethod);
+		return (result);
+	}
+	
+	
 	private void writeNegativeToCsvFiles(MethodDataSmelly methodSmellyBuscar) {
 		pmResultSmellRefactoredMethodsMessage.write(methodSmellyBuscar.getNomeClasse(),
 			methodSmellyBuscar.getNomeMetodo(), methodSmellyBuscar.getSmell() != null ? methodSmellyBuscar.getSmell() : "",
@@ -500,149 +647,6 @@ computeFalsePositive(commitInitial, listRefactoring, typeSmell, targetTefactorin
 				refactoring.getLinesOfCode(), refactoring.getComplexity(),
 				refactoring.getEfferent(), refactoring.getNumberOfParameters(),
 				"false", "");
-	}
-	
-	
-	private static int countPositivePredictionForTechnique(FilterSmellResult commitInitial, String smellType, String technique) {
-		int positivePrediction = 0; 
-		for (MethodDataSmelly methodSmelly : commitInitial.getMetodosSmell()) {
-			if (methodSmelly.getSmell().contains(smellType)) {
-				if (methodSmelly.getListaTecnicas().contains(technique)) {
-					positivePrediction++;
-				}
-			}
-		}
-		return positivePrediction;
-	}
-	
-	
-	
-	private CommitData getCommitById(String commitId) {
-		CommitData result = null;
-		for (CommitData commit : commitsMergedIntoMaster) {
-			if (commit.getId().equals(commitId)) {
-				result = commit;
-			}
-		}
-		return result;
-	}
-	
-	private CommitData getNextCommit(String commitId) {
-		CommitData result = null;
-		CommitData commit = getCommitById(commitId);
-		if (commit!=null) {
-			result = commit.getNext();
-		}
-		return result;
-	}
-		
-	
-	public static String extrairNomeMetodo(String rightSide) {
-		int methodNameEnd = rightSide.indexOf("(");
-		String partialMethodName = rightSide.substring(0, methodNameEnd);
-		int methodNameBegin = partialMethodName.lastIndexOf(" ") + 1;
-		return partialMethodName.substring(methodNameBegin);
-	}
-
-	
-	
-
-	private boolean wasMethodRefactored(String className, String methodName, RefactoringData refactoring) {
-		// boolean isClassInvolvementBefore = refactoring.getInvolvedClassesBefore().contains(className);
-		// boolean isClassInvolvementAfter  = refactoring.getInvolvedClassesAfter().contains(className);
-		// boolean isClassInvolvement  = (isClassInvolvementBefore || isClassInvolvementAfter);
-		boolean isClassSameName = refactoring.getNomeClasse().equals(className);
-
-		// boolean isMethodLeftSide = refactoring.getLeftSide().contains(methodName);
-		// boolean isMethodRightSide = refactoring.getRightSide().contains(methodName);
-		// boolean isMethodSide = (isMethodLeftSide || isMethodRightSide);
-		boolean isMethodSameName = refactoring.getNomeMetodo().equals(methodName);
-
-		boolean isSameClass = (isClassSameName);
-		boolean isSameMethod = (isMethodSameName);
-		
-		return (isSameClass && isSameMethod);
-	}
-	
-
-	private boolean hasRefactoringsInNextCommit(String beforeCommitId, String originalFilePath, String originalClassName, String originalMethodName, HashSet<String> targetTefactoringTypes) {
-		ArrayList<RefactoringData> refactoringsForNextCommit = getRefactoringsForNextCommit(beforeCommitId, originalFilePath, originalClassName, originalMethodName, targetTefactoringTypes, true);
-		return (refactoringsForNextCommit.size()>0);		 
-	}
-	
-	private ArrayList<RefactoringData> getRefactoringsForNextCommit(String baseCommitId, String originalFilePath, String originalClassName, String originalMethodName, HashSet<String> targetTefactoringTypes, boolean justNextCommit) {
-		ArrayList<RefactoringData> result = new ArrayList<RefactoringData>(); 
-		CommitData baseCommit = getCommitById(baseCommitId);
-		CommitData nextCommit = baseCommit.getNext();
-		String filePath = originalFilePath;
-		String className = originalClassName;
-		String methodName = originalMethodName;
-		boolean renamedMethod;
-		Date dateCommitRenamed = null;
-		do {
-			renamedMethod = false;
-			String pathRenamedName = null;
-			String classRenamedName = null;
-			String methodRenamedName = null;
-			for (RefactoringData refactoring : listRefactoring) {
-				if ( (!this.getMethodRenameRefactoringTypes().contains(refactoring.getRefactoringType())) && (!targetTefactoringTypes.contains(refactoring.getRefactoringType())) ) {
-					continue;
-				}
-				if (refactoring.getCommitDate().before(baseCommit.getDate())) {
-					continue;
-				}
-				if ( (justNextCommit) && (!refactoring.getCommit().equals(nextCommit.getId())) ) {
-					continue;
-				}
-				if (!refactoring.getFileNameBefore().equals(filePath)) {
-					continue;
-				}
-				if (!refactoring.getNomeClasse().equals(className)) {
-					continue;
-				}
-				if (this.getClassRenameRefactoringTypes().contains(refactoring.getRefactoringType())) {
-					if ((dateCommitRenamed == null) || ( (dateCommitRenamed != null)
-							&& (dateCommitRenamed.compareTo(refactoring.getCommitDate()) < 0)) ) {
-						renamedMethod = true;
-						// Change it
-						dateCommitRenamed = refactoring.getCommitDate();
-						pathRenamedName = refactoring.getFileNameBefore();
-						classRenamedName = refactoring.getRightSide();
-						// Do not change
-						methodRenamedName = methodName;
-					}
-				}
-				if (!wasMethodRefactored(className, methodName, refactoring)) {
-					continue;
-				}
-				if (targetTefactoringTypes.contains(refactoring.getRefactoringType())) {
-					CommitData nextCommitForSmell = getNextCommit(baseCommitId);
-					if ( (nextCommitForSmell != null) &&  (refactoring.getCommit().equals(nextCommitForSmell.getId())) ) {
-						result.add(refactoring);
-					}
-				}
-				if (this.getMethodRenameRefactoringTypes().contains(refactoring.getRefactoringType())) {
-					if ((dateCommitRenamed == null) || ( (dateCommitRenamed != null)
-							&& (dateCommitRenamed.compareTo(refactoring.getCommitDate()) < 0)) ) {
-						renamedMethod = true;
-						// Do not change
-						pathRenamedName = filePath;
-						classRenamedName = className;
-						// Change it
-						dateCommitRenamed = refactoring.getCommitDate();
-						methodRenamedName = extrairNomeMetodo(refactoring.getRightSide());
-					}
-				}
-			}
-			if (renamedMethod) {
-				filePath = pathRenamedName;
-				className = classRenamedName;
-				methodName = methodRenamedName;
-			} else {
-				dateCommitRenamed = null;
-			}
-		} while (renamedMethod);
-		return (result);
 	}
 	
 	

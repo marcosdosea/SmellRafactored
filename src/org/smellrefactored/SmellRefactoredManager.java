@@ -29,8 +29,7 @@ import org.smellrefactored.refactoringminer.wrapper.RefactoringMinerWrapperDto;
 
 public class SmellRefactoredManager {
 
-	
-	final boolean USE_SMELLS_COMMIT_CACHE = false; 
+	final boolean USE_SMELLS_COMMIT_OLD_CACHE = false; 
 	
 	static Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
 
@@ -71,13 +70,16 @@ public class SmellRefactoredManager {
 
 
 	private void prepareSmellRefactored() throws Exception {
+		if (initialCommit.equals(finalCommit)) {
+			throw new Exception("At least 2 commits are required in the range of commits to be analyzed.");
+		}
 		
 		RefactoringMinerWrapperManager refactoringMinerWrapperManager = new RefactoringMinerWrapperManager(urlRepository, localFolder, initialCommit, finalCommit, resultBaseFileName);
 
 		// List<RefactoringMinerWrapperDto> refactoringDtoList = refactoringMinerWrapperManager.getRefactoringDtoListWithoutCache();
 		List<RefactoringMinerWrapperDto> refactoringDtoList = refactoringMinerWrapperManager.getRefactoringDtoListUsingJsonCache();
 
-		listRefactoring = getRefactoringDataListFromRefactoringList(refactoringDtoList);
+		listRefactoring = getRefactoringDataListFromRefactoringListIgnoringInitialCommit(refactoringDtoList);
 		HashSet<String> commitsWithRefactorings = refactoringMinerWrapperManager.getCommitsWithRefactoringsFromRefactoringList(refactoringDtoList);
 
 		logger.info("Total de refactorings encontrados: " + listRefactoring.size());
@@ -88,7 +90,7 @@ public class SmellRefactoredManager {
 		ArrayList<CommitData> commitsWithRefactoringMergedIntoMaster = getCommitsWithRefactoringMergedIntoMaster(commitsWithRefactorings);
 
 		commitSmell = new CommitSmell(gitService, repo, commitsWithRefactoringMergedIntoMaster, localFolder, listaLimiarTecnica, resultBaseFileName);
-		commitSmell.useCache(USE_SMELLS_COMMIT_CACHE); 
+		commitSmell.useOldCache(USE_SMELLS_COMMIT_OLD_CACHE); 
 	}
 
 	
@@ -182,6 +184,7 @@ public class SmellRefactoredManager {
 			smellRefactoredMethod.getSmellRefactoredMethods();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
+			e.printStackTrace();
 		}
 	}
 
@@ -191,6 +194,7 @@ public class SmellRefactoredManager {
 			smellRefactoredClass.getSmellRefactoredClasses();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
+			e.printStackTrace();
 		}
 	}
 
@@ -206,12 +210,14 @@ public class SmellRefactoredManager {
 	
 	
 	
-	private ArrayList<RefactoringData> getRefactoringDataListFromRefactoringList(List<RefactoringMinerWrapperDto> refactoringDtoList) {
+	private ArrayList<RefactoringData> getRefactoringDataListFromRefactoringListIgnoringInitialCommit(List<RefactoringMinerWrapperDto> refactoringDtoList) {
 		ArrayList<RefactoringData> refactoringDataList = new ArrayList<RefactoringData>(); 
 		for (RefactoringMinerWrapperDto refactoringDto : refactoringDtoList) {
 			if (refactoringDto != null) {
-				RefactoringData refactoringData = newRefactoringData(refactoringDto);
-				refactoringDataList.add(refactoringData);
+				if (!refactoringDto.commitId.equals(this.initialCommit)) {
+					RefactoringData refactoringData = newRefactoringData(refactoringDto);
+					refactoringDataList.add(refactoringData);
+				}
 			}
 		}
     return (refactoringDataList);
@@ -294,7 +300,34 @@ public class SmellRefactoredManager {
 	}
 	
 	
+	public static CommitData getCommitById(String commitId, ArrayList<CommitData> commitsMergedIntoMaster) throws Exception {
+		CommitData result = null;
+		for (CommitData commit : commitsMergedIntoMaster) {
+			if (commit.getId().equals(commitId)) {
+				result = commit;
+			}
+		}
+		if (result == null) {
+			throw new Exception("Commit "  + commitId + " not found."); 
+		}
+		return result;
+	}
 	
-	
+	public static CommitData getNextCommit(String commitId, ArrayList<CommitData> commitsMergedIntoMaster) throws Exception {
+		CommitData result = null;
+		CommitData commit = getCommitById(commitId, commitsMergedIntoMaster);
+		if (commit != null) {
+			result = commit.getNext();
+		} else {
+			throw new Exception("Commit "  + commitId + " not found."); 
+		}
+		if (result == null) {
+			throw new Exception("Next commit for commit "  + commitId + " not found."); 
+		}
+		if (result.getId() == commitId) {
+			throw new Exception("Next commit for commit "  + commitId + " it is himself."); 
+		}
+		return result;
+	}
 	
 }
