@@ -34,9 +34,16 @@ import org.slf4j.LoggerFactory;
 
 import com.opencsv.CSVReader;
 
-public class SmellRefactoredManager2 {
+/**
+ * Identifies all commits that have refactorings and checks,
+ * based on the previous commit, which refactorings were performed 
+ * in smelly methods.
+ * @author Marcos Dósea
+ *
+ */
+public class SmellRefactoredAllManager {
 
-	static Logger logger = LoggerFactory.getLogger(SmellRefactoredManager2.class);
+	static Logger logger = LoggerFactory.getLogger(SmellRefactoredAllManager.class);
 
 	private String urlRepository;
 	private String localFolder;
@@ -58,7 +65,7 @@ public class SmellRefactoredManager2 {
 	PersistenceMechanism pmResultSmellRefactoredCommit;
 	HashSet<String> listCommitEvaluated = new HashSet<String>();
 
-	public SmellRefactoredManager2(String urlRepository, String localFolder, String initialCommit, String finalCommit,
+	public SmellRefactoredAllManager(String urlRepository, String localFolder, String initialCommit, String finalCommit,
 			List<LimiarTecnica> listaLimiarTecnica, String resultFileName) {
 		this.urlRepository = urlRepository;
 		this.localFolder = localFolder;
