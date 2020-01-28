@@ -6,6 +6,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -34,9 +35,16 @@ import org.slf4j.LoggerFactory;
 
 import com.opencsv.CSVReader;
 
-public class SmellRefactoredManager2 {
+/**
+ * Identifies all commits that have refactorings and checks,
+ * based on the previous commit, which refactorings were performed 
+ * in smelly methods.
+ * @author Marcos Dósea
+ *
+ */
+public class SmellRefactoredAllManagerOld {
 
-	static Logger logger = LoggerFactory.getLogger(SmellRefactoredManager2.class);
+	static Logger logger = LoggerFactory.getLogger(SmellRefactoredAllManager.class);
 
 	private String urlRepository;
 	private String localFolder;
@@ -58,7 +66,7 @@ public class SmellRefactoredManager2 {
 	PersistenceMechanism pmResultSmellRefactoredCommit;
 	HashSet<String> listCommitEvaluated = new HashSet<String>();
 
-	public SmellRefactoredManager2(String urlRepository, String localFolder, String initialCommit, String finalCommit,
+	public SmellRefactoredAllManagerOld(String urlRepository, String localFolder, String initialCommit, String finalCommit,
 			List<LimiarTecnica> listaLimiarTecnica, String resultFileName) {
 		this.urlRepository = urlRepository;
 		this.localFolder = localFolder;
@@ -181,6 +189,7 @@ public class SmellRefactoredManager2 {
 			ArrayList<RefactoringData> listRefactoringRelatedRenaming = new ArrayList<RefactoringData>();
 
 			ArrayList<RefactoringData> listRefactoringMergedIntoMaster = new ArrayList<RefactoringData>();
+			HashMap<String, CommitData> listCommitAnalisados = new HashMap<String, CommitData>();
 			for (RefactoringData refactoring : listRefactoring) {
 				for (CommitData commit : commitsMergedIntoMaster) {
 					if (refactoring.getCommit().equals(commit.getId())) {
@@ -191,10 +200,14 @@ public class SmellRefactoredManager2 {
 						// if (refactoring.getRefactoringType().contains("OPERATION") &&
 						// (refactoring.getRefactoringType().contains("EXTRACT")||refactoring.getRefactoringType().contains("MOVE")))
 						if (refactoring.getRefactoringType().contains("OPERATION")
-								&& refactoring.getRefactoringType().contains("EXTRACT"))
+								&& refactoring.getRefactoringType().contains("EXTRACT")) {
 							listRefactoringRelatedOperation.add(refactoring);
-						if (refactoring.getRefactoringType().equals("RENAME_METHOD"))
+							listCommitAnalisados.put(commit.getId(), commit);
+						} 
+						if (refactoring.getRefactoringType().equals("RENAME_METHOD")) {
 							listRefactoringRelatedRenaming.add(refactoring);
+							listCommitAnalisados.put(commit.getId(), commit);
+						}
 					}
 				}
 			}
@@ -222,6 +235,12 @@ public class SmellRefactoredManager2 {
 					MethodDataSmelly.HIGH_EFFERENT_COUPLING);
 			evaluateSmellChangeParameters(commitsWithRefactoringMergedIntoMaster, listRefactoringRelatedRenaming, repo,
 					MethodDataSmelly.MANY_PARAMETERS);
+			pmResultEvaluation.write("DADOS COMMITS");
+			pmResultEvaluation.write("ID", "Data", "Short Message");
+			for(CommitData commit : listCommitAnalisados.values()) {
+				pmResultEvaluation.write(commit.getId(), commit.getDate(), commit.getShortMessage());
+			}
+			
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}

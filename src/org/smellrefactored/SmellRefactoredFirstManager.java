@@ -1,5 +1,6 @@
 package org.smellrefactored;
 
+
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
@@ -33,10 +34,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.opencsv.CSVReader;
+/**
+ * Identify the smells from the first version and check if they have been refactored throughout evolution.
+ * @author Marcos Dósea
+ *
+ */
+public class SmellRefactoredFirstManager {
 
-public class SmellRefactoredManager {
-
-	static Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
+	static Logger logger = LoggerFactory.getLogger(SmellRefactoredFirstManager.class);
 
 	private String urlRepository;
 	private String localFolder;
@@ -59,7 +64,7 @@ public class SmellRefactoredManager {
 	PersistenceMechanism pmResultSmellRefactoredCommit;
 	HashSet<String> listCommitEvaluated = new HashSet<String>();
 
-	public SmellRefactoredManager(String urlRepository, String localFolder, String initialCommit, String finalCommit,
+	public SmellRefactoredFirstManager(String urlRepository, String localFolder, String initialCommit, String finalCommit,
 			List<LimiarTecnica> listaLimiarTecnica, String resultFileName) {
 		this.urlRepository = urlRepository;
 		this.localFolder = localFolder;
