@@ -130,7 +130,7 @@ public class SmellRefactoredManager {
 	
 	private RefactoringData newRefactoringData(RefactoringMinerWrapperDto refactoringDto) {
 		RefactoringData result = new RefactoringData();
-		result.setCommit(refactoringDto.commitId);
+		result.setCommitId(refactoringDto.commitId);
 		result.setRefactoringName(refactoringDto.name);
 		result.setRefactoringType(refactoringDto.type.toString());
 		if ( (refactoringDto.leftSide != null) && (refactoringDto.leftSide.size()>0) )  {

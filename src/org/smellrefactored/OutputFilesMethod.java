@@ -1,0 +1,260 @@
+package org.smellrefactored;
+
+import org.designroleminer.smelldetector.model.ClassDataSmelly;
+import org.designroleminer.smelldetector.model.MethodDataSmelly;
+import org.repodriller.persistence.PersistenceMechanism;
+import org.repodriller.persistence.csv.CSVFile;
+
+public class OutputFilesMethod {
+
+	String baseFileName;
+	
+	PersistenceMechanism pmResultSmellRefactoredMethods;
+	PersistenceMechanism pmResultSmellRefactoredMethodsMessage;
+	PersistenceMechanism pmResultSmellRefactoredMethodsMachineLearning;
+
+	public OutputFilesMethod(String baseFileName) {
+		
+		this.baseFileName = baseFileName;
+		
+		pmResultSmellRefactoredMethods = new CSVFile(this.baseFileName + "-smellRefactored-methods.csv", false);
+		pmResultSmellRefactoredMethodsMessage = new CSVFile(this.baseFileName + "-smellRefactored-methods-message.csv", false);
+		pmResultSmellRefactoredMethodsMachineLearning = new CSVFile(this.baseFileName + "-smellRefactored-methods-machineLearning.csv", false);
+
+	}
+	
+	public void writeHeaders() {
+		pmResultSmellRefactoredMethodsMessage.write(
+				"Class"
+				, "Method"
+				, "Smell"
+				, "LOC"
+				, "CC"
+				, "EC"
+				, "NOP"
+				, "Tecnicas"
+				, "Commit"
+				, "Refactoring"
+				, "Left Side"
+				, "Right Side"
+				, "Full Message"
+				);
+		pmResultSmellRefactoredMethods.write(
+				"Class"
+				, "Method"
+				, "Smell"
+				, "LOC"
+				, "CC"
+				, "EC"
+				, "NOP"
+				, "Tecnicas"
+				, "Commit"
+				, "Refactoring"
+				, "Left Side"
+				, "Right Side"
+				);
+		pmResultSmellRefactoredMethodsMachineLearning.write(
+				"commitId"
+				, "filePath"
+				, "className"
+				, "methodName"
+				, "DesignRole"
+				, "LOC"
+				, "CC"
+				, "EC"
+				, "NOP"
+				, "isRefactoring"
+				, "Refactoring"
+				);
+	}
+
+	
+	public void writeTruePositiveToCsvFiles(RefactoringData refactoring, MethodDataSmelly methodSmell) throws Exception {
+		pmResultSmellRefactoredMethodsMessage.write(
+				refactoring.getNomeClasse()
+				, refactoring.getNomeMetodo()
+				, methodSmell.getSmell()
+				, methodSmell.getLinesOfCode()
+				, methodSmell.getComplexity()
+				, methodSmell.getEfferent()
+				, methodSmell.getNumberOfParameters()
+				, methodSmell.getListaTecnicas()
+				, refactoring.getCommitId()
+				, refactoring.getRefactoringType()
+				, refactoring.getLeftSide()
+				, refactoring.getRightSide()
+				, refactoring.getFullMessage()
+			);
+		pmResultSmellRefactoredMethods.write(
+				refactoring.getNomeClasse()
+				, refactoring.getNomeMetodo()
+				, methodSmell.getSmell()
+				, methodSmell.getLinesOfCode()
+				, methodSmell.getComplexity()
+				, methodSmell.getEfferent()
+				, methodSmell.getNumberOfParameters()
+				, methodSmell.getListaTecnicas()
+				, refactoring.getCommitId()
+				, refactoring.getRefactoringType()
+				, refactoring.getLeftSide()
+				, refactoring.getRightSide()
+			);
+		pmResultSmellRefactoredMethodsMachineLearning.write(
+				methodSmell.getCommit()
+				, refactoring.getFileNameAfter()
+				, refactoring.getNomeClasse()
+				, refactoring.getNomeMetodo()
+				, refactoring.getClassDesignRole()
+				, methodSmell.getLinesOfCode()
+				, methodSmell.getComplexity()
+				, methodSmell.getEfferent()
+				, methodSmell.getNumberOfParameters()
+				, "true"
+				, refactoring.getRefactoringType()
+				);
+		
+	}
+
+	public void writeFalseNegativeToCsvFiles(RefactoringData refactoring, MethodDataSmelly methodNotSmell) throws Exception {
+		pmResultSmellRefactoredMethodsMessage.write(
+				refactoring.getNomeClasse()
+				, refactoring.getNomeMetodo()
+				, (methodNotSmell.getSmell() != null ? methodNotSmell.getSmell() : "")
+				, methodNotSmell.getLinesOfCode()
+				, methodNotSmell.getComplexity()
+				, methodNotSmell.getEfferent()
+				, methodNotSmell.getNumberOfParameters()
+				, methodNotSmell.getListaTecnicas()
+				, refactoring.getCommitId()
+				, refactoring.getRefactoringType()
+				, refactoring.getLeftSide()
+				, refactoring.getRightSide()
+				, refactoring.getFullMessage()
+				);
+		pmResultSmellRefactoredMethods.write(
+				refactoring.getNomeClasse()
+				, refactoring.getNomeMetodo()
+				, (methodNotSmell.getSmell() != null ? methodNotSmell.getSmell() : "")
+				, methodNotSmell.getLinesOfCode()
+				, methodNotSmell.getComplexity()
+				, methodNotSmell.getEfferent()
+				, methodNotSmell.getNumberOfParameters()
+				, methodNotSmell.getListaTecnicas()
+				, refactoring.getCommitId()
+				, refactoring.getRefactoringType()
+				, refactoring.getLeftSide()
+				, refactoring.getRightSide()
+				);
+		pmResultSmellRefactoredMethodsMachineLearning.write(
+				methodNotSmell.getCommit()
+				, refactoring.getFileNameAfter()
+				, refactoring.getNomeClasse()
+				, refactoring.getNomeMetodo()
+				, refactoring.getClassDesignRole()
+				, methodNotSmell.getLinesOfCode()
+				, methodNotSmell.getComplexity()
+				, methodNotSmell.getEfferent()
+				, methodNotSmell.getNumberOfParameters()
+				, "true"
+				, refactoring.getRefactoringType()
+				);
+	}
+
+	public void writeFalsePositiveToCsvFiles(RefactoringData refactoring, MethodDataSmelly methodNotSmell) throws Exception {
+		pmResultSmellRefactoredMethodsMessage.write(
+				refactoring.getNomeClasse()
+				, refactoring.getNomeMetodo()
+				, (methodNotSmell.getSmell() != null ? methodNotSmell.getSmell() : "")
+				, methodNotSmell.getLinesOfCode()
+				, methodNotSmell.getComplexity()
+				, methodNotSmell.getEfferent()
+				, methodNotSmell.getNumberOfParameters()
+				, methodNotSmell.getListaTecnicas()
+				, refactoring.getCommitId()
+				, ""
+				, ""
+				, ""
+				, ""
+				);
+		pmResultSmellRefactoredMethods.write(
+				refactoring.getNomeClasse()
+				, refactoring.getNomeMetodo()
+				, (methodNotSmell.getSmell() != null ? methodNotSmell.getSmell() : "")
+				, methodNotSmell.getLinesOfCode()
+				, methodNotSmell.getComplexity()
+				, methodNotSmell.getEfferent()
+				, methodNotSmell.getNumberOfParameters()
+				, methodNotSmell.getListaTecnicas()
+				, methodNotSmell.getCommit()
+				, ""
+				, ""
+				, ""
+				);
+		pmResultSmellRefactoredMethodsMachineLearning.write(
+				methodNotSmell.getCommit()
+				, refactoring.getFileNameAfter()
+				, refactoring.getNomeClasse()
+				, refactoring.getNomeMetodo()
+				, refactoring.getClassDesignRole()
+				, methodNotSmell.getLinesOfCode()
+				, methodNotSmell.getComplexity()
+				, methodNotSmell.getEfferent()
+				, methodNotSmell.getNumberOfParameters()
+				, "false"
+				, ""
+				);
+	}
+	public void writeNegativeToCsvFiles(MethodDataSmelly methodSmellyBuscar) {
+		pmResultSmellRefactoredMethodsMessage.write(
+				methodSmellyBuscar.getNomeClasse()
+				, methodSmellyBuscar.getNomeMetodo()
+				, (methodSmellyBuscar.getSmell() != null ? methodSmellyBuscar.getSmell() : "")
+				, methodSmellyBuscar.getLinesOfCode()
+				, methodSmellyBuscar.getComplexity()
+				, methodSmellyBuscar.getEfferent()
+				, methodSmellyBuscar.getNumberOfParameters()
+				, methodSmellyBuscar.getListaTecnicas()
+				, methodSmellyBuscar.getCommit()
+				, ""
+				, ""
+				, ""
+				, ""
+			);
+		pmResultSmellRefactoredMethods.write(
+				methodSmellyBuscar.getNomeClasse()
+				, methodSmellyBuscar.getNomeMetodo()
+				, (methodSmellyBuscar.getSmell() != null ? methodSmellyBuscar.getSmell() : "")
+				, methodSmellyBuscar.getLinesOfCode()
+				, methodSmellyBuscar.getComplexity()
+				, methodSmellyBuscar.getEfferent()
+				, methodSmellyBuscar.getNumberOfParameters()
+				, methodSmellyBuscar.getListaTecnicas()
+				, methodSmellyBuscar.getCommit()
+				, ""
+				, ""
+				, ""
+			);
+		pmResultSmellRefactoredMethodsMachineLearning.write(
+				methodSmellyBuscar.getCommit()
+				, methodSmellyBuscar.getDiretorioDaClasse()
+				, methodSmellyBuscar.getNomeClasse()
+				, methodSmellyBuscar.getNomeMetodo()
+				, methodSmellyBuscar.getClassDesignRole()
+				, methodSmellyBuscar.getLinesOfCode()
+				, methodSmellyBuscar.getComplexity()
+				, methodSmellyBuscar.getEfferent()
+				, methodSmellyBuscar.getNumberOfParameters()
+				, "false"
+				, ""
+				);
+	}
+
+	public void close() {
+		pmResultSmellRefactoredMethodsMessage.close();
+		pmResultSmellRefactoredMethods.close();
+		pmResultSmellRefactoredMethodsMachineLearning.close();
+		
+	}
+	
+	
+}

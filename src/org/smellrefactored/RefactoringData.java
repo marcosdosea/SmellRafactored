@@ -13,54 +13,32 @@ public class RefactoringData implements Comparable<RefactoringData> {
 		this.rightSide = rightSide;
 	}
 
-	private String commit;
+	private String commitId;
+	private Date commitDate;
 	private String refactoringName;
 	private String refactoringType;
 	private String leftSide;
 	private String rightSide;
+	private String fileNameBefore;
+	private String fileNameAfter;
 	private String involvedClassesAfter;
 	private String involvedClassesBefore;
 	private String shortMessage;
 	private String fullMessage;
 	
-	
-	private int numberOfClasses;
-	private int numberOfMethods;
-	private int systemLOC;
-	private Date commitDate;
-
-	private String fileNameBefore;
-	private String fileNameAfter;
-
 	private String nomeClasse;
-	private String nomeMetodo;
-	private int linesOfCode;
-	private int complexity;
-	private int numberOfParameters;
-	private int efferent;
-	private HashSet<String> listaTecnicas;
-	private String smell;
 	private String classDesignRole;
+	private String nomeMetodo;
 
-	
-	
-	public String getFileNameBefore() {
-		return fileNameBefore;
+
+
+	public String getCommitId() {
+		return commitId;
 	}
 
-	public void setFileNameBefore(String fileNameBefore) {
-		this.fileNameBefore = fileNameBefore;
+	public void setCommitId(String commit) {
+		this.commitId = commit;
 	}
-
-	public String getFileNameAfter() {
-		return fileNameAfter;
-	}
-
-	public void setFileNameAfter(String fileNameAfter) {
-		this.fileNameAfter = fileNameAfter;
-	}
-
-	
 	
 	public String getNomeClasse() {
 		return nomeClasse;
@@ -78,52 +56,21 @@ public class RefactoringData implements Comparable<RefactoringData> {
 		this.nomeMetodo = nomeMetodo;
 	}
 
-	public int getLinesOfCode() {
-		return linesOfCode;
+	
+	public String getFileNameBefore() {
+		return fileNameBefore;
 	}
 
-	public void setLinesOfCode(int linesOfCode) {
-		this.linesOfCode = linesOfCode;
+	public void setFileNameBefore(String fileNameBefore) {
+		this.fileNameBefore = fileNameBefore;
 	}
 
-	public int getComplexity() {
-		return complexity;
+	public String getFileNameAfter() {
+		return fileNameAfter;
 	}
 
-	public void setComplexity(int complexity) {
-		this.complexity = complexity;
-	}
-
-	public int getNumberOfParameters() {
-		return numberOfParameters;
-	}
-
-	public void setNumberOfParameters(int numberOfParameters) {
-		this.numberOfParameters = numberOfParameters;
-	}
-
-	public int getEfferent() {
-		return efferent;
-	}
-
-	public void setEfferent(int efferent) {
-		this.efferent = efferent;
-	}
-
-	public HashSet<String> getListaTecnicas() {
-		return listaTecnicas;
-	}
-
-	public void setListaTecnicas(HashSet<String> listaTecnicas) {
-		this.listaTecnicas = listaTecnicas;
-	}
-
-	public String getSmell() {
-		return smell;
-	}
-
-	public void setSmell(String smell) {
-		this.smell = smell;
+	public void setFileNameAfter(String fileNameAfter) {
+		this.fileNameAfter = fileNameAfter;
 	}
 
 	public String getClassDesignRole() {
@@ -132,14 +79,6 @@ public class RefactoringData implements Comparable<RefactoringData> {
 
 	public void setClassDesignRole(String classDesignRole) {
 		this.classDesignRole = classDesignRole;
-	}
-
-	public String getCommit() {
-		return commit;
-	}
-
-	public void setCommit(String commit) {
-		this.commit = commit;
 	}
 
 	public String getRefactoringName() {
@@ -197,31 +136,7 @@ public class RefactoringData implements Comparable<RefactoringData> {
 	public void setFullMessage(String fullMessage) {
 		this.fullMessage = fullMessage;
 	}
-
-	public int getNumberOfClasses() {
-		return numberOfClasses;
-	}
-
-	public void setNumberOfClasses(int numberOfClasses) {
-		this.numberOfClasses = numberOfClasses;
-	}
-
-	public int getSystemLOC() {
-		return systemLOC;
-	}
-
-	public void setSystemLOC(int systemLOC) {
-		this.systemLOC = systemLOC;
-	}
-
-	public int getNumberOfMethods() {
-		return numberOfMethods;
-	}
-
-	public void setNumberOfMethods(int numberOfMethods) {
-		this.numberOfMethods = numberOfMethods;
-	}
-
+	
 	public Date getCommitDate() {
 		return commitDate;
 	}

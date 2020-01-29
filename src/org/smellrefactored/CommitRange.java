@@ -134,14 +134,12 @@ public class CommitRange {
 		CommitData commit = getCommitById(commitId);
 		if (commit != null) {
 			result = commit.getPrevious();
-		} else {
-			throw new Exception("Commit "  + commitId + " not found."); 
-		}
-		if (result == null) {
-			throw new Exception("Previous commit for commit "  + commitId + " not found."); 
-		}
-		if (result.getId() == commitId) {
-			throw new Exception("Previous commit for commit "  + commitId + " it is himself."); 
+			if (result == null) {
+				throw new Exception("Previous commit for commit "  + commitId + " not found."); 
+			}
+			if (result.getId() == commitId) {
+				throw new Exception("Previous commit for commit "  + commitId + " it is himself."); 
+			}
 		}
 		return result;
 	}
