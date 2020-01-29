@@ -46,7 +46,7 @@ public class RefactoringMinerWrapperManager {
 
 	public List<RefactoringMinerWrapperDto> getRefactoringDtoListUsingJsonCache() throws Exception {
 		List<RefactoringMinerWrapperDto> refactoringDtoList;
-		RefactoringMinerWrapperCache cacheJson = new RefactoringMinerWrapperCacheJson(resultBaseFileName);
+		RefactoringMinerWrapperCacheJson cacheJson = new RefactoringMinerWrapperCacheJson(resultBaseFileName);
 		if (!cacheJson.hasCache()) {
 			refactoringDtoList = this.getRefactoringDtoListFromRefactoringMiner();
 			cacheJson.saveRefactoringDtoListToFile(refactoringDtoList);

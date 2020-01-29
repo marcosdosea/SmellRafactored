@@ -68,7 +68,7 @@ public class SmellRefactoredClass {
 
 	ArrayList<RefactoringData> listRefactoring;
 	private String initialCommit;
-	ArrayList<CommitData> commitsMergedIntoMaster;
+	CommitRange commitRange;
 	String resultFileName;
 	
 	PersistenceMechanism pmResultEvaluationClass;
@@ -79,10 +79,10 @@ public class SmellRefactoredClass {
 	CommitSmell commitSmell;
 
 	
-	public SmellRefactoredClass(ArrayList<RefactoringData> listRefactoring, String initialCommit, ArrayList<CommitData> commitsMergedIntoMaster, CommitSmell commitSmell, String resultFileName) {
+	public SmellRefactoredClass(ArrayList<RefactoringData> listRefactoring, String initialCommit, CommitRange commitRange, CommitSmell commitSmell, String resultFileName) {
 		this.listRefactoring = listRefactoring;
 		this.initialCommit = initialCommit;
-		this.commitsMergedIntoMaster = commitsMergedIntoMaster;
+		this.commitRange = commitRange;
 		this.commitSmell = commitSmell;
 		this.resultFileName = resultFileName;
 		
@@ -105,7 +105,7 @@ public class SmellRefactoredClass {
 			}
 			ArrayList<RefactoringData> listRefactoringMergedIntoMaster = new ArrayList<RefactoringData>();
 			for (RefactoringData refactoring : listRefactoring) {
-				for (CommitData commit : commitsMergedIntoMaster) {
+				for (CommitData commit : commitRange.getCommitsMergedIntoMaster() ) {
 					if (refactoring.getCommit().equals(commit.getId())) {
 						refactoring.setCommitDate(commit.getDate());
 						refactoring.setFullMessage(commit.getFullMessage());
@@ -161,7 +161,15 @@ public class SmellRefactoredClass {
 					"Left Side", "Right Side", "Full Message");
 			pmResultSmellRefactoredClasses.write("Class", "Smell", "CLOC", "Tecnicas", "Commit", "Refactoring",
 					"Left Side", "Right Side");
-			pmResultSmellRefactoredClassesMachineLearning.write("DesignRole", "CLOC", "isRefactoring", "Refactoring");
+			pmResultSmellRefactoredClassesMachineLearning.write(
+					"commitId"
+					, "filePath"
+					, "className"
+					, "DesignRole"
+					, "CLOC"
+					, "isRefactoring"
+					, "Refactoring"
+					);
 
 			
 			evaluateInDetailSmellChangeOperation(ClassDataSmelly.LONG_CLASS, this.getLongClassRefactoringTypes(), smellsCommitInitial, listRefactoringMergedIntoMaster);
@@ -225,7 +233,7 @@ public class SmellRefactoredClass {
 			if ( (ENABLE_REDUNDANT_VERIFICATION_FOR_DEBUG) && (!hasSmellPredictionForTechniqueInCommit(classSmelly.getCommit(), smellType, technique, classSmelly.getDiretorioDaClasse(), classSmelly.getNomeClasse())) ) {
 				throw new Exception("Existing class smelly not found (" + classSmelly.getCommit() + " | " + smellType + " | " + technique + " | " + classSmelly.getDiretorioDaClasse() + " | " + classSmelly.getNomeClasse() + ".");
 			} 
-			CommitData nextCommit = SmellRefactoredManager.getNextCommit(classSmelly.getCommit(), commitsMergedIntoMaster);
+			CommitData nextCommit = this.commitRange.getNextCommit(classSmelly.getCommit());
 			if (nextCommit != null) {
  				if (!hasRefactoringsInCommit(nextCommit.getId(), classSmelly.getDiretorioDaClasse(), classSmelly.getNomeClasse(), targetTefactoringTypes)) {
  					boolean ignoreCurrentPrediction = false;
@@ -247,7 +255,7 @@ public class SmellRefactoredClass {
 	private void computeTrueNegativeBySmellAndTechnique(FilterSmellResult commitInitial, String technique, String smellType, HashSet<String> targetTefactoringTypes, ConfusionMatrix confusionMtrix) throws Exception {
 		HashSet<ClassDataSmelly> notSmellyClassesForSelectedTechniqueSmell = getNotSmellingClassesBySmellAndTechnique(commitInitial, smellType, technique); 
 		for (ClassDataSmelly classNotSmelly : notSmellyClassesForSelectedTechniqueSmell) {
-			CommitData nextCommit = SmellRefactoredManager.getNextCommit(classNotSmelly.getCommit(), commitsMergedIntoMaster);
+			CommitData nextCommit = this.commitRange.getNextCommit(classNotSmelly.getCommit());
 			if (nextCommit != null) {
 				if (!hasRefactoringsInCommit(nextCommit.getId(), classNotSmelly.getDiretorioDaClasse(), classNotSmelly.getNomeClasse(), targetTefactoringTypes)) {
 					confusionMtrix.incTrueNegative();
@@ -311,7 +319,7 @@ public class SmellRefactoredClass {
 	
 	public ClassDataSmelly getPreviousSmellCommitForClassByRefactoring(RefactoringData refactoring, String smellType) throws Exception {
 		ClassDataSmelly result = null;
-		CommitData commit = SmellRefactoredManager.getCommitById(refactoring.getCommit(), commitsMergedIntoMaster);
+		CommitData commit = this.commitRange.getCommitById(refactoring.getCommit());
 		if (commit == null ) {
 			throw new Exception("Refactor Commit does not exist in the list of commits.");
 		}
@@ -426,7 +434,7 @@ public class SmellRefactoredClass {
 	}
 	
 
-	private void writeTruePositiveToCsvFiles(RefactoringData refactoring, ClassDataSmelly classSmell) {
+	private void writeTruePositiveToCsvFiles(RefactoringData refactoring, ClassDataSmelly classSmell) throws Exception {
 		pmResultSmellRefactoredClassesMessage.write(refactoring.getNomeClasse(),
 			refactoring.getSmell(), classSmell.getLinesOfCode(),
 			refactoring.getListaTecnicas(), refactoring.getCommit(),
@@ -437,11 +445,18 @@ public class SmellRefactoredClass {
 			refactoring.getListaTecnicas(), refactoring.getCommit(),
 			refactoring.getRefactoringType(), refactoring.getLeftSide(),
 			refactoring.getRightSide());
-		pmResultSmellRefactoredClassesMachineLearning.write(refactoring.getClassDesignRole(),
-			classSmell.getLinesOfCode(), "true", refactoring.getRefactoringType());
+		pmResultSmellRefactoredClassesMachineLearning.write(
+				this.commitRange.getPreviousCommit(refactoring.getCommit())
+				, refactoring.getFileNameAfter()
+				, refactoring.getNomeClasse()
+				, refactoring.getClassDesignRole()
+				, classSmell.getLinesOfCode()
+				, "true"
+				, refactoring.getRefactoringType()
+				);
 	}
 
-	private void writeFalseNegativeToCsvFiles(RefactoringData refactoring, ClassDataSmelly classNotSmell) {
+	private void writeFalseNegativeToCsvFiles(RefactoringData refactoring, ClassDataSmelly classNotSmell) throws Exception {
 		pmResultSmellRefactoredClassesMessage.write(refactoring.getNomeClasse(),
 			refactoring.getSmell() != null ? refactoring.getSmell() : "", classNotSmell.getLinesOfCode(),
 			refactoring.getListaTecnicas(), refactoring.getCommit(),
@@ -452,11 +467,35 @@ public class SmellRefactoredClass {
 			refactoring.getListaTecnicas(), refactoring.getCommit(),
 			refactoring.getRefactoringType(), refactoring.getLeftSide(),
 			refactoring.getRightSide());
-		pmResultSmellRefactoredClassesMachineLearning.write(refactoring.getClassDesignRole(),
-			classNotSmell.getLinesOfCode(),
-			"true", refactoring.getRefactoringType());
+		pmResultSmellRefactoredClassesMachineLearning.write(
+				this.commitRange.getPreviousCommit(refactoring.getCommit())
+				, refactoring.getFileNameAfter()
+				, refactoring.getNomeClasse()
+				, refactoring.getClassDesignRole()
+				, classNotSmell.getLinesOfCode()
+				, "true"
+				, refactoring.getRefactoringType()
+				);
 	}	
 
+	private void writeFalsePositiveToCsvFiles(RefactoringData refactoring) throws Exception {
+		pmResultSmellRefactoredClassesMessage.write(refactoring.getNomeClasse(), refactoring.getSmell(),
+				refactoring.getLinesOfCode(), refactoring.getListaTecnicas(), refactoring.getCommit(), "", "",
+			"", "");
+		pmResultSmellRefactoredClasses.write(refactoring.getNomeClasse(), refactoring.getSmell(),
+				refactoring.getLinesOfCode(), refactoring.getListaTecnicas(), refactoring.getCommit(), "", "",
+			"");
+		pmResultSmellRefactoredClassesMachineLearning.write(
+				this.commitRange.getPreviousCommit(refactoring.getCommit())
+				, refactoring.getFileNameAfter()
+				, refactoring.getNomeClasse()
+				, refactoring.getClassDesignRole()
+				, refactoring.getLinesOfCode()
+				, "false"
+				, ""
+				);
+	}
+	
 	private void writeNegativeToCsvFiles(ClassDataSmelly classBuscar) {
 		pmResultSmellRefactoredClassesMessage.write(classBuscar.getNomeClasse(), classBuscar.getSmell(),
 			classBuscar.getLinesOfCode(), classBuscar.getListaTecnicas(), classBuscar.getCommit(), "", "",
@@ -464,18 +503,15 @@ public class SmellRefactoredClass {
 		pmResultSmellRefactoredClasses.write(classBuscar.getNomeClasse(), classBuscar.getSmell(),
 			classBuscar.getLinesOfCode(), classBuscar.getListaTecnicas(), classBuscar.getCommit(), "", "",
 			"");
-		pmResultSmellRefactoredClassesMachineLearning.write(classBuscar.getClassDesignRole(),
-			classBuscar.getLinesOfCode(), "false", "");
-	}
-	private void writeFalsePositiveToCsvFiles(RefactoringData refactoring) {
-		pmResultSmellRefactoredClassesMessage.write(refactoring.getNomeClasse(), refactoring.getSmell(),
-				refactoring.getLinesOfCode(), refactoring.getListaTecnicas(), refactoring.getCommit(), "", "",
-			"", "");
-		pmResultSmellRefactoredClasses.write(refactoring.getNomeClasse(), refactoring.getSmell(),
-				refactoring.getLinesOfCode(), refactoring.getListaTecnicas(), refactoring.getCommit(), "", "",
-			"");
-		pmResultSmellRefactoredClassesMachineLearning.write(refactoring.getClassDesignRole(),
-				refactoring.getLinesOfCode(), "false", "");
+		pmResultSmellRefactoredClassesMachineLearning.write(
+				classBuscar.getCommit() 
+				, classBuscar.getDiretorioDaClasse()
+				, classBuscar.getNomeClasse()
+				, classBuscar.getClassDesignRole()
+				, classBuscar.getLinesOfCode()
+				, "false"
+				, ""
+				);
 	}
 	
 	

@@ -1,25 +1,11 @@
 package org.smellrefactored;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.designroleminer.smelldetector.model.LimiarTecnica;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.NoHeadException;
-import org.eclipse.jgit.errors.AmbiguousObjectException;
-import org.eclipse.jgit.errors.IncorrectObjectTypeException;
-import org.eclipse.jgit.errors.MissingObjectException;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.DepthWalk.RevWalk;
-import org.eclipse.jgit.revwalk.RevCommit;
 import org.refactoringminer.api.GitService;
 import org.refactoringminer.util.GitServiceImpl;
 import org.slf4j.Logger;
@@ -29,7 +15,7 @@ import org.smellrefactored.refactoringminer.wrapper.RefactoringMinerWrapperDto;
 
 public class SmellRefactoredManager {
 
-	final boolean USE_SMELLS_COMMIT_OLD_CACHE = false; 
+	final boolean USE_SMELLS_COMMIT_OLD_CACHE = true; 
 	
 	static Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
 
@@ -38,11 +24,10 @@ public class SmellRefactoredManager {
 	private String initialCommit;
 	private String finalCommit;
 	private List<LimiarTecnica> listaLimiarTecnica;
-	private GitService gitService;
-	private Repository repo;
 
+	private CommitRange commitRange;
+	
 	private ArrayList<RefactoringData> listRefactoring = new ArrayList<RefactoringData>();
-	private ArrayList<CommitData> commitsMergedIntoMaster = new ArrayList<CommitData>();
 	private CommitSmell commitSmell;
 	
 	private String resultBaseFileName;
@@ -58,8 +43,7 @@ public class SmellRefactoredManager {
 		this.finalCommit = finalCommit;
 		this.listaLimiarTecnica = listaLimiarTecnica;
 		this.resultBaseFileName = resultBaseFileName;
-		
-		gitService = new GitServiceImpl();
+
 
 		try {
 			prepareSmellRefactored();
@@ -85,102 +69,23 @@ public class SmellRefactoredManager {
 		logger.info("Total de refactorings encontrados: " + listRefactoring.size());
 		
 		
-		repo = gitService.cloneIfNotExists(localFolder, urlRepository);
+		GitService gitService = new GitServiceImpl();
+		gitService.cloneIfNotExists(localFolder, urlRepository);
 
-		ArrayList<CommitData> commitsWithRefactoringMergedIntoMaster = getCommitsWithRefactoringMergedIntoMaster(commitsWithRefactorings);
+		commitRange = new CommitRange(localFolder, initialCommit, finalCommit);
+		ArrayList<CommitData> commitsWithRefactoringMergedIntoMaster = commitRange.getCommitsMergedIntoMasterByIds(commitsWithRefactorings);
 
-		commitSmell = new CommitSmell(gitService, repo, commitsWithRefactoringMergedIntoMaster, localFolder, listaLimiarTecnica, resultBaseFileName);
+		commitSmell = new CommitSmell(localFolder, commitsWithRefactoringMergedIntoMaster, listaLimiarTecnica, resultBaseFileName);
 		commitSmell.useOldCache(USE_SMELLS_COMMIT_OLD_CACHE); 
 	}
 
 	
 	
-	private ArrayList<CommitData> getCommitsWithRefactoringMergedIntoMaster(HashSet<String> refactoringCommitIds)
-			throws Exception, GitAPIException, NoHeadException, MissingObjectException, IncorrectObjectTypeException,
-			IOException, AmbiguousObjectException {
-		// Filtra os commits com refactoring cujo commit feito no master ou pull request
-		// realizados no master
-		ArrayList<CommitData> commitsNotMergedIntoMaster = new ArrayList<CommitData>();
-		Git git = new Git(repo);
-		gitService.checkout(repo, finalCommit);
-			Iterable<RevCommit> log = git.log().call();
-		Iterator<RevCommit> logIterator = log.iterator();
-		RevWalk revWalk = new RevWalk(repo, 3);
-		RevCommit masterHead = revWalk.parseCommit(repo.resolve("refs/heads/master"));
-		while (logIterator.hasNext()) {
-			RevCommit currentCommit = logIterator.next();
-			CommitData commitData = new CommitData();
-			commitData.setId(currentCommit.getId().getName());
-			commitData.setFullMessage(currentCommit.getFullMessage());
-			commitData.setShortMessage(currentCommit.getShortMessage());
-			commitData.setDate(new Date(currentCommit.getCommitTime() * 1000L));
-			ObjectId id = repo.resolve(commitData.getId());
-			RevCommit otherHead = revWalk.parseCommit(id);
-			if (revWalk.isMergedInto(otherHead, masterHead)) {
-				if ((otherHead.getParentCount() == 1)
-						|| (otherHead.getShortMessage().toUpperCase().contains("MERGE")
-								&& otherHead.getShortMessage().toUpperCase().contains("PULL"))) {
-					commitsMergedIntoMaster.add(commitData);
-				} else {
-					commitsNotMergedIntoMaster.add(commitData);
-				}
-			}
-			revWalk.close();
-			revWalk.dispose();
-		}
-		git.close();
-		
-		
-
-		Collections.sort(commitsNotMergedIntoMaster);
-		Collections.sort(commitsMergedIntoMaster);
-
-		
-		getChainedOrderedCommitsMergedIntoMaster();
-
-		
-		ArrayList<CommitData> commitsWithRefactoringMergedIntoMaster = commitsWithRefactoringMergedIntoMasterFromRefactoringCommitIds(
-				refactoringCommitIds);
-		
-		
-		return commitsWithRefactoringMergedIntoMaster;
-	}
 
 
-	private ArrayList<CommitData> commitsWithRefactoringMergedIntoMasterFromRefactoringCommitIds(
-			HashSet<String> refactoringCommitIds) {
-		ArrayList<CommitData> commitsWithRefactoringMergedIntoMaster = new ArrayList<CommitData>();
-		Iterator<CommitData> it = commitsMergedIntoMaster.iterator();
-		while (it.hasNext()) {
-			CommitData commit = it.next();
-			if (refactoringCommitIds.contains(commit.getId())) {
-				commitsWithRefactoringMergedIntoMaster.add(commit);
-			}
-		}
-		return commitsWithRefactoringMergedIntoMaster;
-	}
-
-
-	private void getChainedOrderedCommitsMergedIntoMaster() {
-		Iterator<CommitData> it = commitsMergedIntoMaster.iterator();
-		CommitData previousCommit = null;
-		while (it.hasNext()) {
-			CommitData commit = it.next();
-			commit.setPrevious(previousCommit);
-			if (previousCommit!=null) {
-				previousCommit.setNext(commit);
-			}
-			previousCommit = commit; 
-		}
-	}
-
-	
-	
-	
-	
 	public void getSmellRefactoredMethods() {
 		try {
-			SmellRefactoredMethod smellRefactoredMethod = new SmellRefactoredMethod(listRefactoring, initialCommit, commitsMergedIntoMaster, commitSmell, resultBaseFileName);
+			SmellRefactoredMethod smellRefactoredMethod = new SmellRefactoredMethod(listRefactoring, initialCommit, commitRange, commitSmell, resultBaseFileName);
 			smellRefactoredMethod.getSmellRefactoredMethods();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -190,7 +95,7 @@ public class SmellRefactoredManager {
 
 	public void getSmellRefactoredClasses() {
 		try {
-			SmellRefactoredClass smellRefactoredClass = new SmellRefactoredClass(listRefactoring, initialCommit, commitsMergedIntoMaster, commitSmell, resultBaseFileName);
+			SmellRefactoredClass smellRefactoredClass = new SmellRefactoredClass(listRefactoring, initialCommit, commitRange, commitSmell, resultBaseFileName);
 			smellRefactoredClass.getSmellRefactoredClasses();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -299,35 +204,5 @@ public class SmellRefactoredManager {
 		return result.toUpperCase();
 	}
 	
-	
-	public static CommitData getCommitById(String commitId, ArrayList<CommitData> commitsMergedIntoMaster) throws Exception {
-		CommitData result = null;
-		for (CommitData commit : commitsMergedIntoMaster) {
-			if (commit.getId().equals(commitId)) {
-				result = commit;
-			}
-		}
-		if (result == null) {
-			throw new Exception("Commit "  + commitId + " not found."); 
-		}
-		return result;
-	}
-	
-	public static CommitData getNextCommit(String commitId, ArrayList<CommitData> commitsMergedIntoMaster) throws Exception {
-		CommitData result = null;
-		CommitData commit = getCommitById(commitId, commitsMergedIntoMaster);
-		if (commit != null) {
-			result = commit.getNext();
-		} else {
-			throw new Exception("Commit "  + commitId + " not found."); 
-		}
-		if (result == null) {
-			throw new Exception("Next commit for commit "  + commitId + " not found."); 
-		}
-		if (result.getId() == commitId) {
-			throw new Exception("Next commit for commit "  + commitId + " it is himself."); 
-		}
-		return result;
-	}
 	
 }

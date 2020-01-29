@@ -4,9 +4,11 @@ import java.util.Date;
 
 public class CommitData implements Comparable<CommitData> {
 	private String id;
+	private Date date;
+	private String authorName;
+	private String authorEmail;
 	private String shortMessage;
 	private String fullMessage;
-	private Date date;
 	private CommitData previous;
 	private CommitData next;
 
@@ -16,6 +18,30 @@ public class CommitData implements Comparable<CommitData> {
 
 	public void setId(String idCommit) {
 		this.id = idCommit;
+	}
+
+	public Date getDate() {
+		return date;
+	}
+
+	public void setDate(Date date) {
+		this.date = date;
+	}
+
+	public String getAuthorName() {
+		return authorName;
+	}
+
+	public void setAuthorName(String authorName) {
+		this.authorName = authorName;
+	}
+
+	public String getAuthorEmail() {
+		return authorEmail;
+	}
+
+	public void setAuthorEmail(String authorEmail) {
+		this.authorEmail = authorEmail;
 	}
 
 	public String getShortMessage() {
@@ -32,14 +58,6 @@ public class CommitData implements Comparable<CommitData> {
 
 	public void setFullMessage(String fullMessage) {
 		this.fullMessage = fullMessage;
-	}
-
-	public Date getDate() {
-		return date;
-	}
-
-	public void setDate(Date date) {
-		this.date = date;
 	}
 
 	public CommitData getPrevious() {

@@ -18,6 +18,7 @@ import org.designroleminer.smelldetector.model.MethodDataSmelly;
 import org.designroleminer.threshold.TechniqueExecutor;
 import org.eclipse.jgit.lib.Repository;
 import org.refactoringminer.api.GitService;
+import org.refactoringminer.util.GitServiceImpl;
 import org.repodriller.persistence.PersistenceMechanism;
 import org.repodriller.persistence.csv.CSVFile;
 import org.slf4j.Logger;
@@ -48,13 +49,15 @@ public class CommitSmell {
 	HashSet<String> listCommitEvaluated = new HashSet<String>();
 
 	
-	public CommitSmell(GitService gitService, Repository repo, ArrayList<CommitData> commitsWithRefactoringMergedIntoMaster, String localFolder, List<LimiarTecnica> listaLimiarTecnica, String resultFileName) {
-		this.gitService = gitService;
-		this.repo = repo;
+	public CommitSmell(String localFolder, ArrayList<CommitData> commitsWithRefactoringMergedIntoMaster, List<LimiarTecnica> listaLimiarTecnica, String resultFileName) throws Exception {
 		this.commitsWithRefactoringMergedIntoMaster = commitsWithRefactoringMergedIntoMaster;
 		this.localFolder = localFolder;
 		this.listaLimiarTecnica = listaLimiarTecnica;
 		this.resultFileName = resultFileName;
+		
+		gitService = new GitServiceImpl();
+		repo = gitService.openRepository(localFolder);
+		
 		
 		techniquesThresholds = new LinkedHashMap<String, LimiarTecnica>();
 		for (LimiarTecnica limiarTecnica : this.listaLimiarTecnica) {

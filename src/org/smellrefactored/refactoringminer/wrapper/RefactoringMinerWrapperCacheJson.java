@@ -11,7 +11,7 @@ import java.util.List;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 
-public class RefactoringMinerWrapperCacheJson implements RefactoringMinerWrapperCache {
+public class RefactoringMinerWrapperCacheJson {
 
 	private String cacheFileName;
 	
