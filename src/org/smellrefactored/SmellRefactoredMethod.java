@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 
 import org.designroleminer.smelldetector.model.FilterSmellResult;
 import org.designroleminer.smelldetector.model.MethodDataSmelly;
@@ -30,12 +29,12 @@ public class SmellRefactoredMethod {
 		refactoringTypes.add(RefactoringType.EXTRACT_OPERATION.toString());
 		// refactoringTypes.add(RefactoringType.RENAME_METHOD.toString());
 		// refactoringTypes.add(RefactoringType.INLINE_OPERATION.toString());
-		// refactoringTypes.add(RefactoringType.MOVE_OPERATION.toString());
-		// refactoringTypes.add(RefactoringType.MOVE_AND_RENAME_OPERATION.toString());
+		refactoringTypes.add(RefactoringType.MOVE_OPERATION.toString());
+		refactoringTypes.add(RefactoringType.MOVE_AND_RENAME_OPERATION.toString());
 		// refactoringTypes.add(RefactoringType.PULL_UP_OPERATION.toString());
 		// refactoringTypes.add(RefactoringType.PUSH_DOWN_OPERATION.toString());
 		// refactoringTypes.add(RefactoringType.MERGE_OPERATION.toString());
-		// refactoringTypes.add(RefactoringType.EXTRACT_AND_MOVE_OPERATION.toString());
+		refactoringTypes.add(RefactoringType.EXTRACT_AND_MOVE_OPERATION.toString());
 		// refactoringTypes.add(RefactoringType.MOVE_AND_INLINE_OPERATION.toString());
 		// refactoringTypes.add(RefactoringType.CHANGE_METHOD_SIGNATURE.toString());
 		// refactoringTypes.add(RefactoringType.CHANGE_RETURN_TYPE.toString());
@@ -52,7 +51,7 @@ public class SmellRefactoredMethod {
 		// refactoringTypes.add(RefactoringType.PULL_UP_OPERATION.toString());
 		// refactoringTypes.add(RefactoringType.PUSH_DOWN_OPERATION.toString());
 		// refactoringTypes.add(RefactoringType.MERGE_OPERATION.toString());
-		// refactoringTypes.add(RefactoringType.EXTRACT_AND_MOVE_OPERATION.toString());
+		refactoringTypes.add(RefactoringType.EXTRACT_AND_MOVE_OPERATION.toString());
 		// refactoringTypes.add(RefactoringType.MOVE_AND_INLINE_OPERATION.toString());
 		// refactoringTypes.add(RefactoringType.CHANGE_METHOD_SIGNATURE.toString());
 		// refactoringTypes.add(RefactoringType.CHANGE_RETURN_TYPE.toString());
@@ -69,7 +68,7 @@ public class SmellRefactoredMethod {
 		// refactoringTypes.add(RefactoringType.PULL_UP_OPERATION.toString());
 		// refactoringTypes.add(RefactoringType.PUSH_DOWN_OPERATION.toString());
 		// refactoringTypes.add(RefactoringType.MERGE_OPERATION.toString());
-		// refactoringTypes.add(RefactoringType.EXTRACT_AND_MOVE_OPERATION.toString());
+		refactoringTypes.add(RefactoringType.EXTRACT_AND_MOVE_OPERATION.toString());
 		// refactoringTypes.add(RefactoringType.MOVE_AND_INLINE_OPERATION.toString());
 		// refactoringTypes.add(RefactoringType.CHANGE_METHOD_SIGNATURE.toString());
 		// refactoringTypes.add(RefactoringType.CHANGE_RETURN_TYPE.toString());
@@ -86,7 +85,7 @@ public class SmellRefactoredMethod {
 		// refactoringTypes.add(RefactoringType.PULL_UP_OPERATION.toString());
 		// refactoringTypes.add(RefactoringType.PUSH_DOWN_OPERATION.toString());
 		// refactoringTypes.add(RefactoringType.MERGE_OPERATION.toString());
-		// refactoringTypes.add(RefactoringType.EXTRACT_AND_MOVE_OPERATION.toString());
+		refactoringTypes.add(RefactoringType.EXTRACT_AND_MOVE_OPERATION.toString());
 		// refactoringTypes.add(RefactoringType.MOVE_AND_INLINE_OPERATION.toString());
 		refactoringTypes.add(RefactoringType.CHANGE_METHOD_SIGNATURE.toString());
 		// // refactoringTypes.add(RefactoringType.CHANGE_RETURN_TYPE.toString());
