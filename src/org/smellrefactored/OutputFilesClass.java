@@ -55,7 +55,7 @@ public class OutputFilesClass {
 	}
 
 	
-	public void writeTruePositiveToCsvFiles(RefactoringData refactoring, ClassDataSmelly classSmell) throws Exception {
+	public void writeTruePositiveToCsvFiles(RefactoringEvent refactoring, ClassDataSmelly classSmell) throws Exception {
 		pmResultSmellRefactoredClassesMessage.write(
 				refactoring.getNomeClasse()
 				, classSmell.getSmell()
@@ -81,14 +81,14 @@ public class OutputFilesClass {
 				classSmell.getCommit()
 				, refactoring.getFileNameAfter()
 				, refactoring.getNomeClasse()
-				, refactoring.getClassDesignRole()
+				, classSmell.getClassDesignRole()
 				, classSmell.getLinesOfCode()
 				, "true"
 				, refactoring.getRefactoringType()
 				);
 	}
 
-	public void writeFalseNegativeToCsvFiles(RefactoringData refactoring, ClassDataSmelly classNotSmell) throws Exception {
+	public void writeFalseNegativeToCsvFiles(RefactoringEvent refactoring, ClassDataSmelly classNotSmell) throws Exception {
 		pmResultSmellRefactoredClassesMessage.write(
 				refactoring.getNomeClasse()
 				, (classNotSmell.getSmell() != null ? classNotSmell.getSmell() : "")
@@ -114,14 +114,14 @@ public class OutputFilesClass {
 				classNotSmell.getCommit()
 				, refactoring.getFileNameAfter()
 				, refactoring.getNomeClasse()
-				, refactoring.getClassDesignRole()
+				, classNotSmell.getClassDesignRole()
 				, classNotSmell.getLinesOfCode()
 				, "true"
 				, refactoring.getRefactoringType()
 				);
 	}	
 
-	public void writeFalsePositiveToCsvFiles(RefactoringData refactoring, ClassDataSmelly classNotSmell) throws Exception {
+	public void writeFalsePositiveToCsvFiles(RefactoringEvent refactoring, ClassDataSmelly classNotSmell) throws Exception {
 		pmResultSmellRefactoredClassesMessage.write(
 				refactoring.getNomeClasse()
 				, classNotSmell.getSmell()
@@ -147,7 +147,7 @@ public class OutputFilesClass {
 				classNotSmell.getCommit()
 				, refactoring.getFileNameAfter()
 				, refactoring.getNomeClasse()
-				, refactoring.getClassDesignRole()
+				, classNotSmell.getClassDesignRole()
 				, classNotSmell.getLinesOfCode()
 				, "false"
 				, ""

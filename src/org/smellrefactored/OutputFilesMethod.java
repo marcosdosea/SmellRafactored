@@ -1,6 +1,5 @@
 package org.smellrefactored;
 
-import org.designroleminer.smelldetector.model.ClassDataSmelly;
 import org.designroleminer.smelldetector.model.MethodDataSmelly;
 import org.repodriller.persistence.PersistenceMechanism;
 import org.repodriller.persistence.csv.CSVFile;
@@ -69,10 +68,10 @@ public class OutputFilesMethod {
 	}
 
 	
-	public void writeTruePositiveToCsvFiles(RefactoringData refactoring, MethodDataSmelly methodSmell) throws Exception {
+	public void writeTruePositiveToCsvFiles(RefactoringEvent refactoring, MethodDataSmelly methodSmell) throws Exception {
 		pmResultSmellRefactoredMethodsMessage.write(
 				refactoring.getNomeClasse()
-				, refactoring.getNomeMetodo()
+				, refactoring.getMethodName()
 				, methodSmell.getSmell()
 				, methodSmell.getLinesOfCode()
 				, methodSmell.getComplexity()
@@ -87,7 +86,7 @@ public class OutputFilesMethod {
 			);
 		pmResultSmellRefactoredMethods.write(
 				refactoring.getNomeClasse()
-				, refactoring.getNomeMetodo()
+				, refactoring.getMethodName()
 				, methodSmell.getSmell()
 				, methodSmell.getLinesOfCode()
 				, methodSmell.getComplexity()
@@ -103,8 +102,8 @@ public class OutputFilesMethod {
 				methodSmell.getCommit()
 				, refactoring.getFileNameAfter()
 				, refactoring.getNomeClasse()
-				, refactoring.getNomeMetodo()
-				, refactoring.getClassDesignRole()
+				, refactoring.getMethodName()
+				, methodSmell.getClassDesignRole()
 				, methodSmell.getLinesOfCode()
 				, methodSmell.getComplexity()
 				, methodSmell.getEfferent()
@@ -115,10 +114,10 @@ public class OutputFilesMethod {
 		
 	}
 
-	public void writeFalseNegativeToCsvFiles(RefactoringData refactoring, MethodDataSmelly methodNotSmell) throws Exception {
+	public void writeFalseNegativeToCsvFiles(RefactoringEvent refactoring, MethodDataSmelly methodNotSmell) throws Exception {
 		pmResultSmellRefactoredMethodsMessage.write(
 				refactoring.getNomeClasse()
-				, refactoring.getNomeMetodo()
+				, refactoring.getMethodName()
 				, (methodNotSmell.getSmell() != null ? methodNotSmell.getSmell() : "")
 				, methodNotSmell.getLinesOfCode()
 				, methodNotSmell.getComplexity()
@@ -133,7 +132,7 @@ public class OutputFilesMethod {
 				);
 		pmResultSmellRefactoredMethods.write(
 				refactoring.getNomeClasse()
-				, refactoring.getNomeMetodo()
+				, refactoring.getMethodName()
 				, (methodNotSmell.getSmell() != null ? methodNotSmell.getSmell() : "")
 				, methodNotSmell.getLinesOfCode()
 				, methodNotSmell.getComplexity()
@@ -149,8 +148,8 @@ public class OutputFilesMethod {
 				methodNotSmell.getCommit()
 				, refactoring.getFileNameAfter()
 				, refactoring.getNomeClasse()
-				, refactoring.getNomeMetodo()
-				, refactoring.getClassDesignRole()
+				, refactoring.getMethodName()
+				, methodNotSmell.getClassDesignRole()
 				, methodNotSmell.getLinesOfCode()
 				, methodNotSmell.getComplexity()
 				, methodNotSmell.getEfferent()
@@ -160,10 +159,10 @@ public class OutputFilesMethod {
 				);
 	}
 
-	public void writeFalsePositiveToCsvFiles(RefactoringData refactoring, MethodDataSmelly methodNotSmell) throws Exception {
+	public void writeFalsePositiveToCsvFiles(RefactoringEvent refactoring, MethodDataSmelly methodNotSmell) throws Exception {
 		pmResultSmellRefactoredMethodsMessage.write(
 				refactoring.getNomeClasse()
-				, refactoring.getNomeMetodo()
+				, refactoring.getMethodName()
 				, (methodNotSmell.getSmell() != null ? methodNotSmell.getSmell() : "")
 				, methodNotSmell.getLinesOfCode()
 				, methodNotSmell.getComplexity()
@@ -178,7 +177,7 @@ public class OutputFilesMethod {
 				);
 		pmResultSmellRefactoredMethods.write(
 				refactoring.getNomeClasse()
-				, refactoring.getNomeMetodo()
+				, refactoring.getMethodName()
 				, (methodNotSmell.getSmell() != null ? methodNotSmell.getSmell() : "")
 				, methodNotSmell.getLinesOfCode()
 				, methodNotSmell.getComplexity()
@@ -194,8 +193,8 @@ public class OutputFilesMethod {
 				methodNotSmell.getCommit()
 				, refactoring.getFileNameAfter()
 				, refactoring.getNomeClasse()
-				, refactoring.getNomeMetodo()
-				, refactoring.getClassDesignRole()
+				, refactoring.getMethodName()
+				, methodNotSmell.getClassDesignRole()
 				, methodNotSmell.getLinesOfCode()
 				, methodNotSmell.getComplexity()
 				, methodNotSmell.getEfferent()

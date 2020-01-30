@@ -9,13 +9,13 @@ import org.designroleminer.smelldetector.model.FilterSmellResult;
 import org.designroleminer.smelldetector.model.MethodDataSmelly;
 
 public class SmellRefactoredResult {
-	private Map<String, List<RefactoringData>> listRefactoringsByMethodSmelly;
-	private Map<String, List<RefactoringData>> listRefactoringsByMethodNotSmelly;
+	private Map<String, List<RefactoringEvent>> listRefactoringsByMethodSmelly;
+	private Map<String, List<RefactoringEvent>> listRefactoringsByMethodNotSmelly;
 	private HashSet<MethodDataSmelly> methodSmellyInitialNotRefactored;
 	private FilterSmellResult smellsCommitInitial;
 	
 	
-	private ArrayList<RefactoringData> listRefactoring;
+	private ArrayList<RefactoringEvent> listRefactoring;
 	
 	public HashSet<MethodDataSmelly> getMethodInitialSmellyNotRefactored() {
 		return methodSmellyInitialNotRefactored;
@@ -25,28 +25,28 @@ public class SmellRefactoredResult {
 		this.methodSmellyInitialNotRefactored = methodSmellyNotRefactored;
 	}
 
-	public ArrayList<RefactoringData> getListRefactoring() {
+	public ArrayList<RefactoringEvent> getListRefactoring() {
 		return listRefactoring;
 	}
 
-	public void setListRefactoring(ArrayList<RefactoringData> listRefactoring) {
+	public void setListRefactoring(ArrayList<RefactoringEvent> listRefactoring) {
 		this.listRefactoring = listRefactoring;
 	}
 
-	public Map<String, List<RefactoringData>> getListRefactoringsByMethodSmelly() {
+	public Map<String, List<RefactoringEvent>> getListRefactoringsByMethodSmelly() {
 		return listRefactoringsByMethodSmelly;
 	}
 
-	public void setListRefactoringsByMethodSmelly(Map<String, List<RefactoringData>> listRefactoringsByMethodSmelly) {
+	public void setListRefactoringsByMethodSmelly(Map<String, List<RefactoringEvent>> listRefactoringsByMethodSmelly) {
 		this.listRefactoringsByMethodSmelly = listRefactoringsByMethodSmelly;
 	}
 
-	public Map<String, List<RefactoringData>> getListRefactoringsByMethodNotSmelly() {
+	public Map<String, List<RefactoringEvent>> getListRefactoringsByMethodNotSmelly() {
 		return listRefactoringsByMethodNotSmelly;
 	}
 
 	public void setListRefactoringsByMethodNotSmelly(
-			Map<String, List<RefactoringData>> listRefactoringsByMethodNotSmelly) {
+			Map<String, List<RefactoringEvent>> listRefactoringsByMethodNotSmelly) {
 		this.listRefactoringsByMethodNotSmelly = listRefactoringsByMethodNotSmelly;
 	}
 

@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 public class RefactoringMinerWrapperManager {
 	
 	private String urlRepository;
-	private String localFolder;
+	private String repositoryPath;
 	private String initialCommit;
 	private String finalCommit;
 	private String resultBaseFileName;
@@ -28,15 +28,15 @@ public class RefactoringMinerWrapperManager {
 
 	static Logger logger = LoggerFactory.getLogger(RefactoringMinerWrapperManager.class);
 	
-	public RefactoringMinerWrapperManager(String urlRepository, String localFolder, String initialCommit, String finalCommit, String resultBaseFileName) throws Exception {
+	public RefactoringMinerWrapperManager(String urlRepository, String repositoryPath, String initialCommit, String finalCommit, String resultBaseFileName) throws Exception {
 		this.urlRepository = urlRepository;
-		this.localFolder = localFolder;
+		this.repositoryPath = repositoryPath;
 		this.initialCommit = initialCommit;
 		this.finalCommit = finalCommit;
 		this.resultBaseFileName = resultBaseFileName + "-refactoring" + "-" + initialCommit + "-" + finalCommit;
 		
 		gitService = new GitServiceImpl();
-		repo = gitService.cloneIfNotExists(this.localFolder, this.urlRepository);
+		repo = gitService.cloneIfNotExists(this.repositoryPath, this.urlRepository);
 
 	}
 
