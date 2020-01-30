@@ -53,7 +53,7 @@ public class RefactoringEvent implements Comparable<RefactoringEvent> {
 		this.commitId = commit;
 	}
 	
-	public String getNomeClasse() {
+	public String getClassName() {
 		return className;
 	}
 

@@ -57,7 +57,7 @@ public class OutputFilesClass {
 	
 	public void writeTruePositiveToCsvFiles(RefactoringEvent refactoring, ClassDataSmelly classSmell) throws Exception {
 		pmResultSmellRefactoredClassesMessage.write(
-				refactoring.getNomeClasse()
+				refactoring.getClassName()
 				, classSmell.getSmell()
 				, classSmell.getLinesOfCode()
 				, classSmell.getListaTecnicas()
@@ -68,7 +68,7 @@ public class OutputFilesClass {
 				, refactoring.getFullMessage()
 				);
 		pmResultSmellRefactoredClasses.write(
-				refactoring.getNomeClasse()
+				refactoring.getClassName()
 				, classSmell.getSmell()
 				, classSmell.getLinesOfCode()
 				, classSmell.getListaTecnicas()
@@ -80,7 +80,7 @@ public class OutputFilesClass {
 		pmResultSmellRefactoredClassesMachineLearning.write(
 				classSmell.getCommit()
 				, refactoring.getFileNameAfter()
-				, refactoring.getNomeClasse()
+				, refactoring.getClassName()
 				, classSmell.getClassDesignRole()
 				, classSmell.getLinesOfCode()
 				, "true"
@@ -90,7 +90,7 @@ public class OutputFilesClass {
 
 	public void writeFalseNegativeToCsvFiles(RefactoringEvent refactoring, ClassDataSmelly classNotSmell) throws Exception {
 		pmResultSmellRefactoredClassesMessage.write(
-				refactoring.getNomeClasse()
+				refactoring.getClassName()
 				, (classNotSmell.getSmell() != null ? classNotSmell.getSmell() : "")
 				, classNotSmell.getLinesOfCode()
 				, classNotSmell.getListaTecnicas()
@@ -101,7 +101,7 @@ public class OutputFilesClass {
 				, refactoring.getFullMessage()
 				);
 		pmResultSmellRefactoredClasses.write(
-				refactoring.getNomeClasse()
+				refactoring.getClassName()
 				, (classNotSmell.getSmell() != null ? classNotSmell.getSmell() : "")
 				, classNotSmell.getLinesOfCode()
 				, classNotSmell.getListaTecnicas()
@@ -113,7 +113,7 @@ public class OutputFilesClass {
 		pmResultSmellRefactoredClassesMachineLearning.write(
 				classNotSmell.getCommit()
 				, refactoring.getFileNameAfter()
-				, refactoring.getNomeClasse()
+				, refactoring.getClassName()
 				, classNotSmell.getClassDesignRole()
 				, classNotSmell.getLinesOfCode()
 				, "true"
@@ -123,7 +123,7 @@ public class OutputFilesClass {
 
 	public void writeFalsePositiveToCsvFiles(RefactoringEvent refactoring, ClassDataSmelly classNotSmell) throws Exception {
 		pmResultSmellRefactoredClassesMessage.write(
-				refactoring.getNomeClasse()
+				refactoring.getClassName()
 				, classNotSmell.getSmell()
 				, classNotSmell.getLinesOfCode()
 				, classNotSmell.getListaTecnicas()
@@ -134,7 +134,7 @@ public class OutputFilesClass {
 				, ""
 				);
 		pmResultSmellRefactoredClasses.write(
-				refactoring.getNomeClasse()
+				refactoring.getClassName()
 				, classNotSmell.getSmell()
 				, classNotSmell.getLinesOfCode()
 				, classNotSmell.getListaTecnicas()
@@ -146,7 +146,7 @@ public class OutputFilesClass {
 		pmResultSmellRefactoredClassesMachineLearning.write(
 				classNotSmell.getCommit()
 				, refactoring.getFileNameAfter()
-				, refactoring.getNomeClasse()
+				, refactoring.getClassName()
 				, classNotSmell.getClassDesignRole()
 				, classNotSmell.getLinesOfCode()
 				, "false"

@@ -70,7 +70,7 @@ public class OutputFilesMethod {
 	
 	public void writeTruePositiveToCsvFiles(RefactoringEvent refactoring, MethodDataSmelly methodSmell) throws Exception {
 		pmResultSmellRefactoredMethodsMessage.write(
-				refactoring.getNomeClasse()
+				refactoring.getClassName()
 				, refactoring.getMethodName()
 				, methodSmell.getSmell()
 				, methodSmell.getLinesOfCode()
@@ -85,7 +85,7 @@ public class OutputFilesMethod {
 				, refactoring.getFullMessage()
 			);
 		pmResultSmellRefactoredMethods.write(
-				refactoring.getNomeClasse()
+				refactoring.getClassName()
 				, refactoring.getMethodName()
 				, methodSmell.getSmell()
 				, methodSmell.getLinesOfCode()
@@ -101,7 +101,7 @@ public class OutputFilesMethod {
 		pmResultSmellRefactoredMethodsMachineLearning.write(
 				methodSmell.getCommit()
 				, refactoring.getFileNameAfter()
-				, refactoring.getNomeClasse()
+				, refactoring.getClassName()
 				, refactoring.getMethodName()
 				, methodSmell.getClassDesignRole()
 				, methodSmell.getLinesOfCode()
@@ -116,7 +116,7 @@ public class OutputFilesMethod {
 
 	public void writeFalseNegativeToCsvFiles(RefactoringEvent refactoring, MethodDataSmelly methodNotSmell) throws Exception {
 		pmResultSmellRefactoredMethodsMessage.write(
-				refactoring.getNomeClasse()
+				refactoring.getClassName()
 				, refactoring.getMethodName()
 				, (methodNotSmell.getSmell() != null ? methodNotSmell.getSmell() : "")
 				, methodNotSmell.getLinesOfCode()
@@ -131,7 +131,7 @@ public class OutputFilesMethod {
 				, refactoring.getFullMessage()
 				);
 		pmResultSmellRefactoredMethods.write(
-				refactoring.getNomeClasse()
+				refactoring.getClassName()
 				, refactoring.getMethodName()
 				, (methodNotSmell.getSmell() != null ? methodNotSmell.getSmell() : "")
 				, methodNotSmell.getLinesOfCode()
@@ -147,7 +147,7 @@ public class OutputFilesMethod {
 		pmResultSmellRefactoredMethodsMachineLearning.write(
 				methodNotSmell.getCommit()
 				, refactoring.getFileNameAfter()
-				, refactoring.getNomeClasse()
+				, refactoring.getClassName()
 				, refactoring.getMethodName()
 				, methodNotSmell.getClassDesignRole()
 				, methodNotSmell.getLinesOfCode()
@@ -161,7 +161,7 @@ public class OutputFilesMethod {
 
 	public void writeFalsePositiveToCsvFiles(RefactoringEvent refactoring, MethodDataSmelly methodNotSmell) throws Exception {
 		pmResultSmellRefactoredMethodsMessage.write(
-				refactoring.getNomeClasse()
+				refactoring.getClassName()
 				, refactoring.getMethodName()
 				, (methodNotSmell.getSmell() != null ? methodNotSmell.getSmell() : "")
 				, methodNotSmell.getLinesOfCode()
@@ -176,7 +176,7 @@ public class OutputFilesMethod {
 				, ""
 				);
 		pmResultSmellRefactoredMethods.write(
-				refactoring.getNomeClasse()
+				refactoring.getClassName()
 				, refactoring.getMethodName()
 				, (methodNotSmell.getSmell() != null ? methodNotSmell.getSmell() : "")
 				, methodNotSmell.getLinesOfCode()
@@ -192,7 +192,7 @@ public class OutputFilesMethod {
 		pmResultSmellRefactoredMethodsMachineLearning.write(
 				methodNotSmell.getCommit()
 				, refactoring.getFileNameAfter()
-				, refactoring.getNomeClasse()
+				, refactoring.getClassName()
 				, refactoring.getMethodName()
 				, methodNotSmell.getClassDesignRole()
 				, methodNotSmell.getLinesOfCode()

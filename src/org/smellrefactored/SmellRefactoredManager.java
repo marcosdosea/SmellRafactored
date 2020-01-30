@@ -26,8 +26,8 @@ public class SmellRefactoredManager {
 	private List<LimiarTecnica> listaLimiarTecnica;
 
 	private CommitRange commitRange;
+	private RefactoringEvents refactoringEvents;
 	
-	private ArrayList<RefactoringEvent> listRefactoring = new ArrayList<RefactoringEvent>();
 	private CommitSmell commitSmell;
 	
 	private String resultBaseFileName;
@@ -43,7 +43,6 @@ public class SmellRefactoredManager {
 		this.finalCommit = finalCommit;
 		this.listaLimiarTecnica = listaLimiarTecnica;
 		this.resultBaseFileName = resultBaseFileName;
-
 
 		try {
 			prepareSmellRefactored();
@@ -63,10 +62,12 @@ public class SmellRefactoredManager {
 		// List<RefactoringMinerWrapperDto> refactoringDtoList = refactoringMinerWrapperManager.getRefactoringDtoListWithoutCache();
 		List<RefactoringMinerWrapperDto> refactoringDtoList = refactoringMinerWrapperManager.getRefactoringDtoListUsingJsonCache();
 
-		listRefactoring = getRefactoringDataListFromRefactoringListIgnoringInitialCommit(refactoringDtoList);
+		refactoringEvents = new RefactoringEvents(refactoringDtoList, this.repositoryPath);
+		refactoringEvents.removeEventsForCommit(initialCommit);
+		
 		HashSet<String> commitsWithRefactorings = refactoringMinerWrapperManager.getCommitsWithRefactoringsFromRefactoringList(refactoringDtoList);
 
-		logger.info("Total de refactorings encontrados: " + listRefactoring.size());
+		logger.info("Total de refactorings encontrados: " + refactoringEvents.size());
 		
 		
 		GitService gitService = new GitServiceImpl();
@@ -81,7 +82,7 @@ public class SmellRefactoredManager {
 
 	public void getSmellRefactoredMethods() {
 		try {
-			SmellRefactoredMethod smellRefactoredMethod = new SmellRefactoredMethod(listRefactoring, initialCommit, commitRange, commitSmell, resultBaseFileName);
+			SmellRefactoredMethod smellRefactoredMethod = new SmellRefactoredMethod(refactoringEvents, initialCommit, commitRange, commitSmell, resultBaseFileName);
 			smellRefactoredMethod.getSmellRefactoredMethods();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -91,7 +92,7 @@ public class SmellRefactoredManager {
 
 	public void getSmellRefactoredClasses() {
 		try {
-			SmellRefactoredClass smellRefactoredClass = new SmellRefactoredClass(listRefactoring, initialCommit, commitRange, commitSmell, resultBaseFileName);
+			SmellRefactoredClass smellRefactoredClass = new SmellRefactoredClass(refactoringEvents, initialCommit, commitRange, commitSmell, resultBaseFileName);
 			smellRefactoredClass.getSmellRefactoredClasses();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -99,26 +100,12 @@ public class SmellRefactoredManager {
 		}
 	}
 
-
 	public static int countRealPositive(LinkedHashMap<String, Integer> refactoringsCounter, HashSet<String> targetTefactoringTypes) {
 		int realPositive = 0;
 		for (String targetTefactoringType: targetTefactoringTypes) {
 			realPositive += refactoringsCounter.getOrDefault(targetTefactoringType, 0);
 		}
 		return realPositive;
-	}
-	
-	private ArrayList<RefactoringEvent> getRefactoringDataListFromRefactoringListIgnoringInitialCommit(List<RefactoringMinerWrapperDto> refactoringDtoList) {
-		ArrayList<RefactoringEvent> refactoringDataList = new ArrayList<RefactoringEvent>(); 
-		for (RefactoringMinerWrapperDto refactoringDto : refactoringDtoList) {
-			if (refactoringDto != null) {
-				if (!refactoringDto.commitId.equals(this.initialCommit)) {
-					RefactoringEvent refactoringData = new RefactoringEvent(refactoringDto, this.repositoryPath);
-					refactoringDataList.add(refactoringData);
-				}
-			}
-		}
-    return (refactoringDataList);
 	}
 	
 }
