@@ -20,8 +20,6 @@ public class SmellRefactoredClass {
 
 	final private boolean ANALYZE_EACH_REFACTORING_TYPE_BY_SMELL = true; // Increases processing time.
 	
-	final private boolean ENABLE_REDUNDANT_VERIFICATION_FOR_DEBUG = false; // Increases processing time.
-	
 	final private boolean IGNORE_REPEATED_PREDICION_ON_NEXT_COMMIT = true; // Increases processing time.
 	
 	private HashSet<String> getLongClassRefactoringTypes() {
@@ -43,7 +41,7 @@ public class SmellRefactoredClass {
 
 	private HashSet<String> getClassRefactoringTypes() {
 		HashSet<String> refactoringTypes = new HashSet<String>();
-		// Add all smell refactor groups here.
+		// Add all smell refactoring groups here.
 		refactoringTypes.addAll(this.getLongClassRefactoringTypes());
 		return refactoringTypes;
 	}
@@ -52,20 +50,20 @@ public class SmellRefactoredClass {
 	static Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
 
 	private RefactoringEvents refactoringEvents;
-	CommitSmell commitSmell;
+	CommitClassSmell commitClassSmell;
 
-	private String initialCommit;
+	private ArrayList<String> smellCommitIds;
 	CommitRange commitRange;
 	String resultFileName;
 	
 	PersistenceMechanism pmResultEvaluationClass;
 	OutputFilesClass classOutputFiles;
 	
-	public SmellRefactoredClass(RefactoringEvents refactoringEvents, String initialCommit, CommitRange commitRange, CommitSmell commitSmell, String resultFileName) {
+	public SmellRefactoredClass(RefactoringEvents refactoringEvents, ArrayList<String> smellCommitIds, CommitRange commitRange, CommitSmell commitSmell, String resultFileName) {
 		this.refactoringEvents = refactoringEvents;
-		this.initialCommit = initialCommit;
+		this.smellCommitIds = smellCommitIds;
 		this.commitRange = commitRange;
-		this.commitSmell = commitSmell;
+		this.commitClassSmell = new CommitClassSmell(commitSmell);
 		this.resultFileName = resultFileName;
 		pmResultEvaluationClass = new CSVFile(resultFileName + "-evaluation-classes.csv", false);
 		classOutputFiles = new OutputFilesClass(this.resultFileName);
@@ -101,16 +99,11 @@ public class SmellRefactoredClass {
 			for (String refactoringType: this.getClassRefactoringTypes()) {
 				pmResultEvaluationClass.write("Numero de refatoracoes do tipo " + refactoringType + ":", this.refactoringEvents.countType(refactoringType));
 			}
-
-			FilterSmellResult smellsCommitInitial = this.commitSmell.obterSmellsCommit(initialCommit);
-			pmResultEvaluationClass.write("Numero Classes Smell Commit Inicial:",
-					smellsCommitInitial.getClassesSmell().size());
-			pmResultEvaluationClass.write("Numero Classes NOT Smell Commit Inicial:",
-					smellsCommitInitial.getClassesNotSmelly().size());
-
+			pmResultEvaluationClass.write("Numero de commits a analisar smells:", this.smellCommitIds.size());
+			
 			classOutputFiles.writeHeaders();
 
-			evaluateInDetailSmellChangeOperation(ClassDataSmelly.LONG_CLASS, this.getLongClassRefactoringTypes(), smellsCommitInitial, listRefactoringMergedIntoMaster);
+			evaluateInDetailSmellChangeOperation(ClassDataSmelly.LONG_CLASS, this.getLongClassRefactoringTypes(), this.smellCommitIds, listRefactoringMergedIntoMaster);
 			
 			classOutputFiles.close();
 		} catch (Exception e) {
@@ -118,25 +111,28 @@ public class SmellRefactoredClass {
 		}
 	}
 
-	private void evaluateInDetailSmellChangeOperation(String smellType, HashSet<String> targetTefactoringTypes, FilterSmellResult smellsCommitInitial,
+	private void evaluateInDetailSmellChangeOperation(String smellType, HashSet<String> targetTefactoringTypes, ArrayList<String> smellCommitIds,
 			ArrayList<RefactoringEvent> listRefactoringMergedIntoMaster) throws Exception {
-		evaluateSmellChangeClass(smellsCommitInitial, listRefactoringMergedIntoMaster, smellType, targetTefactoringTypes);
+		evaluateSmellChangeClass(smellCommitIds, listRefactoringMergedIntoMaster, smellType, targetTefactoringTypes);
 		if ( (ANALYZE_EACH_REFACTORING_TYPE_BY_SMELL) && (targetTefactoringTypes.size() > 1) ) {
 			for (String targetTefactoringType : targetTefactoringTypes) {
-				evaluateSmellChangeClass(smellsCommitInitial, listRefactoringMergedIntoMaster, smellType, new HashSet<String>(Arrays.asList(targetTefactoringType)));
+				evaluateSmellChangeClass(smellCommitIds, listRefactoringMergedIntoMaster, smellType, new HashSet<String>(Arrays.asList(targetTefactoringType)));
 			}
 		}
 	}
 	
-	private void evaluateSmellChangeClass(FilterSmellResult commitInitial, ArrayList<RefactoringEvent> listRefactoring, String typeSmell, HashSet<String> targetTefactoringTypes) throws Exception {
+	private void evaluateSmellChangeClass(ArrayList<String> smellCommitIds, ArrayList<RefactoringEvent> listRefactoring, String typeSmell, HashSet<String> targetTefactoringTypes) throws Exception {
 
-		ConfusionMatrixPredictors confusionMatrices = new ConfusionMatrixPredictors(typeSmell + " " + targetTefactoringTypes.toString(), this.commitSmell.getTechniquesThresholds().keySet());
+		ConfusionMatrixPredictors confusionMatrices = new ConfusionMatrixPredictors(typeSmell + " " + targetTefactoringTypes.toString(), this.commitClassSmell.getTechniquesThresholds().keySet());
 		confusionMatrices.enableValidations(!IGNORE_REPEATED_PREDICION_ON_NEXT_COMMIT);
 	
 		// TP e FN
 		computeTruePositiveAndFalseNegative(listRefactoring, typeSmell, targetTefactoringTypes, confusionMatrices);
-		// FP and TN
-		computeFalsePositiveAndTrueNegativeForAllTechniques(commitInitial, listRefactoring, typeSmell, targetTefactoringTypes, confusionMatrices);
+		for (String smellCommitId: smellCommitIds) {
+			FilterSmellResult smellResult = this.commitClassSmell.obterSmellsCommit(smellCommitId);
+			// FP and TN
+			computeFalsePositiveAndTrueNegativeForAllTechniques(smellResult, listRefactoring, typeSmell, targetTefactoringTypes, confusionMatrices);
+		}
 		
 		/* 
 	     * Warning: The validation of the confusion matrix by the total of positive predictions 
@@ -145,7 +141,7 @@ public class SmellRefactoredClass {
 		 * int realPositive = SmellRefactoredManager.countRealPositive(refactoringsCounter, targetTefactoringTypes);
 		 * confusionMatrices.setValidationRealPositive(realPositive);
 		 * for (String technique : this.commitSmell.getTechniquesThresholds().keySet()) {
-		 * 	Integer positivePredictionExpected = countPositivePredictionForTechnique(commitInitial, typeSmell, technique);
+		 * 	Integer positivePredictionExpected = this.commitSmell.countClassSmellPredictionForTechniqueInCommit(commitInitial, typeSmell, technique);
 		 * 	confusionMatrices.setValidationPositivePrediction(technique, positivePredictionExpected);
 		 * }
 		*/
@@ -154,27 +150,24 @@ public class SmellRefactoredClass {
 		confusionMatrices.writeToCsvFile(pmResultEvaluationClass);
 	}
 	
-	private void computeFalsePositiveAndTrueNegativeForAllTechniques(FilterSmellResult commitInitial,
+	private void computeFalsePositiveAndTrueNegativeForAllTechniques(FilterSmellResult smellResult,
 			ArrayList<RefactoringEvent> listRefactoring, String smellType, HashSet<String> targetTefactoringTypes,
 			ConfusionMatrixPredictors confusionMatrices) throws Exception {
 		for (String technique : confusionMatrices.getPredictores()) {
-			computeFalsePositiveBySmellAndTechnique(commitInitial, technique, smellType, targetTefactoringTypes, confusionMatrices.get(technique));
-			computeTrueNegativeBySmellAndTechnique(commitInitial, technique, smellType, targetTefactoringTypes, confusionMatrices.get(technique));
+			computeFalsePositiveBySmellAndTechnique(smellResult, technique, smellType, targetTefactoringTypes, confusionMatrices.get(technique));
+			computeTrueNegativeBySmellAndTechnique(smellResult, technique, smellType, targetTefactoringTypes, confusionMatrices.get(technique));
 			}
 	}
 	
-	private void computeFalsePositiveBySmellAndTechnique(FilterSmellResult commitInitial, String technique, String smellType, HashSet<String> targetTefactoringTypes, ConfusionMatrix confusionMtrix) throws Exception {
-		HashSet<ClassDataSmelly> smellyClassesForSelectedTechniqueSmell = getSmellingClassesBySmellAndTechnique(commitInitial, smellType, technique);
+	private void computeFalsePositiveBySmellAndTechnique(FilterSmellResult smellResult, String technique, String smellType, HashSet<String> targetTefactoringTypes, ConfusionMatrix confusionMtrix) throws Exception {
+		HashSet<ClassDataSmelly> smellyClassesForSelectedTechniqueSmell = this.commitClassSmell.getSmellingClassesBySmellAndTechnique(smellResult, smellType, technique);
 		for (ClassDataSmelly classSmelly : smellyClassesForSelectedTechniqueSmell) {
-			if ( (ENABLE_REDUNDANT_VERIFICATION_FOR_DEBUG) && (!hasSmellPredictionForTechniqueInCommit(classSmelly.getCommit(), smellType, technique, classSmelly.getDiretorioDaClasse(), classSmelly.getNomeClasse())) ) {
-				throw new Exception("Existing class smelly not found (" + classSmelly.getCommit() + " | " + smellType + " | " + technique + " | " + classSmelly.getDiretorioDaClasse() + " | " + classSmelly.getNomeClasse() + ".");
-			} 
 			CommitData nextCommit = this.commitRange.getNextCommit(classSmelly.getCommit());
 			if (nextCommit != null) {
  				if (! this.refactoringEvents.hasClassRefactoringsInCommit(nextCommit.getId(), classSmelly.getDiretorioDaClasse(), classSmelly.getNomeClasse(), targetTefactoringTypes)) {
  					boolean ignoreCurrentPrediction = false;
  					if (IGNORE_REPEATED_PREDICION_ON_NEXT_COMMIT) {
- 						ignoreCurrentPrediction = hasSmellPredictionForTechniqueInCommit(nextCommit.getId(), smellType, technique, classSmelly.getDiretorioDaClasse(), classSmelly.getNomeClasse()); 
+ 						ignoreCurrentPrediction = this.commitClassSmell.hasClassSmellPredictionForTechniqueInCommit(nextCommit.getId(), smellType, technique, classSmelly.getDiretorioDaClasse(), classSmelly.getNomeClasse()); 
  					}
 					if (!ignoreCurrentPrediction) {
 						confusionMtrix.incFalsePositive();
@@ -188,8 +181,8 @@ public class SmellRefactoredClass {
 		}
 	}
 
-	private void computeTrueNegativeBySmellAndTechnique(FilterSmellResult commitInitial, String technique, String smellType, HashSet<String> targetTefactoringTypes, ConfusionMatrix confusionMtrix) throws Exception {
-		HashSet<ClassDataSmelly> notSmellyClassesForSelectedTechniqueSmell = getNotSmellingClassesBySmellAndTechnique(commitInitial, smellType, technique); 
+	private void computeTrueNegativeBySmellAndTechnique(FilterSmellResult smellResult, String technique, String smellType, HashSet<String> targetTefactoringTypes, ConfusionMatrix confusionMtrix) throws Exception {
+		HashSet<ClassDataSmelly> notSmellyClassesForSelectedTechniqueSmell = this.commitClassSmell.getNotSmellingClassesBySmellAndTechnique(smellResult, smellType, technique); 
 		for (ClassDataSmelly classNotSmelly : notSmellyClassesForSelectedTechniqueSmell) {
 			CommitData nextCommit = this.commitRange.getNextCommit(classNotSmelly.getCommit());
 			if (nextCommit != null) {
@@ -210,13 +203,10 @@ public class SmellRefactoredClass {
 			if (!targetTefactoringTypes.contains(refactoring.getRefactoringType())) {
 				continue;
 			}
-			if ((ENABLE_REDUNDANT_VERIFICATION_FOR_DEBUG) && (!this.refactoringEvents.hasClassRefactoringsInCommit(refactoring.getCommitId(), refactoring.getFileNameBefore(), refactoring.getClassName(), targetTefactoringTypes))) {
-				throw new Exception("Existing refactoring not found.");
-			} 
 			PredictionRound predictionRound = confusionMatrices.newRound();
 			predictionRound.setCondition(true);
 			CommitData previousCommit = this.commitRange.getPreviousCommit(refactoring.getCommitId());
-			ClassDataSmelly classSmell = getSmellCommitForClass(previousCommit.getId(), refactoring.getFileNameBefore(), refactoring.getClassName(), smellType); 
+			ClassDataSmelly classSmell = this.commitClassSmell.getSmellCommitForClass(previousCommit.getId(), refactoring.getFileNameBefore(), refactoring.getClassName(), smellType); 
 			if (classSmell != null) {
 				predictionRound.setTrue(classSmell.getListaTecnicas());
 				predictionRound.setFalseAllExcept(classSmell.getListaTecnicas());
@@ -233,68 +223,6 @@ public class SmellRefactoredClass {
 		}
 	}
 	
-	private HashSet<ClassDataSmelly> getSmellingClassesBySmellAndTechnique(FilterSmellResult commitInitial, String smellType, String selectedTechnique) {
-		HashSet<ClassDataSmelly> result =  new HashSet<ClassDataSmelly>();
-		for (ClassDataSmelly classSmelly : commitInitial.getClassesSmell()) {
-			if (classSmelly.getSmell().equals(smellType)) {
-				if (classSmelly.getListaTecnicas().contains(selectedTechnique)) {
-					result.add(classSmelly);
-				}
-			}
-		}
-		return (result);
-	}
-
-	private int countPositivePredictionForTechnique(FilterSmellResult commitInitial, String smellType, String technique) {
-		HashSet<ClassDataSmelly> smellyClasses = getSmellingClassesBySmellAndTechnique(commitInitial, smellType, technique);
-		return (smellyClasses.size());
-	}
 	
-	public ClassDataSmelly getSmellCommitForClass(String commitId, String filePath, String className, String smellType) throws Exception {
-		ClassDataSmelly result = null;
-		FilterSmellResult smellsCommit = this.commitSmell.obterSmellsCommit(commitId);
-		if (smellsCommit != null) {
-			for (ClassDataSmelly classSmell : smellsCommit.getClassesSmell()) {
-				if (classSmell.getSmell().equals(smellType)) {
-					if ( (classSmell.getDiretorioDaClasse().equals(filePath)) 
-							&& classSmell.getNomeClasse().equals(className) ) {				
-						result = classSmell;
-					}
-				}
-			}
-		}
-		return result;
-	}
 	
-	private HashSet<ClassDataSmelly> getNotSmellingClassesBySmellAndTechnique(FilterSmellResult commitInitial, String smellType, String selectedTechnique) {
-		HashSet<ClassDataSmelly> result =  new HashSet<ClassDataSmelly>();
-		result.addAll(commitInitial.getClassesNotSmelly());
-		for (ClassDataSmelly classSmelly : commitInitial.getClassesSmell()) {
-			if (classSmelly.getSmell().equals(smellType)) {
-				if (!classSmelly.getListaTecnicas().contains(selectedTechnique)) {
-					result.add(classSmelly);
-				}
-			}
-		}
-		return (result);
-	}
-	
-	private boolean hasSmellPredictionForTechniqueInCommit(String commitId, String smellType, String technique, String filePath, String className) throws Exception {
-		boolean result = false;
-		FilterSmellResult smellsInCommit = this.commitSmell.obterSmellsCommit(commitId);
-		if (smellsInCommit != null) {
-			for(ClassDataSmelly smellInCommit: smellsInCommit.getClassesSmell() ) {
-				if (smellInCommit.getSmell().contains(smellType)) {
-					if ( (smellInCommit.getDiretorioDaClasse().equals(filePath))
-							&& (smellInCommit.getNomeClasse().equals(className)) ) {
-						if (smellInCommit.getListaTecnicas().contains(technique)) {
-							result = true;
-						}
-					}
-				}
-			}
-		}
-		return (result);
-	}
-
 }

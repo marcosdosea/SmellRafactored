@@ -223,10 +223,16 @@ public class RefactoringEvent implements Comparable<RefactoringEvent> {
 	}
 	
 	private String extractMethodName(String side) {
-		int methodNameEnd = side.indexOf("(");
-		String partialMethodName = side.substring(0, methodNameEnd);
-		int methodNameBegin = partialMethodName.lastIndexOf(" ") + 1;
-		return partialMethodName.substring(methodNameBegin);
+		String result = side;
+		int methodNameEnd = result.indexOf("(");
+		if (methodNameEnd >= 0) {
+			result = result.substring(0, methodNameEnd);
+		}
+		int methodNameBegin = result.lastIndexOf(" ") + 1;
+		if (methodNameBegin >= 0) {
+			result = result.substring(methodNameBegin);
+		}
+		return (result);
 	}
 
 }

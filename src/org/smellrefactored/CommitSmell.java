@@ -11,10 +11,8 @@ import java.util.List;
 
 import org.designroleminer.MetricReport;
 import org.designroleminer.smelldetector.FilterSmells;
-import org.designroleminer.smelldetector.model.ClassDataSmelly;
 import org.designroleminer.smelldetector.model.FilterSmellResult;
 import org.designroleminer.smelldetector.model.LimiarTecnica;
-import org.designroleminer.smelldetector.model.MethodDataSmelly;
 import org.designroleminer.threshold.TechniqueExecutor;
 import org.eclipse.jgit.lib.Repository;
 import org.refactoringminer.api.GitService;
@@ -28,19 +26,16 @@ import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 
 public class CommitSmell {
-
-	static Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
-	
 	
 	private GitService gitService;
 	private Repository repo;
-	private ArrayList<CommitData> commitsWithRefactoringMergedIntoMaster;
 	private String localFolder;
 	private List<LimiarTecnica> listaLimiarTecnica;
 	String resultFileName;
 	
 	private Date startAt = new Date();
 	private boolean usingOldCache = false;
+	private boolean usingLargeCacheInMemory = false;
 	LinkedHashMap<String, FilterSmellResult> memoryCache = new LinkedHashMap<String, FilterSmellResult>();  
 	
 	private LinkedHashMap<String, LimiarTecnica> techniquesThresholds;
@@ -49,16 +44,15 @@ public class CommitSmell {
 
 	HashSet<String> listCommitEvaluated = new HashSet<String>();
 
+	static Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
 
 	public CommitSmell(String localFolder, ArrayList<CommitData> commitsWithRefactoringMergedIntoMaster, List<LimiarTecnica> listaLimiarTecnica, String resultFileName) throws Exception {
-		this.commitsWithRefactoringMergedIntoMaster = commitsWithRefactoringMergedIntoMaster;
 		this.localFolder = localFolder;
 		this.listaLimiarTecnica = listaLimiarTecnica;
 		this.resultFileName = resultFileName;
 		
 		gitService = new GitServiceImpl();
 		repo = gitService.openRepository(localFolder);
-		
 		
 		techniquesThresholds = new LinkedHashMap<String, LimiarTecnica>();
 		for (LimiarTecnica limiarTecnica : this.listaLimiarTecnica) {
@@ -78,30 +72,24 @@ public class CommitSmell {
 			logger.info("The smells commit OLD CACHE was turned OFF.");
 		}
 	}
-	
-	public FilterSmellResult obterSmellsPreviousCommit(String commitId) {
-		CommitData previousCommit = null;
-		for (CommitData commit : commitsWithRefactoringMergedIntoMaster) {
-			if (commit.getId().equals(commit.getPrevious().getId())) {
-				logger.error("Commit " + commit.getId() + " tem a si mesmo como commit prévio.");
-				continue;
-			}
-			if (commit.getId().equals(commitId)) {
-				previousCommit = commit.getPrevious();
-				break;
-			}
+
+	public void useLargeCacheInMemory(boolean onOff) {
+		this.usingLargeCacheInMemory = onOff;
+		if (this.usingLargeCacheInMemory) {
+			logger.warn("The smells commit large memory cache was turned ON.");
+		} else {
+			logger.info("The smells commit large memory cache was turned OFF.");
 		}
-		FilterSmellResult smellsPreviousCommit = null;
-		if (previousCommit != null) {
-			try {
-				smellsPreviousCommit = obterSmellsCommit(previousCommit.getId());
-			} catch (Exception e) {
-				e.getStackTrace();
-			}
-		}
-		return smellsPreviousCommit;
 	}
 	
+	public ArrayList<FilterSmellResult> obterSmellsCommits(ArrayList<String> commitIds) throws Exception {
+		ArrayList<FilterSmellResult> result = new ArrayList<FilterSmellResult>();
+		for (String commitId: commitIds) {
+			result.add(obterSmellsCommit(commitId));
+		}
+		return (result);
+	}
+
 	public FilterSmellResult obterSmellsCommit(String commitId) throws Exception {
 		FilterSmellResult smellsCommit;
 		if (memoryCache.containsKey(commitId)) {
@@ -112,6 +100,9 @@ public class CommitSmell {
 			} else {
 				smellsCommit = getSmellsCommitFromGitRepository(commitId);
 				saveSmellsCommitToCache(smellsCommit);
+			}
+			if (!usingLargeCacheInMemory) {
+				memoryCache.clear();
 			}
 			memoryCache.put(commitId, smellsCommit);
 		}
@@ -171,44 +162,16 @@ public class CommitSmell {
 		}
 		if (!listCommitEvaluated.contains(commitId)) {
 			listCommitEvaluated.add(commitId);
-			pmResultSmellRefactoredCommit.write(commitId, report.getNumberOfClasses(), report.getNumberOfMethods(),
-					report.getSystemLOC());
+			pmResultSmellRefactoredCommit.write(commitId, report.getNumberOfClasses(), report.getNumberOfMethods(), report.getSystemLOC());
 		}
 		logger.info("Gerando smells com a lista de problemas de design encontrados...");
 		FilterSmellResult smellsCommitInitial = FilterSmells.filtrar(report.all(), listaLimiarTecnica, commitId);
-		FilterSmells.gravarMetodosSmell(smellsCommitInitial.getMetodosSmell(), resultFileName + "-smells-commit-initial-method.csv");
-		FilterSmells.gravarClassesSmell(smellsCommitInitial.getClassesSmell(), resultFileName + "-smells-commit-initial-class.csv");
-		consistMethodNotSmelly(smellsCommitInitial);
-		consistClassNotSmelly(smellsCommitInitial);
+		FilterSmells.gravarMetodosSmell(smellsCommitInitial.getMetodosSmell(), resultFileName + "-smells-commit-" + commitId + "-method.csv");
+		FilterSmells.gravarClassesSmell(smellsCommitInitial.getClassesSmell(), resultFileName + "-smells-commit-" + commitId + "-class.csv");
+		CommitMethodSmell.consistMethodNotSmelly(smellsCommitInitial);
+		CommitClassSmell.consistClassNotSmelly(smellsCommitInitial);
 		return smellsCommitInitial;
 	}
-	
-	private void consistMethodNotSmelly(FilterSmellResult smellsCommitInitial) {
-		for (MethodDataSmelly methodSmelly : smellsCommitInitial.getMetodosSmell()) {
-			for (MethodDataSmelly methodNotSmelly : smellsCommitInitial.getMetodosNotSmelly()) {
-				if (methodSmelly.getDiretorioDaClasse().equals(methodNotSmelly.getDiretorioDaClasse())
-					&& methodSmelly.getNomeClasse().equals(methodNotSmelly.getNomeClasse())
-					&& methodSmelly.getNomeMetodo().equals(methodNotSmelly.getNomeMetodo())
-					&& methodSmelly.getCommit().equals(methodNotSmelly.getCommit())
-					&& methodSmelly.getCharInicial() == methodNotSmelly.getCharInicial()) {
-					logger.error("Method found in the list of smells and non-smells.:" + methodSmelly.toString());
-				}
-			}
-		}
-	}
-
-	private void consistClassNotSmelly(FilterSmellResult smellsCommitInitial) {
-		for (ClassDataSmelly classSmelly : smellsCommitInitial.getClassesSmell()) {
-			for (ClassDataSmelly classNotSmelly : smellsCommitInitial.getClassesNotSmelly()) {
-				if (classSmelly.getDiretorioDaClasse().equals(classSmelly.getDiretorioDaClasse())
-			        && classSmelly.getNomeClasse().equals(classNotSmelly.getNomeClasse())
-					&& classSmelly.getCommit().equals(classNotSmelly.getCommit())) {
-					logger.error("Class found in the list of smells and non-smells.:" + classSmelly.toString());
-				}
-			}
-		}
-	}
-
 	
 	public LinkedHashMap<String, LimiarTecnica> getTechniquesThresholds() {
  		return (this.techniquesThresholds);

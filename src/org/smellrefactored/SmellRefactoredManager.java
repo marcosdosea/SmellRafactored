@@ -2,7 +2,6 @@ package org.smellrefactored;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.designroleminer.smelldetector.model.LimiarTecnica;
@@ -15,19 +14,25 @@ import org.smellrefactored.refactoringminer.wrapper.RefactoringMinerWrapperDto;
 
 public class SmellRefactoredManager {
 
-	final boolean USE_SMELLS_COMMIT_OLD_CACHE = true; 
-	
+	final boolean ANALYZE_FIRST_COMMIT_ONLY = true; // Very, very, very slow!
+
+	final boolean USE_SMELLS_COMMIT_OLD_CACHE = true; // This can ignore new adjustments in DesignRoleMiner.
+
+	final boolean USE_SMELLS_COMMIT_LARGE_CACHE_IN_MEMORY = ANALYZE_FIRST_COMMIT_ONLY; // This can quickly fill the memory if many commits are analyzed. 
+
 	static Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
 
 	private String urlRepository;
 	private String repositoryPath;
-	private String initialCommit;
-	private String finalCommit;
+	private String initialCommitId;
+	private String finalCommitId;
 	private List<LimiarTecnica> listaLimiarTecnica;
 
 	private CommitRange commitRange;
 	private RefactoringEvents refactoringEvents;
 	
+	
+	private ArrayList<String> smellCommitIds = new ArrayList<String>(); 
 	private CommitSmell commitSmell;
 	
 	private String resultBaseFileName;
@@ -35,12 +40,12 @@ public class SmellRefactoredManager {
 
 	HashSet<String> listCommitEvaluated = new HashSet<String>();
 	
-	public SmellRefactoredManager(String urlRepository, String repositoryPath, String initialCommit, String finalCommit,
+	public SmellRefactoredManager(String urlRepository, String repositoryPath, String initialCommitId, String finalCommitId,
 			List<LimiarTecnica> listaLimiarTecnica, String resultBaseFileName) {
 		this.urlRepository = urlRepository;
 		this.repositoryPath = repositoryPath;
-		this.initialCommit = initialCommit;
-		this.finalCommit = finalCommit;
+		this.initialCommitId = initialCommitId;
+		this.finalCommitId = finalCommitId;
 		this.listaLimiarTecnica = listaLimiarTecnica;
 		this.resultBaseFileName = resultBaseFileName;
 
@@ -53,17 +58,17 @@ public class SmellRefactoredManager {
 
 
 	private void prepareSmellRefactored() throws Exception {
-		if (initialCommit.equals(finalCommit)) {
+		if (initialCommitId.equals(finalCommitId)) {
 			throw new Exception("At least 2 commits are required in the range of commits to be analyzed.");
 		}
 		
-		RefactoringMinerWrapperManager refactoringMinerWrapperManager = new RefactoringMinerWrapperManager(urlRepository, repositoryPath, initialCommit, finalCommit, resultBaseFileName);
+		RefactoringMinerWrapperManager refactoringMinerWrapperManager = new RefactoringMinerWrapperManager(urlRepository, repositoryPath, initialCommitId, finalCommitId, resultBaseFileName);
 
 		// List<RefactoringMinerWrapperDto> refactoringDtoList = refactoringMinerWrapperManager.getRefactoringDtoListWithoutCache();
 		List<RefactoringMinerWrapperDto> refactoringDtoList = refactoringMinerWrapperManager.getRefactoringDtoListUsingJsonCache();
 
 		refactoringEvents = new RefactoringEvents(refactoringDtoList, this.repositoryPath);
-		refactoringEvents.removeEventsForCommit(initialCommit);
+		refactoringEvents.removeEventsForCommit(initialCommitId);
 		
 		HashSet<String> commitsWithRefactorings = refactoringMinerWrapperManager.getCommitsWithRefactoringsFromRefactoringList(refactoringDtoList);
 
@@ -73,16 +78,24 @@ public class SmellRefactoredManager {
 		GitService gitService = new GitServiceImpl();
 		gitService.cloneIfNotExists(repositoryPath, urlRepository);
 
-		commitRange = new CommitRange(repositoryPath, initialCommit, finalCommit);
+		commitRange = new CommitRange(repositoryPath, initialCommitId, finalCommitId);
 		ArrayList<CommitData> commitsWithRefactoringMergedIntoMaster = commitRange.getCommitsMergedIntoMasterByIds(commitsWithRefactorings);
 
+		if (ANALYZE_FIRST_COMMIT_ONLY) {
+			smellCommitIds.add(initialCommitId);
+		} else {
+			smellCommitIds = commitRange.getIds();
+			smellCommitIds.remove(finalCommitId);
+		}
+		
 		commitSmell = new CommitSmell(repositoryPath, commitsWithRefactoringMergedIntoMaster, listaLimiarTecnica, resultBaseFileName);
-		commitSmell.useOldCache(USE_SMELLS_COMMIT_OLD_CACHE); 
+		commitSmell.useOldCache(USE_SMELLS_COMMIT_OLD_CACHE);
+		commitSmell.useLargeCacheInMemory(USE_SMELLS_COMMIT_LARGE_CACHE_IN_MEMORY);
 	}
 
 	public void getSmellRefactoredMethods() {
 		try {
-			SmellRefactoredMethod smellRefactoredMethod = new SmellRefactoredMethod(refactoringEvents, initialCommit, commitRange, commitSmell, resultBaseFileName);
+			SmellRefactoredMethod smellRefactoredMethod = new SmellRefactoredMethod(refactoringEvents, smellCommitIds, commitRange, commitSmell, resultBaseFileName);
 			smellRefactoredMethod.getSmellRefactoredMethods();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -92,7 +105,7 @@ public class SmellRefactoredManager {
 
 	public void getSmellRefactoredClasses() {
 		try {
-			SmellRefactoredClass smellRefactoredClass = new SmellRefactoredClass(refactoringEvents, initialCommit, commitRange, commitSmell, resultBaseFileName);
+			SmellRefactoredClass smellRefactoredClass = new SmellRefactoredClass(refactoringEvents, smellCommitIds, commitRange, commitSmell, resultBaseFileName);
 			smellRefactoredClass.getSmellRefactoredClasses();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -100,12 +113,4 @@ public class SmellRefactoredManager {
 		}
 	}
 
-	public static int countRealPositive(LinkedHashMap<String, Integer> refactoringsCounter, HashSet<String> targetTefactoringTypes) {
-		int realPositive = 0;
-		for (String targetTefactoringType: targetTefactoringTypes) {
-			realPositive += refactoringsCounter.getOrDefault(targetTefactoringType, 0);
-		}
-		return realPositive;
-	}
-	
 }

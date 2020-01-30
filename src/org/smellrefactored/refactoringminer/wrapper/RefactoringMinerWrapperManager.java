@@ -19,8 +19,8 @@ public class RefactoringMinerWrapperManager {
 	
 	private String urlRepository;
 	private String repositoryPath;
-	private String initialCommit;
-	private String finalCommit;
+	private String initialCommitId;
+	private String finalCommitId;
 	private String resultBaseFileName;
 	
 	private GitService gitService;
@@ -28,12 +28,12 @@ public class RefactoringMinerWrapperManager {
 
 	static Logger logger = LoggerFactory.getLogger(RefactoringMinerWrapperManager.class);
 	
-	public RefactoringMinerWrapperManager(String urlRepository, String repositoryPath, String initialCommit, String finalCommit, String resultBaseFileName) throws Exception {
+	public RefactoringMinerWrapperManager(String urlRepository, String repositoryPath, String initialCommitId, String finalCommitId, String resultBaseFileName) throws Exception {
 		this.urlRepository = urlRepository;
 		this.repositoryPath = repositoryPath;
-		this.initialCommit = initialCommit;
-		this.finalCommit = finalCommit;
-		this.resultBaseFileName = resultBaseFileName + "-refactoring" + "-" + initialCommit + "-" + finalCommit;
+		this.initialCommitId = initialCommitId;
+		this.finalCommitId = finalCommitId;
+		this.resultBaseFileName = resultBaseFileName + "-refactoring" + "-" + this.initialCommitId + "-" + this.finalCommitId;
 		
 		gitService = new GitServiceImpl();
 		repo = gitService.cloneIfNotExists(this.repositoryPath, this.urlRepository);
@@ -58,7 +58,7 @@ public class RefactoringMinerWrapperManager {
 	private List<RefactoringMinerWrapperDto> getRefactoringDtoListFromRefactoringMiner() throws Exception {
 		final List<RefactoringMinerWrapperDto> refactoringDtoList = new ArrayList<RefactoringMinerWrapperDto>();
 		GitHistoryRefactoringMiner miner = new GitHistoryRefactoringMinerImpl();
-		miner.detectBetweenCommits(repo, initialCommit, finalCommit, new RefactoringHandler() {
+		miner.detectBetweenCommits(repo, initialCommitId, finalCommitId, new RefactoringHandler() {
 			@Override
 			public void handle(String idCommit, List<Refactoring> refactorings) {
 				for (Refactoring ref : refactorings) {

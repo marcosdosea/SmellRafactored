@@ -17,16 +17,16 @@ import org.refactoringminer.util.GitServiceImpl;
 public class CommitRange {
 	
 	private String localFolder;
-	private String initialCommit;
-	private String finalCommit;
+	private String initialCommitId;
+	private String finalCommitId;
 	
 	private ArrayList<CommitData> commitsMergedIntoMaster = new ArrayList<CommitData>();
 	private ArrayList<CommitData> commitsNotMergedIntoMaster = new ArrayList<CommitData>();
 	
-	public CommitRange(String localFolder, String initialCommit, String finalCommit) throws Exception {
+	public CommitRange(String localFolder, String initialCommitId, String finalCommitId) throws Exception {
 		this.localFolder = localFolder;
-		this.initialCommit = initialCommit;
-		this.finalCommit = finalCommit;
+		this.initialCommitId = initialCommitId;
+		this.finalCommitId = finalCommitId;
 		processRangeOfCommitsFromRepository();
 	}
 
@@ -34,20 +34,18 @@ public class CommitRange {
 		GitService gitService = new GitServiceImpl();
 		Repository repo = gitService.openRepository(localFolder);
 		Git git = new Git(repo);
-		gitService.checkout(repo, finalCommit);
+		gitService.checkout(repo, finalCommitId);
 		Iterable<RevCommit> log = git.log().call();
 		Iterator<RevCommit> logIterator = log.iterator();
 		RevWalk revWalk = new RevWalk(repo, 3);
 		RevCommit masterHead = revWalk.parseCommit(repo.resolve("refs/heads/master"));
-		boolean inRange = false;
+		boolean inRange = true; 
+		// reverse order
 		while (logIterator.hasNext()) {
 			RevCommit revCommit = logIterator.next();
-			/// if ( (!inRange) && (revCommit.getId().getName().equals(initialCommit)) ) {
-				inRange = true;
-			/// }
+			CommitData commitData = newCommitData(revCommit);
+			ObjectId id = repo.resolve(commitData.getId());
 			if (inRange) {
-				CommitData commitData = newCommitData(revCommit);
-				ObjectId id = repo.resolve(commitData.getId());
 				RevCommit otherHead = revWalk.parseCommit(id);
 				if (revWalk.isMergedInto(otherHead, masterHead)) {
 					if ((otherHead.getParentCount() == 1)
@@ -58,6 +56,9 @@ public class CommitRange {
 						commitsNotMergedIntoMaster.add(commitData);
 					}
 				}
+				if (id.getName().equals(initialCommitId)) {
+					inRange = false;
+				}
 			}
 			revWalk.close();
 			revWalk.dispose();
@@ -66,7 +67,6 @@ public class CommitRange {
 
 		Collections.sort(commitsMergedIntoMaster);
 		Collections.sort(commitsNotMergedIntoMaster);
-
 		
 		chainOrderedCommitsMergedIntoMaster();
 	}
@@ -134,7 +134,7 @@ public class CommitRange {
 		CommitData commit = getCommitById(commitId);
 		if (commit != null) {
 			result = commit.getPrevious();
-			if (result == null) {
+			if ( (result == null) && (!commit.equals(initialCommitId)) ) {
 				throw new Exception("Previous commit for commit "  + commitId + " not found."); 
 			}
 			if (result.getId() == commitId) {
@@ -153,15 +153,21 @@ public class CommitRange {
 		} else {
 			throw new Exception("Commit "  + commitId + " not found."); 
 		}
-		// if (result == null) {
-		// 	throw new Exception("Next commit for commit "  + commitId + " not found."); 
-		// }
+		if ( (result == null) && (!commit.equals(finalCommitId)) ) {
+		 	throw new Exception("Next commit for commit "  + commitId + " not found."); 
+		}
 		if ( (result != null) && (result.getId() == commitId) ) {
 			throw new Exception("Next commit for commit "  + commitId + " it is himself."); 
 		}
 		return result;
 	}
 
-	
+	public ArrayList<String> getIds() {
+		ArrayList<String> result = new ArrayList<String>();
+		for (CommitData commit : commitsMergedIntoMaster) {
+			result.add(commit.getId());
+		}
+		return (result);
+	}
 	
 }
