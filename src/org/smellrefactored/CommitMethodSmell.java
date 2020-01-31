@@ -96,10 +96,10 @@ public class CommitMethodSmell {
 	static public void consistMethodNotSmelly(FilterSmellResult smellResult) throws Exception {
 		for (MethodDataSmelly methodSmelly : smellResult.getMetodosSmell()) {
 			for (MethodDataSmelly methodNotSmelly : smellResult.getMetodosNotSmelly()) {
-				if (methodSmelly.getDiretorioDaClasse().equals(methodNotSmelly.getDiretorioDaClasse())
+				if (methodSmelly.getCommit().equals(methodNotSmelly.getCommit())
+					&& methodSmelly.getDiretorioDaClasse().equals(methodNotSmelly.getDiretorioDaClasse())
 					&& methodSmelly.getNomeClasse().equals(methodNotSmelly.getNomeClasse())
 					&& methodSmelly.getNomeMetodo().equals(methodNotSmelly.getNomeMetodo())
-					&& methodSmelly.getCommit().equals(methodNotSmelly.getCommit())
 					&& methodSmelly.getCharInicial() == methodNotSmelly.getCharInicial()) {
 					throw new Exception("Method found in the list of smells and non-smells:" + methodSmelly.toString());
 				}

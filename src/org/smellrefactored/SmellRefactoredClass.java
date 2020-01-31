@@ -71,6 +71,7 @@ public class SmellRefactoredClass {
 	
 	public void getSmellRefactoredClasses() {
 		try {
+			logger.info("Starting class analysis...");
 			ArrayList<RefactoringEvent> listRefactoringMergedIntoMaster = new ArrayList<RefactoringEvent>();
 			for (RefactoringEvent refactoring : refactoringEvents.getAll()) {
 				for (CommitData commit : commitRange.getCommitsMergedIntoMaster() ) {
@@ -106,6 +107,8 @@ public class SmellRefactoredClass {
 			evaluateInDetailSmellChangeOperation(ClassDataSmelly.LONG_CLASS, this.getLongClassRefactoringTypes(), this.smellCommitIds, listRefactoringMergedIntoMaster);
 			
 			classOutputFiles.close();
+
+			logger.info("Class analyzes completed.");
 		} catch (Exception e) {
 			e.getStackTrace();
 		}

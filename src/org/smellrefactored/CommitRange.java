@@ -39,25 +39,21 @@ public class CommitRange {
 		Iterator<RevCommit> logIterator = log.iterator();
 		RevWalk revWalk = new RevWalk(repo, 3);
 		RevCommit masterHead = revWalk.parseCommit(repo.resolve("refs/heads/master"));
-		boolean inRange = true; 
 		// reverse order
 		while (logIterator.hasNext()) {
 			RevCommit revCommit = logIterator.next();
 			CommitData commitData = newCommitData(revCommit);
 			ObjectId id = repo.resolve(commitData.getId());
-			if (inRange) {
-				RevCommit otherHead = revWalk.parseCommit(id);
-				if (revWalk.isMergedInto(otherHead, masterHead)) {
-					if ((otherHead.getParentCount() == 1)
-						|| (otherHead.getShortMessage().toUpperCase().contains("MERGE")
-								&& otherHead.getShortMessage().toUpperCase().contains("PULL"))) {
-						commitsMergedIntoMaster.add(commitData);
-					} else {
-						commitsNotMergedIntoMaster.add(commitData);
-					}
-				}
-				if (id.getName().equals(initialCommitId)) {
-					inRange = false;
+			RevCommit otherHead = revWalk.parseCommit(id);
+			if (revWalk.isMergedInto(otherHead, masterHead)) {
+				if ((otherHead.getParentCount() == 1)
+					|| (	( otherHead.getShortMessage().toUpperCase().contains("MERGE")
+									|| otherHead.getShortMessage().toUpperCase().contains("MERGING") // Ice b3f9a0784b9a61ad713675aac3543e0035345e85
+									) 
+							||/*original: &&*/ otherHead.getShortMessage().toUpperCase().contains("PULL"))) {
+					commitsMergedIntoMaster.add(commitData);
+				} else {
+					commitsNotMergedIntoMaster.add(commitData);
 				}
 			}
 			revWalk.close();
@@ -66,9 +62,11 @@ public class CommitRange {
 		git.close();
 
 		Collections.sort(commitsMergedIntoMaster);
-		Collections.sort(commitsNotMergedIntoMaster);
-		
-		chainOrderedCommitsMergedIntoMaster();
+		commitsMergedIntoMaster = getSegmentFromOrderedCommit(commitsMergedIntoMaster, initialCommitId, finalCommitId);
+		chainOrderedCommits(commitsMergedIntoMaster);
+
+		// Collections.sort(commitsNotMergedIntoMaster);
+		// chainOrderedCommits(commitsNotMergedIntoMaster);
 	}
 
 	private CommitData newCommitData(RevCommit revCommit) {
@@ -82,8 +80,26 @@ public class CommitRange {
 		return commitData;
 	}
 	
-	private void chainOrderedCommitsMergedIntoMaster() {
-		Iterator<CommitData> it = commitsMergedIntoMaster.iterator();
+	private ArrayList<CommitData> getSegmentFromOrderedCommit(ArrayList<CommitData> orderedCommits, String startCommitId, String endCommitId) {
+		ArrayList<CommitData> result = new ArrayList<CommitData>();
+		boolean inRange = false;
+		for (CommitData commit: orderedCommits) {
+			if ( (!inRange) && (commit.getId().equals(startCommitId)) ) {
+				inRange = true; 
+			}
+			if (inRange) {
+				result.add(commit);
+			}
+			if ( (inRange) && (commit.getId().equals(endCommitId)) ) {
+				inRange = false;
+				break;
+			}
+		}
+		return (result);
+	}
+
+	private void chainOrderedCommits(ArrayList<CommitData> orderedCommits) {
+		Iterator<CommitData> it = orderedCommits.iterator();
 		CommitData previousCommit = null;
 		while (it.hasNext()) {
 			CommitData commit = it.next();
@@ -94,7 +110,7 @@ public class CommitRange {
 			previousCommit = commit; 
 		}
 	}
-
+	
 	public ArrayList<CommitData> getCommitsMergedIntoMaster() {
 		return (this.commitsMergedIntoMaster);
 	}
@@ -134,10 +150,10 @@ public class CommitRange {
 		CommitData commit = getCommitById(commitId);
 		if (commit != null) {
 			result = commit.getPrevious();
-			if ( (result == null) && (!commit.equals(initialCommitId)) ) {
+			if ( (result == null) && (!commit.getId().equals(initialCommitId)) ) {
 				throw new Exception("Previous commit for commit "  + commitId + " not found."); 
 			}
-			if (result.getId() == commitId) {
+			if ( (result != null) && (result.getId().equals(commitId)) ) {
 				throw new Exception("Previous commit for commit "  + commitId + " it is himself."); 
 			}
 		}
@@ -153,10 +169,10 @@ public class CommitRange {
 		} else {
 			throw new Exception("Commit "  + commitId + " not found."); 
 		}
-		if ( (result == null) && (!commit.equals(finalCommitId)) ) {
+		if ( (result == null) && (!commit.getId().equals(finalCommitId)) ) {
 		 	throw new Exception("Next commit for commit "  + commitId + " not found."); 
 		}
-		if ( (result != null) && (result.getId() == commitId) ) {
+		if ( (result != null) && (result.getId().equals(commitId)) ) {
 			throw new Exception("Next commit for commit "  + commitId + " it is himself."); 
 		}
 		return result;

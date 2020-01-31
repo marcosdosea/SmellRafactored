@@ -66,8 +66,8 @@ public class CommitSmell {
 		this.usingOldCache = onOff;
 		if (this.usingOldCache) {
 			logger.warn("The smells commit OLD CACHE was turned ON.");
-			logger.warn("Use smells commit OLD cache only to speed of maintenance and development on this project.");
-			logger.warn("Clear the cache whenever the weather is cloudy ;)");
+			logger.warn("Use smells commit OLD CACHE only to speed of maintenance and development on this project.");
+			logger.warn("Clear the OLD CACHE whenever the weather is cloudy ;)");
 		} else {
 			logger.info("The smells commit OLD CACHE was turned OFF.");
 		}

@@ -123,6 +123,7 @@ public class SmellRefactoredMethod {
 	
 	public void getSmellRefactoredMethods() {
 		try {
+			logger.info("Starting method analysis...");
 			ArrayList<RefactoringEvent> listRefactoringMergedIntoMaster = new ArrayList<RefactoringEvent>();
 			for (RefactoringEvent refactoring : refactoringEvents.getAll()) {
 				for (CommitData commit : this.commitRange.getCommitsMergedIntoMaster()) {
@@ -171,7 +172,8 @@ public class SmellRefactoredMethod {
 			evaluateInDetailSmellChangeOperation(MethodDataSmelly.MANY_PARAMETERS       , this.getManyParametersRefactoringTypes(), this.smellCommitIds, listRefactoringMergedIntoMaster);
 			
 			methodOutputFiles.close();
-			
+
+			logger.info("Mathod analyzes completed.");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

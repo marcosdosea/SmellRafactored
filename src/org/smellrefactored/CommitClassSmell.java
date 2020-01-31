@@ -95,9 +95,9 @@ public class CommitClassSmell {
 	static public void consistClassNotSmelly(FilterSmellResult smellResult) throws Exception {
 		for (ClassDataSmelly classSmelly : smellResult.getClassesSmell()) {
 			for (ClassDataSmelly classNotSmelly : smellResult.getClassesNotSmelly()) {
-				if (classSmelly.getDiretorioDaClasse().equals(classSmelly.getDiretorioDaClasse())
-			        && classSmelly.getNomeClasse().equals(classNotSmelly.getNomeClasse())
-					&& classSmelly.getCommit().equals(classNotSmelly.getCommit())) {
+				if (classSmelly.getCommit().equals(classNotSmelly.getCommit())
+				    && classSmelly.getDiretorioDaClasse().equals(classNotSmelly.getDiretorioDaClasse())
+			        && classSmelly.getNomeClasse().equals(classNotSmelly.getNomeClasse()) ) {
 					throw new Exception("Class found in the list of smells and non-smells.:" + classSmelly.toString());
 				}
 			}
