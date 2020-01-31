@@ -46,9 +46,9 @@ public class CommitMethodSmell {
 		return (result);
 	}
 
-	public HashSet<MethodDataSmelly> getSmellingMethodsBySmellAndTechnique(FilterSmellResult commitInitial, String smellType, String selectedTechnique) {
+	public HashSet<MethodDataSmelly> getSmellingMethodsBySmellAndTechnique(FilterSmellResult smellResult, String smellType, String selectedTechnique) {
 		HashSet<MethodDataSmelly> result =  new HashSet<MethodDataSmelly>();
-		for (MethodDataSmelly methodSmelly : commitInitial.getMetodosSmell()) {
+		for (MethodDataSmelly methodSmelly : smellResult.getMetodosSmell()) {
 			if (methodSmelly.getSmell().equals(smellType)) {
 				if (methodSmelly.getListaTecnicas().contains(selectedTechnique)) {
 					result.add(methodSmelly);
@@ -58,10 +58,10 @@ public class CommitMethodSmell {
 		return (result);
 	}
 
-	public HashSet<MethodDataSmelly> getNotSmellingMethodsBySmellAndTechnique(FilterSmellResult commitInitial, String smellType, String selectedTechnique) {
+	public HashSet<MethodDataSmelly> getNotSmellingMethodsBySmellAndTechnique(FilterSmellResult smellResult, String smellType, String selectedTechnique) {
 		HashSet<MethodDataSmelly> result =  new HashSet<MethodDataSmelly>();
-		result.addAll(commitInitial.getMetodosNotSmelly());
-		for (MethodDataSmelly methodSmelly : commitInitial.getMetodosSmell()) {
+		result.addAll(smellResult.getMetodosNotSmelly());
+		for (MethodDataSmelly methodSmelly : smellResult.getMetodosSmell()) {
 			if (methodSmelly.getSmell().equals(smellType)) {
 				if (!methodSmelly.getListaTecnicas().contains(selectedTechnique)) {
 					result.add(methodSmelly);
@@ -88,14 +88,14 @@ public class CommitMethodSmell {
 		return result;
 	}
 
-	public int countMethodSmellPredictionForTechniqueInCommit(FilterSmellResult commitInitial, String smellType, String technique) {
-		HashSet<MethodDataSmelly> smellyMethods = getSmellingMethodsBySmellAndTechnique(commitInitial, smellType, technique);
+	public int countMethodSmellPredictionForTechniqueInCommit(FilterSmellResult smellResult, String smellType, String technique) {
+		HashSet<MethodDataSmelly> smellyMethods = getSmellingMethodsBySmellAndTechnique(smellResult, smellType, technique);
 		return (smellyMethods.size());
 	}
 	
-	static public void consistMethodNotSmelly(FilterSmellResult smellsCommitInitial) throws Exception {
-		for (MethodDataSmelly methodSmelly : smellsCommitInitial.getMetodosSmell()) {
-			for (MethodDataSmelly methodNotSmelly : smellsCommitInitial.getMetodosNotSmelly()) {
+	static public void consistMethodNotSmelly(FilterSmellResult smellResult) throws Exception {
+		for (MethodDataSmelly methodSmelly : smellResult.getMetodosSmell()) {
+			for (MethodDataSmelly methodNotSmelly : smellResult.getMetodosNotSmelly()) {
 				if (methodSmelly.getDiretorioDaClasse().equals(methodNotSmelly.getDiretorioDaClasse())
 					&& methodSmelly.getNomeClasse().equals(methodNotSmelly.getNomeClasse())
 					&& methodSmelly.getNomeMetodo().equals(methodNotSmelly.getNomeMetodo())

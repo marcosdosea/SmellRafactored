@@ -46,10 +46,10 @@ public class CommitClassSmell {
 		return (result);
 	}
 	
-	public HashSet<ClassDataSmelly> getNotSmellingClassesBySmellAndTechnique(FilterSmellResult commitInitial, String smellType, String selectedTechnique) {
+	public HashSet<ClassDataSmelly> getNotSmellingClassesBySmellAndTechnique(FilterSmellResult smellResult, String smellType, String selectedTechnique) {
 		HashSet<ClassDataSmelly> result =  new HashSet<ClassDataSmelly>();
-		result.addAll(commitInitial.getClassesNotSmelly());
-		for (ClassDataSmelly classSmelly : commitInitial.getClassesSmell()) {
+		result.addAll(smellResult.getClassesNotSmelly());
+		for (ClassDataSmelly classSmelly : smellResult.getClassesSmell()) {
 			if (classSmelly.getSmell().equals(smellType)) {
 				if (!classSmelly.getListaTecnicas().contains(selectedTechnique)) {
 					result.add(classSmelly);
@@ -75,14 +75,14 @@ public class CommitClassSmell {
 		return result;
 	}
 	
-	public int countClassSmellPredictionForTechniqueInCommit(FilterSmellResult commitInitial, String smellType, String technique) {
-		HashSet<ClassDataSmelly> smellyClasses = getSmellingClassesBySmellAndTechnique(commitInitial, smellType, technique);
+	public int countClassSmellPredictionForTechniqueInCommit(FilterSmellResult smellResult, String smellType, String technique) {
+		HashSet<ClassDataSmelly> smellyClasses = getSmellingClassesBySmellAndTechnique(smellResult, smellType, technique);
 		return (smellyClasses.size());
 	}
 
-	public HashSet<ClassDataSmelly> getSmellingClassesBySmellAndTechnique(FilterSmellResult commitInitial, String smellType, String selectedTechnique) {
+	public HashSet<ClassDataSmelly> getSmellingClassesBySmellAndTechnique(FilterSmellResult smellResult, String smellType, String selectedTechnique) {
 		HashSet<ClassDataSmelly> result =  new HashSet<ClassDataSmelly>();
-		for (ClassDataSmelly classSmelly : commitInitial.getClassesSmell()) {
+		for (ClassDataSmelly classSmelly : smellResult.getClassesSmell()) {
 			if (classSmelly.getSmell().equals(smellType)) {
 				if (classSmelly.getListaTecnicas().contains(selectedTechnique)) {
 					result.add(classSmelly);
@@ -92,9 +92,9 @@ public class CommitClassSmell {
 		return (result);
 	}
 	
-	static public void consistClassNotSmelly(FilterSmellResult smellsCommitInitial) throws Exception {
-		for (ClassDataSmelly classSmelly : smellsCommitInitial.getClassesSmell()) {
-			for (ClassDataSmelly classNotSmelly : smellsCommitInitial.getClassesNotSmelly()) {
+	static public void consistClassNotSmelly(FilterSmellResult smellResult) throws Exception {
+		for (ClassDataSmelly classSmelly : smellResult.getClassesSmell()) {
+			for (ClassDataSmelly classNotSmelly : smellResult.getClassesNotSmelly()) {
 				if (classSmelly.getDiretorioDaClasse().equals(classSmelly.getDiretorioDaClasse())
 			        && classSmelly.getNomeClasse().equals(classNotSmelly.getNomeClasse())
 					&& classSmelly.getCommit().equals(classNotSmelly.getCommit())) {

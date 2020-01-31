@@ -165,12 +165,12 @@ public class CommitSmell {
 			pmResultSmellRefactoredCommit.write(commitId, report.getNumberOfClasses(), report.getNumberOfMethods(), report.getSystemLOC());
 		}
 		logger.info("Gerando smells com a lista de problemas de design encontrados...");
-		FilterSmellResult smellsCommitInitial = FilterSmells.filtrar(report.all(), listaLimiarTecnica, commitId);
-		FilterSmells.gravarMetodosSmell(smellsCommitInitial.getMetodosSmell(), resultFileName + "-smells-commit-" + commitId + "-method.csv");
-		FilterSmells.gravarClassesSmell(smellsCommitInitial.getClassesSmell(), resultFileName + "-smells-commit-" + commitId + "-class.csv");
-		CommitMethodSmell.consistMethodNotSmelly(smellsCommitInitial);
-		CommitClassSmell.consistClassNotSmelly(smellsCommitInitial);
-		return smellsCommitInitial;
+		FilterSmellResult smellResult = FilterSmells.filtrar(report.all(), listaLimiarTecnica, commitId);
+		FilterSmells.gravarMetodosSmell(smellResult.getMetodosSmell(), resultFileName + "-smells-commit-" + commitId + "-method.csv");
+		FilterSmells.gravarClassesSmell(smellResult.getClassesSmell(), resultFileName + "-smells-commit-" + commitId + "-class.csv");
+		CommitMethodSmell.consistMethodNotSmelly(smellResult);
+		CommitClassSmell.consistClassNotSmelly(smellResult);
+		return smellResult;
 	}
 	
 	public LinkedHashMap<String, LimiarTecnica> getTechniquesThresholds() {

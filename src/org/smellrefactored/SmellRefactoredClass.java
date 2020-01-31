@@ -141,7 +141,7 @@ public class SmellRefactoredClass {
 		 * int realPositive = SmellRefactoredManager.countRealPositive(refactoringsCounter, targetTefactoringTypes);
 		 * confusionMatrices.setValidationRealPositive(realPositive);
 		 * for (String technique : this.commitSmell.getTechniquesThresholds().keySet()) {
-		 * 	Integer positivePredictionExpected = this.commitSmell.countClassSmellPredictionForTechniqueInCommit(commitInitial, typeSmell, technique);
+		 * 	Integer positivePredictionExpected = this.commitSmell.countClassSmellPredictionForTechniqueInCommit(smellResult, typeSmell, technique);
 		 * 	confusionMatrices.setValidationPositivePrediction(technique, positivePredictionExpected);
 		 * }
 		*/

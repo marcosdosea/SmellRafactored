@@ -12,7 +12,7 @@ public class SmellRefactoredResult {
 	private Map<String, List<RefactoringEvent>> listRefactoringsByMethodSmelly;
 	private Map<String, List<RefactoringEvent>> listRefactoringsByMethodNotSmelly;
 	private HashSet<MethodDataSmelly> methodSmellyInitialNotRefactored;
-	private FilterSmellResult smellsCommitInitial;
+	private FilterSmellResult smellsCommit;
 	
 	
 	private ArrayList<RefactoringEvent> listRefactoring;
@@ -50,11 +50,11 @@ public class SmellRefactoredResult {
 		this.listRefactoringsByMethodNotSmelly = listRefactoringsByMethodNotSmelly;
 	}
 
-	public FilterSmellResult getSmellsCommitInitial() {
-		return smellsCommitInitial;
+	public FilterSmellResult getSmellsCommit() {
+		return smellsCommit;
 	}
 
-	public void setSmellsCommitInitial(FilterSmellResult smellsCommitInitial) {
-		this.smellsCommitInitial = smellsCommitInitial;
+	public void setSmellsCommit(FilterSmellResult smellsCommit) {
+		this.smellsCommit = smellsCommit;
 	}
 }
