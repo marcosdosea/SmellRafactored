@@ -5,9 +5,13 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.DepthWalk.RevWalk;
@@ -35,35 +39,54 @@ public class CommitRange {
 		Repository repo = gitService.openRepository(localFolder);
 		Git git = new Git(repo);
 		gitService.checkout(repo, finalCommitId);
-		Iterable<RevCommit> log = git.log().call();
-		Iterator<RevCommit> logIterator = log.iterator();
-		RevWalk revWalk = new RevWalk(repo, 3);
-		RevCommit masterHead = revWalk.parseCommit(repo.resolve("refs/heads/master"));
-		// reverse order
-		while (logIterator.hasNext()) {
-			RevCommit revCommit = logIterator.next();
-			CommitData commitData = newCommitData(revCommit);
-			ObjectId id = repo.resolve(commitData.getId());
-			RevCommit otherHead = revWalk.parseCommit(id);
-			if (revWalk.isMergedInto(otherHead, masterHead)) {
-				if ((otherHead.getParentCount() == 1)
-					|| (	( otherHead.getShortMessage().toUpperCase().contains("MERGE")
-									|| otherHead.getShortMessage().toUpperCase().contains("MERGING") // Ice b3f9a0784b9a61ad713675aac3543e0035345e85
-									) 
-							||/*original: &&*/ otherHead.getShortMessage().toUpperCase().contains("PULL"))) {
-					commitsMergedIntoMaster.add(commitData);
-				} else {
-					commitsNotMergedIntoMaster.add(commitData);
-				}
+
+		RevWalk revWalk = new RevWalk(repo, 0);
+
+		List<Ref> branches = git.branchList().call();
+		for (Ref branch : branches) {
+			if (!branch.getName().equals("refs/heads/master")) {
+				continue;
 			}
-			revWalk.close();
-			revWalk.dispose();
+			Iterable<RevCommit> revCommits = git.log().all().call();
+			for (RevCommit revCommit : revCommits) {
+				ObjectId commitObjectId = repo.resolve(revCommit.getName());
+	            RevCommit parsedCommit = revWalk.parseCommit(commitObjectId);
+				boolean isMergedIntoMaster = false;
+	            for (Map.Entry<String, Ref> entry : repo.getAllRefs().entrySet()) {
+	                if (entry.getKey().startsWith(Constants.R_HEADS)) {
+	                	ObjectId headsObjectId = entry.getValue().getObjectId();
+	                	RevCommit headsCommit = revWalk.parseCommit(headsObjectId);
+	                    if (revWalk.isMergedInto(parsedCommit, headsCommit)) {
+	                        if (entry.getValue().getName().equals(branch.getName())) {
+	                        	isMergedIntoMaster = true;
+	                            break;
+	                        }
+	                    }
+	                }
+	            }
+				CommitData commitData = newCommitData(revCommit);
+	            if (isMergedIntoMaster) {    
+	            	commitsMergedIntoMaster.add(commitData);
+	            } else {
+	            	commitsNotMergedIntoMaster.add(commitData);
+	            }
+			}
 		}
+		revWalk.close();
+		revWalk.dispose();
 		git.close();
 
 		Collections.sort(commitsMergedIntoMaster);
 		commitsMergedIntoMaster = getSegmentFromOrderedCommit(commitsMergedIntoMaster, initialCommitId, finalCommitId);
 		chainOrderedCommits(commitsMergedIntoMaster);
+
+		// Checking inclusion of extreme commits in the list of commits.
+		if (getCommitById(initialCommitId) == null) {
+			throw new Exception("Initial commit "  + initialCommitId + " not found."); 
+		}
+		if (getCommitById(finalCommitId) == null) {
+			throw new Exception("final commit "  + finalCommitId + " not found."); 
+		}
 
 		// Collections.sort(commitsNotMergedIntoMaster);
 		// chainOrderedCommits(commitsNotMergedIntoMaster);

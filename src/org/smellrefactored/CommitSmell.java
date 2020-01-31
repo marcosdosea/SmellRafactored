@@ -27,6 +27,8 @@ import com.google.gson.stream.JsonReader;
 
 public class CommitSmell {
 	
+	final private int MAXIMUM_COMMITS_IN_MEMORY_CACHE = 100;
+	
 	private GitService gitService;
 	private Repository repo;
 	private String localFolder;
@@ -35,7 +37,6 @@ public class CommitSmell {
 	
 	private Date startAt = new Date();
 	private boolean usingOldCache = false;
-	private boolean usingLargeCacheInMemory = false;
 	LinkedHashMap<String, FilterSmellResult> memoryCache = new LinkedHashMap<String, FilterSmellResult>();  
 	
 	private LinkedHashMap<String, LimiarTecnica> techniquesThresholds;
@@ -67,21 +68,12 @@ public class CommitSmell {
 		if (this.usingOldCache) {
 			logger.warn("The smells commit OLD CACHE was turned ON.");
 			logger.warn("Use smells commit OLD CACHE only to speed of maintenance and development on this project.");
-			logger.warn("Clear the OLD CACHE whenever the weather is cloudy ;)");
+			logger.warn("Clear or disable OLD CACHE whenever the weather is cloudy ;)");
 		} else {
 			logger.info("The smells commit OLD CACHE was turned OFF.");
 		}
 	}
 
-	public void useLargeCacheInMemory(boolean onOff) {
-		this.usingLargeCacheInMemory = onOff;
-		if (this.usingLargeCacheInMemory) {
-			logger.warn("The smells commit large memory cache was turned ON.");
-		} else {
-			logger.info("The smells commit large memory cache was turned OFF.");
-		}
-	}
-	
 	public ArrayList<FilterSmellResult> obterSmellsCommits(ArrayList<String> commitIds) throws Exception {
 		ArrayList<FilterSmellResult> result = new ArrayList<FilterSmellResult>();
 		for (String commitId: commitIds) {
@@ -101,7 +93,7 @@ public class CommitSmell {
 				smellsCommit = getSmellsCommitFromGitRepository(commitId);
 				saveSmellsCommitToCache(smellsCommit);
 			}
-			if (!usingLargeCacheInMemory) {
+			if (memoryCache.size() >= MAXIMUM_COMMITS_IN_MEMORY_CACHE) {
 				memoryCache.clear();
 			}
 			memoryCache.put(commitId, smellsCommit);

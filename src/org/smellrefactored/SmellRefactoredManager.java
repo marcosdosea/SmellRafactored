@@ -18,8 +18,6 @@ public class SmellRefactoredManager {
 
 	final boolean USE_SMELLS_COMMIT_OLD_CACHE = true; // This can ignore new adjustments in DesignRoleMiner.
 
-	final boolean USE_SMELLS_COMMIT_LARGE_CACHE_IN_MEMORY = ANALYZE_FIRST_COMMIT_ONLY; // This can quickly fill the memory if many commits are analyzed. 
-
 	static Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
 
 	private String urlRepository;
@@ -90,7 +88,6 @@ public class SmellRefactoredManager {
 		
 		commitSmell = new CommitSmell(repositoryPath, commitsWithRefactoringMergedIntoMaster, listaLimiarTecnica, resultBaseFileName);
 		commitSmell.useOldCache(USE_SMELLS_COMMIT_OLD_CACHE);
-		commitSmell.useLargeCacheInMemory(USE_SMELLS_COMMIT_LARGE_CACHE_IN_MEMORY);
 	}
 
 	public void getSmellRefactoredMethods() {
