@@ -17,27 +17,18 @@ import org.slf4j.LoggerFactory;
 
 public class RefactoringMinerWrapperManager {
 	
-	private String urlRepository;
 	private String repositoryPath;
 	private String initialCommitId;
 	private String finalCommitId;
 	private String resultBaseFileName;
 	
-	private GitService gitService;
-	private Repository repo;
-
 	static Logger logger = LoggerFactory.getLogger(RefactoringMinerWrapperManager.class);
 	
-	public RefactoringMinerWrapperManager(String urlRepository, String repositoryPath, String initialCommitId, String finalCommitId, String resultBaseFileName) throws Exception {
-		this.urlRepository = urlRepository;
+	public RefactoringMinerWrapperManager(String repositoryPath, String initialCommitId, String finalCommitId, String resultBaseFileName) throws Exception {
 		this.repositoryPath = repositoryPath;
 		this.initialCommitId = initialCommitId;
 		this.finalCommitId = finalCommitId;
 		this.resultBaseFileName = resultBaseFileName + "-refactoring" + "-" + this.initialCommitId + "-" + this.finalCommitId;
-		
-		gitService = new GitServiceImpl();
-		repo = gitService.cloneIfNotExists(this.repositoryPath, this.urlRepository);
-
 	}
 
 	public List<RefactoringMinerWrapperDto> getRefactoringDtoListWithoutCache() throws Exception {
@@ -57,6 +48,8 @@ public class RefactoringMinerWrapperManager {
 
 	private List<RefactoringMinerWrapperDto> getRefactoringDtoListFromRefactoringMiner() throws Exception {
 		final List<RefactoringMinerWrapperDto> refactoringDtoList = new ArrayList<RefactoringMinerWrapperDto>();
+		GitService gitService = new GitServiceImpl();
+		Repository repo = gitService.openRepository(this.repositoryPath);
 		GitHistoryRefactoringMiner miner = new GitHistoryRefactoringMinerImpl();
 		miner.detectBetweenCommits(repo, initialCommitId, finalCommitId, new RefactoringHandler() {
 			@Override
@@ -68,6 +61,7 @@ public class RefactoringMinerWrapperManager {
 				}
 			}
 		});
+		repo.close();
 		return (refactoringDtoList);
 	}
 	

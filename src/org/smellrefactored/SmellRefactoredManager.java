@@ -16,7 +16,7 @@ public class SmellRefactoredManager {
 
 	final boolean ANALYZE_FIRST_COMMIT_ONLY = true; // Very, very, very slow!
 
-	final boolean USE_SMELLS_COMMIT_OLD_CACHE = true; // This can ignore new adjustments in DesignRoleMiner.
+	final boolean USE_SMELLS_COMMIT_OLD_CACHE = false; // This can ignore new adjustments in DesignRoleMiner.
 
 	static Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
 
@@ -59,24 +59,17 @@ public class SmellRefactoredManager {
 		if (initialCommitId.equals(finalCommitId)) {
 			throw new Exception("At least 2 commits are required in the range of commits to be analyzed.");
 		}
-		
-		RefactoringMinerWrapperManager refactoringMinerWrapperManager = new RefactoringMinerWrapperManager(urlRepository, repositoryPath, initialCommitId, finalCommitId, resultBaseFileName);
 
-		// List<RefactoringMinerWrapperDto> refactoringDtoList = refactoringMinerWrapperManager.getRefactoringDtoListWithoutCache();
-		List<RefactoringMinerWrapperDto> refactoringDtoList = refactoringMinerWrapperManager.getRefactoringDtoListUsingJsonCache();
-
-		refactoringEvents = new RefactoringEvents(refactoringDtoList, this.repositoryPath);
-		refactoringEvents.removeEventsForCommit(initialCommitId);
-		
-		HashSet<String> commitsWithRefactorings = refactoringMinerWrapperManager.getCommitsWithRefactoringsFromRefactoringList(refactoringDtoList);
-
-		logger.info("Total de refactorings encontrados: " + refactoringEvents.size());
-		
-		
 		GitService gitService = new GitServiceImpl();
 		gitService.cloneIfNotExists(repositoryPath, urlRepository);
-
 		commitRange = new CommitRange(repositoryPath, initialCommitId, finalCommitId);
+		
+		RefactoringMinerWrapperManager refactoringMinerWrapperManager = new RefactoringMinerWrapperManager(repositoryPath, commitRange.getNextCommit(initialCommitId).getId(), finalCommitId, resultBaseFileName);
+		List<RefactoringMinerWrapperDto> refactoringDtoList = refactoringMinerWrapperManager.getRefactoringDtoListUsingJsonCache();
+		refactoringEvents = new RefactoringEvents(refactoringDtoList, this.repositoryPath);
+		logger.info("Total de refactorings encontrados: " + refactoringEvents.size());
+
+		HashSet<String> commitsWithRefactorings = refactoringMinerWrapperManager.getCommitsWithRefactoringsFromRefactoringList(refactoringDtoList);
 		ArrayList<CommitData> commitsWithRefactoringMergedIntoMaster = commitRange.getCommitsMergedIntoMasterByIds(commitsWithRefactorings);
 
 		if (ANALYZE_FIRST_COMMIT_ONLY) {

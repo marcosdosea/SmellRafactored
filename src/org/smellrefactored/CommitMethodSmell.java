@@ -73,21 +73,68 @@ public class CommitMethodSmell {
 	
 	public MethodDataSmelly getSmellCommitForMethod(String commitId, String filePath, String className, String methodName, String smellType) throws Exception {
 		MethodDataSmelly result = null;
-		FilterSmellResult smellsCommit = this.commitSmell.obterSmellsCommit(commitId);
-		if (smellsCommit != null) {
-			for (MethodDataSmelly methodSmell : smellsCommit.getMetodosSmell()) {
-				if (methodSmell.getSmell().equals(smellType)) {
-					if ( (methodSmell.getDiretorioDaClasse().equals(filePath)) 
-							&& methodSmell.getNomeClasse().equals(className) 
-							&& methodSmell.getNomeMetodo().equals(methodName) ) {				
-						result = methodSmell;
-					}
+		FilterSmellResult smellResult = this.commitSmell.obterSmellsCommit(commitId);
+		if (smellResult != null) {
+			result = getSmellCommitForMethodFromSmellResult(smellResult, filePath, className, methodName, smellType);
+		}
+		return result;
+	}
+
+	public MethodDataSmelly getSmellCommitForMethodFromSmellResult(FilterSmellResult smellResult, String filePath, String className, String methodName, String smellType) throws Exception {
+		MethodDataSmelly result = null;
+		for (MethodDataSmelly methodSmell : smellResult.getMetodosSmell()) {
+			if (methodSmell.getSmell().equals(smellType)) {
+				if ( (methodSmell.getDiretorioDaClasse().equals(filePath)) 
+						&& methodSmell.getNomeClasse().equals(className) 
+						&& methodSmell.getNomeMetodo().equals(methodName) ) {				
+					result = methodSmell;
+					break;
 				}
 			}
 		}
 		return result;
 	}
 
+	public MethodDataSmelly getNotSmellCommitForMethod(String commitId, String filePath, String className, String methodName) throws Exception {
+		MethodDataSmelly result = null;
+		FilterSmellResult smellResult = this.commitSmell.obterSmellsCommit(commitId);
+		if (smellResult != null) {
+			result = getNotSmellCommitForMethodFromSmellResult(smellResult, filePath, className, methodName);
+		}
+		return result;
+	}
+
+	public MethodDataSmelly getNotSmellCommitForMethodFromSmellResult(FilterSmellResult smellResult, String filePath, String className, String methodName) throws Exception {
+		MethodDataSmelly result = null;
+		for (MethodDataSmelly methodNotSmell : smellResult.getMetodosNotSmelly()) {
+			if ( (methodNotSmell.getDiretorioDaClasse().equals(filePath)) 
+					&& methodNotSmell.getNomeClasse().equals(className) 
+					&& methodNotSmell.getNomeMetodo().equals(methodName) ) {				
+				result = methodNotSmell;
+				break;
+			}
+		}
+		return result;
+	}
+
+	public MethodDataSmelly getSmellOrNotSmellCommitForMethod(String commitId, String filePath, String className, String methodName, String smellType) throws Exception {
+		MethodDataSmelly result = null;
+		FilterSmellResult smellResult = this.commitSmell.obterSmellsCommit(commitId);
+		if (smellResult != null) {
+			result = getSmellOrNotSmellCommitForMethodFromSmellResult(smellResult, filePath, className, methodName, smellType);
+		}
+		return result;
+	}
+
+	public MethodDataSmelly getSmellOrNotSmellCommitForMethodFromSmellResult(FilterSmellResult smellResult, String filePath, String className, String methodName, String smellType) throws Exception {
+		MethodDataSmelly result = getSmellCommitForMethodFromSmellResult(smellResult, filePath, className, methodName, smellType);
+		if (result == null) { 
+			result = getNotSmellCommitForMethodFromSmellResult(smellResult, filePath, className, methodName);
+		}
+		return result;
+	}
+	
+	
 	public int countMethodSmellPredictionForTechniqueInCommit(FilterSmellResult smellResult, String smellType, String technique) {
 		HashSet<MethodDataSmelly> smellyMethods = getSmellingMethodsBySmellAndTechnique(smellResult, smellType, technique);
 		return (smellyMethods.size());

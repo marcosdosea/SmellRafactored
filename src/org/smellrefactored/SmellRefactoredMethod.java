@@ -228,17 +228,17 @@ public class SmellRefactoredMethod {
 			PredictionRound predictionRound = confusionMatrices.newRound();
 			predictionRound.setCondition(true);
 			CommitData previousCommit = this.commitRange.getPreviousCommit(refactoring.getCommitId());
-			MethodDataSmelly methodSmell = this.commitMethodSmell.getSmellCommitForMethod(previousCommit.getId(), refactoring.getFileNameBefore(), refactoring.getClassName(), refactoring.getMethodName(), smellType); 
-			if (methodSmell != null) {
-				predictionRound.setTrue(methodSmell.getListaTecnicas());
-				predictionRound.setFalseAllExcept(methodSmell.getListaTecnicas());
-				this.methodOutputFiles.writeTruePositiveToCsvFiles(refactoring, methodSmell);
+			MethodDataSmelly methodSmellOrNotSmell = this.commitMethodSmell.getSmellOrNotSmellCommitForMethod(previousCommit.getId(), refactoring.getFileNameBefore(), refactoring.getClassName(), refactoring.getMethodName(), smellType); 
+			if ( (methodSmellOrNotSmell != null) && (methodSmellOrNotSmell.getSmell() != null) && (!methodSmellOrNotSmell.getSmell().isEmpty()) ) {
+				predictionRound.setTrue(methodSmellOrNotSmell.getListaTecnicas());
+				predictionRound.setFalseAllExcept(methodSmellOrNotSmell.getListaTecnicas());
+				this.methodOutputFiles.writeTruePositiveToCsvFiles(refactoring, methodSmellOrNotSmell);
 				if (predictionRound.isAnyoneOutOfRound()) {
-					this.methodOutputFiles.writeFalseNegativeToCsvFiles(refactoring, methodSmell);
+					this.methodOutputFiles.writeFalseNegativeToCsvFiles(refactoring, methodSmellOrNotSmell);
 				}
 			} else {
 				predictionRound.setFalseForAllOutOfRound();
-				this.methodOutputFiles.writeFalsePositiveToCsvFiles(refactoring, new MethodDataSmelly());
+				this.methodOutputFiles.writeFalsePositiveToCsvFiles(refactoring, methodSmellOrNotSmell);
 			}
 			predictionRound.setNullForAllOutOfRound();
 			confusionMatrices.processPredictionRound(predictionRound);

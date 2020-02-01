@@ -83,22 +83,25 @@ public class CommitSmell {
 	}
 
 	public FilterSmellResult obterSmellsCommit(String commitId) throws Exception {
-		FilterSmellResult smellsCommit;
+		FilterSmellResult smellResult;
 		if (memoryCache.containsKey(commitId)) {
-			smellsCommit = memoryCache.get(commitId);
+			smellResult = memoryCache.get(commitId);
 		} else {
 			if ( (cacheExists(commitId)) && (usingOldCache || isRecentCache(commitId)) ) {
-				smellsCommit = getSmellsCommitFromCache(commitId);
+				smellResult = getSmellsCommitFromCache(commitId);
 			} else {
-				smellsCommit = getSmellsCommitFromGitRepository(commitId);
-				saveSmellsCommitToCache(smellsCommit);
+				smellResult = getSmellsCommitFromGitRepository(commitId);
+				saveSmellsCommitToCache(smellResult);
 			}
 			if (memoryCache.size() >= MAXIMUM_COMMITS_IN_MEMORY_CACHE) {
 				memoryCache.clear();
 			}
-			memoryCache.put(commitId, smellsCommit);
+			memoryCache.put(commitId, smellResult);
 		}
-		return (smellsCommit);
+		if (smellResult == null) {
+			throw new Exception("Null response to the smell query from commit " + commitId + ".");
+		}
+		return (smellResult);
 	}
 
 	private boolean isRecentCache(String commitId) throws Exception {

@@ -3,6 +3,8 @@ package org.smellrefactored;
 import org.designroleminer.smelldetector.model.ClassDataSmelly;
 import org.repodriller.persistence.PersistenceMechanism;
 import org.repodriller.persistence.csv.CSVFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OutputFilesClass {
 
@@ -12,6 +14,8 @@ public class OutputFilesClass {
 	PersistenceMechanism pmResultSmellRefactoredClassesMessage;
 	PersistenceMechanism pmResultSmellRefactoredClassesMachineLearning;
 
+	static Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
+	
 	public OutputFilesClass(String baseFileName) {
 		
 		this.baseFileName = baseFileName;
@@ -122,6 +126,10 @@ public class OutputFilesClass {
 	}	
 
 	public void writeFalsePositiveToCsvFiles(RefactoringEvent refactoring, ClassDataSmelly classNotSmell) throws Exception {
+		if (classNotSmell == null) {
+			classNotSmell = new ClassDataSmelly();
+			logger.warn("Null response for querying non-smelling classes.");
+		}
 		pmResultSmellRefactoredClassesMessage.write(
 				refactoring.getClassName()
 				, classNotSmell.getSmell()

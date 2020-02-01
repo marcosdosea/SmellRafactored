@@ -104,7 +104,7 @@ public class SmellRefactoredClass {
 			
 			classOutputFiles.writeHeaders();
 
-			evaluateInDetailSmellChangeOperation(ClassDataSmelly.LONG_CLASS, this.getLongClassRefactoringTypes(), this.smellCommitIds, listRefactoringMergedIntoMaster);
+			evaluateInDetailSmellChangeClass(ClassDataSmelly.LONG_CLASS, this.getLongClassRefactoringTypes(), this.smellCommitIds, listRefactoringMergedIntoMaster);
 			
 			classOutputFiles.close();
 
@@ -114,7 +114,7 @@ public class SmellRefactoredClass {
 		}
 	}
 
-	private void evaluateInDetailSmellChangeOperation(String smellType, HashSet<String> targetTefactoringTypes, ArrayList<String> smellCommitIds,
+	private void evaluateInDetailSmellChangeClass(String smellType, HashSet<String> targetTefactoringTypes, ArrayList<String> smellCommitIds,
 			ArrayList<RefactoringEvent> listRefactoringMergedIntoMaster) throws Exception {
 		evaluateSmellChangeClass(smellCommitIds, listRefactoringMergedIntoMaster, smellType, targetTefactoringTypes);
 		if ( (ANALYZE_EACH_REFACTORING_TYPE_BY_SMELL) && (targetTefactoringTypes.size() > 1) ) {
@@ -209,17 +209,17 @@ public class SmellRefactoredClass {
 			PredictionRound predictionRound = confusionMatrices.newRound();
 			predictionRound.setCondition(true);
 			CommitData previousCommit = this.commitRange.getPreviousCommit(refactoring.getCommitId());
-			ClassDataSmelly classSmell = this.commitClassSmell.getSmellCommitForClass(previousCommit.getId(), refactoring.getFileNameBefore(), refactoring.getClassName(), smellType); 
-			if (classSmell != null) {
-				predictionRound.setTrue(classSmell.getListaTecnicas());
-				predictionRound.setFalseAllExcept(classSmell.getListaTecnicas());
-				classOutputFiles.writeTruePositiveToCsvFiles(refactoring, classSmell);
+			ClassDataSmelly classSmellOrNotSmell = this.commitClassSmell.getSmellOrNotSmellCommitForClass(previousCommit.getId(), refactoring.getFileNameBefore(), refactoring.getClassName(), smellType); 
+			if ( (classSmellOrNotSmell != null) && (classSmellOrNotSmell.getSmell() != null) && (!classSmellOrNotSmell.getSmell().isEmpty()) ) {
+				predictionRound.setTrue(classSmellOrNotSmell.getListaTecnicas());
+				predictionRound.setFalseAllExcept(classSmellOrNotSmell.getListaTecnicas());
+				classOutputFiles.writeTruePositiveToCsvFiles(refactoring, classSmellOrNotSmell);
 				if (predictionRound.isAnyoneOutOfRound()) {
-					classOutputFiles.writeFalseNegativeToCsvFiles(refactoring, classSmell);
+					classOutputFiles.writeFalseNegativeToCsvFiles(refactoring, classSmellOrNotSmell);
 				}
 			} else {
 				predictionRound.setFalseForAllOutOfRound();
-				classOutputFiles.writeFalsePositiveToCsvFiles(refactoring, new ClassDataSmelly());
+				classOutputFiles.writeFalsePositiveToCsvFiles(refactoring, classSmellOrNotSmell);
 			}
 			predictionRound.setNullForAllOutOfRound();
 			confusionMatrices.processPredictionRound(predictionRound);
