@@ -22,7 +22,7 @@ public class OutputFilesMethod {
 		
 		pmResultSmellRefactoredMethods = new CSVFile(this.baseFileName + "-smellRefactored-methods.csv", false);
 		pmResultSmellRefactoredMethodsMessage = new CSVFile(this.baseFileName + "-smellRefactored-methods-message.csv", false);
-		pmResultSmellRefactoredMethodsMachineLearning = new CSVFile(this.baseFileName + "-smellRefactored-methods-machineLearning.csv", false);
+		pmResultSmellRefactoredMethodsMachineLearning = new CSVFile(this.baseFileName + "-refactoredAndNotRefactored-methods-machineLearning.csv", false);
 
 	}
 	

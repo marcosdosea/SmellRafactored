@@ -22,7 +22,7 @@ public class OutputFilesClass {
 		
 		pmResultSmellRefactoredClasses = new CSVFile(this.baseFileName + "-smellRefactored-classes.csv", false);
 		pmResultSmellRefactoredClassesMessage = new CSVFile(this.baseFileName + "-smellRefactored-classes-message.csv", false);
-		pmResultSmellRefactoredClassesMachineLearning = new CSVFile(this.baseFileName + "-smellRefactored-classes-machineLearning.csv", false);
+		pmResultSmellRefactoredClassesMachineLearning = new CSVFile(this.baseFileName + "-refactoredAndNotRefactored-classes-machineLearning.csv", false);
 	}
 	
 	public void writeHeaders() {

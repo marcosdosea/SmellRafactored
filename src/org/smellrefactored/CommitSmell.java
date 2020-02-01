@@ -3,6 +3,7 @@ package org.smellrefactored;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -33,6 +34,7 @@ public class CommitSmell {
 	private Repository repo;
 	private String localFolder;
 	private List<LimiarTecnica> listaLimiarTecnica;
+
 	String resultFileName;
 	
 	private Date startAt = new Date();
@@ -60,7 +62,7 @@ public class CommitSmell {
 			techniquesThresholds.put(limiarTecnica.getTecnica(), limiarTecnica);
 		}
 
-		pmResultSmellRefactoredCommit = new CSVFile(resultFileName + "-smellRefactored-commit.csv", false);
+		pmResultSmellRefactoredCommit = new CSVFile(resultFileName + "-smells-commit.csv", false);
 	}
 	
 	public void useOldCache(boolean onOff) {
@@ -120,6 +122,7 @@ public class CommitSmell {
 		Gson gson = new Gson();
 		String cacheFileName = getCacheFileName(smellsCommit.getCommitId());
 		File existingFile = new File(cacheFileName);
+		existingFile.mkdirs();
 		if (existingFile.exists()) {
 			logger.info("Erasing old cache for commit " + smellsCommit.getCommitId() + "...");
 			existingFile.delete();
@@ -143,7 +146,8 @@ public class CommitSmell {
 	}
 
 	private String getCacheFileName(String commitId) throws Exception {
-		return (this.resultFileName + "-smellsCommit-" + commitId + "-cache.json");
+		String cacheBaseFileName = Paths.get(resultFileName).getParent().getFileName() + "\\cache\\smell\\" + Paths.get(resultFileName).getFileName() + "\\" + Paths.get(resultFileName).getFileName();
+		return (cacheBaseFileName + "-smells-commit-" + commitId + "-cache.json");
 	}
 	
 	private FilterSmellResult getSmellsCommitFromGitRepository(String commitId) throws Exception {
@@ -161,8 +165,8 @@ public class CommitSmell {
 		}
 		logger.info("Gerando smells com a lista de problemas de design encontrados...");
 		FilterSmellResult smellResult = FilterSmells.filtrar(report.all(), listaLimiarTecnica, commitId);
-		FilterSmells.gravarMetodosSmell(smellResult.getMetodosSmell(), resultFileName + "-smells-commit-" + commitId + "-method.csv");
-		FilterSmells.gravarClassesSmell(smellResult.getClassesSmell(), resultFileName + "-smells-commit-" + commitId + "-class.csv");
+		// FilterSmells.gravarMetodosSmell(smellResult.getMetodosSmell(), resultFileName + "-smells-commit-" + commitId + "-method.csv");
+		// FilterSmells.gravarClassesSmell(smellResult.getClassesSmell(), resultFileName + "-smells-commit-" + commitId + "-class.csv");
 		CommitMethodSmell.consistMethodNotSmelly(smellResult);
 		CommitClassSmell.consistClassNotSmelly(smellResult);
 		return smellResult;

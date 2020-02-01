@@ -28,6 +28,9 @@ public class RefactoringMinerWrapperCacheJson {
 	public void saveRefactoringDtoListToFile(List<RefactoringMinerWrapperDto> refactoringDtoList) throws Exception {
 		Gson gson = new Gson();
 		String fileRefactoringNameTemp = this.cacheFileName.replace(".json", ".temp");
+		File cacheFile = new File(fileRefactoringNameTemp);
+		cacheFile.mkdirs();
+		cacheFile.delete();
 		final FileWriter refactoringFileHandler = new FileWriter(fileRefactoringNameTemp);
 		refactoringFileHandler.append("[\n"); // keep this character lonely.
 		for (RefactoringMinerWrapperDto refactoringDto : refactoringDtoList) {

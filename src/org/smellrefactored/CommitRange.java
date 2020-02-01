@@ -17,6 +17,8 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.DepthWalk.RevWalk;
 import org.refactoringminer.api.GitService;
 import org.refactoringminer.util.GitServiceImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CommitRange {
 	
@@ -26,6 +28,8 @@ public class CommitRange {
 	
 	private ArrayList<CommitData> commitsMergedIntoMaster = new ArrayList<CommitData>();
 	private ArrayList<CommitData> commitsNotMergedIntoMaster = new ArrayList<CommitData>();
+	
+	static Logger logger = LoggerFactory.getLogger(CommitRange.class);
 	
 	public CommitRange(String localFolder, String initialCommitId, String finalCommitId) throws Exception {
 		this.localFolder = localFolder;
@@ -49,21 +53,25 @@ public class CommitRange {
 			}
 			Iterable<RevCommit> revCommits = git.log().all().call();
 			for (RevCommit revCommit : revCommits) {
-				ObjectId commitObjectId = repo.resolve(revCommit.getName());
-	            RevCommit parsedCommit = revWalk.parseCommit(commitObjectId);
 				boolean isMergedIntoMaster = false;
-	            for (Map.Entry<String, Ref> entry : repo.getAllRefs().entrySet()) {
-	                if (entry.getKey().startsWith(Constants.R_HEADS)) {
-	                	ObjectId headsObjectId = entry.getValue().getObjectId();
-	                	RevCommit headsCommit = revWalk.parseCommit(headsObjectId);
-	                    if (revWalk.isMergedInto(parsedCommit, headsCommit)) {
-	                        if (entry.getValue().getName().equals(branch.getName())) {
-	                        	isMergedIntoMaster = true;
-	                            break;
-	                        }
-	                    }
-	                }
-	            }
+				ObjectId commitObjectId = repo.resolve(revCommit.getName());
+				RevCommit parsedCommit = revWalk.parseCommit(commitObjectId);
+				for (Map.Entry<String, Ref> entry : repo.getAllRefs().entrySet()) {
+					if (entry.getKey().startsWith(Constants.R_HEADS)) {
+						ObjectId headsObjectId = entry.getValue().getObjectId();
+						RevCommit headsCommit = revWalk.parseCommit(headsObjectId);
+						if (revWalk.isMergedInto(parsedCommit, headsCommit)) {
+							if (entry.getValue().getName().equals(branch.getName())) {
+								isMergedIntoMaster = true;
+								break;
+							}
+						}
+					}
+				}
+				if ( (!isMergedIntoMaster) && (revCommit.getId().getName().equals(finalCommitId)) ) {
+					logger.error("Final commit was not automatically added in commit range.");
+					isMergedIntoMaster = true;
+				}
 				CommitData commitData = newCommitData(revCommit);
 	            if (isMergedIntoMaster) {    
 	            	commitsMergedIntoMaster.add(commitData);
@@ -163,7 +171,13 @@ public class CommitRange {
 			}
 		}
 		if (result == null) {
-			throw new Exception("Commit "  + commitId + " not found."); 
+			if (commitId.equals(initialCommitId)) {
+				throw new Exception("Initial commit "  + commitId + " not found."); 
+			} else if (commitId.equals(finalCommitId)) {
+				throw new Exception("Final commit "  + commitId + " not found."); 
+			} else {
+				throw new Exception("Commit "  + commitId + " not found."); 
+			}
 		}
 		return result;
 	}
