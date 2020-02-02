@@ -1,7 +1,5 @@
 package org.smellrefactored;
 
-import java.util.Date;
-
 import org.smellrefactored.refactoringminer.wrapper.RefactoringMinerWrapperDto;
 
 public class RefactoringEvent implements Comparable<RefactoringEvent> {
@@ -9,7 +7,6 @@ public class RefactoringEvent implements Comparable<RefactoringEvent> {
 	private String repositoryPath;
 	
 	private String commitId;
-	private Date commitDate;
 	private String refactoringName;
 	private String refactoringType;
 	private String leftSide;
@@ -18,8 +15,8 @@ public class RefactoringEvent implements Comparable<RefactoringEvent> {
 	private String fileNameAfter;
 	private String involvedClassesBefore;
 	private String involvedClassesAfter;
-	private String shortMessage;
-	private String fullMessage;
+
+	private CommitData commitData;
 	
 	private String className;
 	private String methodName;
@@ -131,33 +128,17 @@ public class RefactoringEvent implements Comparable<RefactoringEvent> {
 	public void setInvolvedClassesBefore(String involvedClassesBefore) {
 		this.involvedClassesBefore = involvedClassesBefore;
 	}
-
-	public String getShortMessage() {
-		return shortMessage;
-	}
-
-	public void setShortMessage(String shortMessage) {
-		this.shortMessage = shortMessage;
-	}
-
-	public String getFullMessage() {
-		return fullMessage;
-	}
-
-	public void setFullMessage(String fullMessage) {
-		this.fullMessage = fullMessage;
-	}
 	
-	public Date getCommitDate() {
-		return commitDate;
+	public CommitData getCommitData() {
+		return commitData;
 	}
 
-	public void setCommitDate(Date commitDate) {
-		this.commitDate = commitDate;
+	public void setCommitData(CommitData commitData) {
+		this.commitData = commitData;
 	}
 
 	public int compareTo(RefactoringEvent o) {
-		return getCommitDate().compareTo(o.getCommitDate());
+		return this.commitData.getDate().compareTo(o.getCommitData().getDate());
 	}
 	
 	private String makeFilePathCompatibleWithDesignRoleSmell(String filePath) {

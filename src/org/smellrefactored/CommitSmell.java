@@ -49,7 +49,7 @@ public class CommitSmell {
 
 	static Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
 
-	public CommitSmell(String localFolder, ArrayList<CommitData> commitsWithRefactoringMergedIntoMaster, List<LimiarTecnica> listaLimiarTecnica, String resultFileName) throws Exception {
+	public CommitSmell(String localFolder, List<LimiarTecnica> listaLimiarTecnica, String resultFileName) throws Exception {
 		this.localFolder = localFolder;
 		this.techniqueThresholds = listaLimiarTecnica;
 		this.resultFileName = resultFileName;

@@ -22,7 +22,8 @@ import org.slf4j.LoggerFactory;
 
 public class CommitRange {
 	
-	private String localFolder;
+	private String repositoryUrl;
+	private String repositoryPath;
 	private String initialCommitId;
 	private String finalCommitId;
 	
@@ -30,8 +31,9 @@ public class CommitRange {
 	
 	static Logger logger = LoggerFactory.getLogger(CommitRange.class);
 	
-	public CommitRange(String localFolder, String initialCommitId, String finalCommitId) throws Exception {
-		this.localFolder = localFolder;
+	public CommitRange(String repositoryUrl, String repositoryPath, String initialCommitId, String finalCommitId) throws Exception {
+		this.repositoryUrl = repositoryUrl;
+		this.repositoryPath = repositoryPath;
 		this.initialCommitId = initialCommitId;
 		this.finalCommitId = finalCommitId;
 		processRangeOfCommitsFromRepository();
@@ -41,7 +43,9 @@ public class CommitRange {
 		ArrayList<CommitData> commitsMergedIntoMasterTemp = new ArrayList<CommitData>();
 
 		GitService gitService = new GitServiceImpl();
-		Repository repo = gitService.openRepository(localFolder);
+		gitService.cloneIfNotExists(repositoryPath, repositoryUrl);
+		
+		Repository repo = gitService.openRepository(repositoryPath);
 		Git git = new Git(repo);
 
 		/*
@@ -231,5 +235,23 @@ public class CommitRange {
 	public int size() {
 		return (commitsMergedIntoMaster.size());
 	}
+	
+	
+	public String getRepositoryUrl() {
+		return (this.repositoryUrl);
+	}
+	
+	public String getRepositoryPath() {
+		return (this.repositoryPath);
+	}
+
+	public String getInitialCommitId() {
+		return (this.initialCommitId);
+	}
+	
+	public String getFinalCommitId() {
+		return (this.finalCommitId);
+	}
+
 	
 }

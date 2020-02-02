@@ -84,7 +84,7 @@ public class OutputFilesMethod {
 				, refactoring.getRefactoringType()
 				, refactoring.getLeftSide()
 				, refactoring.getRightSide()
-				, refactoring.getFullMessage()
+				, refactoring.getCommitData().getFullMessage()
 			);
 		pmResultSmellRefactoredMethods.write(
 				refactoring.getClassName()
@@ -130,7 +130,7 @@ public class OutputFilesMethod {
 				, refactoring.getRefactoringType()
 				, refactoring.getLeftSide()
 				, refactoring.getRightSide()
-				, refactoring.getFullMessage()
+				, refactoring.getCommitData().getFullMessage()
 				);
 		pmResultSmellRefactoredMethods.write(
 				refactoring.getClassName()

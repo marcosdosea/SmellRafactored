@@ -14,8 +14,6 @@ import org.refactoringminer.api.GitService;
 import org.refactoringminer.util.GitServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smellrefactored.refactoringminer.wrapper.RefactoringMinerWrapperManager;
-import org.smellrefactored.refactoringminer.wrapper.RefactoringMinerWrapperDto;
 
 public class SmellRefactoredManager {
 
@@ -25,7 +23,7 @@ public class SmellRefactoredManager {
 
 	static Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
 
-	private String urlRepository;
+	private String repositoryUrl;
 	private String repositoryPath;
 	private String initialCommitId;
 	private String finalCommitId;
@@ -41,9 +39,9 @@ public class SmellRefactoredManager {
 
 	HashSet<String> listCommitEvaluated = new HashSet<String>();
 	
-	public SmellRefactoredManager(String urlRepository, String repositoryPath, String initialCommitId, String finalCommitId,
+	public SmellRefactoredManager(String repositoryUrl, String repositoryPath, String initialCommitId, String finalCommitId,
 			List<LimiarTecnica> listaLimiarTecnica, String resultBaseFileName) {
-		this.urlRepository = urlRepository;
+		this.repositoryUrl = repositoryUrl;
 		this.repositoryPath = repositoryPath;
 		this.initialCommitId = initialCommitId;
 		this.finalCommitId = finalCommitId;
@@ -52,7 +50,7 @@ public class SmellRefactoredManager {
 
 		logger.info("");
 		logger.info("******");
-		logger.info("** REPOSITORY: " + repositoryPath);
+		logger.info("** REPOSITORY: " + this.repositoryUrl + " ==>> " + this.repositoryPath);
 		logger.info("******");
 		try {
 			prepareSmellRefactored();
@@ -77,17 +75,12 @@ public class SmellRefactoredManager {
 		}
 
 		GitService gitService = new GitServiceImpl();
-		gitService.cloneIfNotExists(repositoryPath, urlRepository);
-		commitRange = new CommitRange(repositoryPath, initialCommitId, finalCommitId);
+		gitService.cloneIfNotExists(repositoryPath, repositoryUrl);
+		commitRange = new CommitRange(repositoryUrl, repositoryPath, initialCommitId, finalCommitId);
 		logger.info("Commits found: " + commitRange.size());
 		
-		RefactoringMinerWrapperManager refactoringMinerWrapperManager = new RefactoringMinerWrapperManager(repositoryPath, commitRange.getNextCommit(initialCommitId).getId(), finalCommitId, resultBaseFileName);
-		List<RefactoringMinerWrapperDto> refactoringDtoList = refactoringMinerWrapperManager.getRefactoringDtoListUsingJsonCache();
-		refactoringEvents = new RefactoringEvents(refactoringDtoList, this.repositoryPath);
+		refactoringEvents = new RefactoringEvents(this.repositoryPath, commitRange, resultBaseFileName);
 		logger.info("Refactorings found: " + refactoringEvents.size());
-
-		HashSet<String> commitsWithRefactorings = refactoringMinerWrapperManager.getCommitsWithRefactoringsFromRefactoringList(refactoringDtoList);
-		ArrayList<CommitData> commitsWithRefactoringMergedIntoMaster = commitRange.getCommitsMergedIntoMasterByIds(commitsWithRefactorings);
 
 		if (ANALYZE_FIRST_COMMIT_ONLY) {
 			smellCommitIds.add(initialCommitId);
@@ -96,7 +89,7 @@ public class SmellRefactoredManager {
 			smellCommitIds.remove(finalCommitId);
 		}
 		
-		commitSmell = new CommitSmell(repositoryPath, commitsWithRefactoringMergedIntoMaster, techniqueThresholds, resultBaseFileName);
+		commitSmell = new CommitSmell(repositoryPath, techniqueThresholds, resultBaseFileName);
 		commitSmell.useOldCache(USE_SMELLS_COMMIT_OLD_CACHE);
 	}
 

@@ -1,8 +1,10 @@
 package org.smellrefactored;
 
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 
 import org.designroleminer.smelldetector.model.FilterSmellResult;
@@ -107,7 +109,7 @@ public class SmellRefactoredMethod {
 	private ArrayList<String> smellCommitIds;
 	private CommitRange commitRange;
 	private String resultFileName;
-	private PersistenceMechanism pmResultEvaluationMethods;
+	private PersistenceMechanism pmResultEvaluation;
 	private OutputFilesMethod methodOutputFiles;
 
 	public SmellRefactoredMethod(RefactoringEvents refactoringEvents, ArrayList<String> smellCommitIds, CommitRange commitRange, CommitSmell commitSmell, String resultFileName) {
@@ -116,58 +118,42 @@ public class SmellRefactoredMethod {
 		this.commitRange = commitRange;
 		this.commitMethodSmell = new CommitMethodSmell(commitSmell);
 		this.resultFileName = resultFileName;
-		pmResultEvaluationMethods = new CSVFile(resultFileName + "-evaluation-methods.csv", false);
+		pmResultEvaluation = new CSVFile(resultFileName + "-evaluation-methods.csv", false);
 		methodOutputFiles = new OutputFilesMethod(this.resultFileName);
 	}
 	
 	public void getSmellRefactoredMethods() {
 		try {
 			logger.info("** Starting method analysis [[[");
-			ArrayList<RefactoringEvent> listRefactoringMergedIntoMaster = new ArrayList<RefactoringEvent>();
-			for (RefactoringEvent refactoring : refactoringEvents.getAll()) {
-				for (CommitData commit : this.commitRange.getCommitsMergedIntoMaster()) {
-					if (refactoring.getCommitId().equals(commit.getId())) {
-						refactoring.setCommitDate(commit.getDate());
-						refactoring.setFullMessage(commit.getFullMessage());
-						refactoring.setShortMessage(commit.getShortMessage());
-						listRefactoringMergedIntoMaster.add(refactoring);
-						if (this.getMethodRefactoringTypes().contains(refactoring.getRefactoringType())) {
-							if (refactoring.getClassName() == null) {
-								logger.error("NULL class name for " + refactoring.getRefactoringType() + " refactoring type: " + refactoring.getClassName());
-							}
-							if (refactoring.getClassName().contains("[") || refactoring.getClassName().contains("]") || refactoring.getClassName().contains(",") || refactoring.getClassName().contains(" ")) {
-								logger.error("DIRTY class name for " + refactoring.getRefactoringType() + " refactoring type: " + refactoring.getClassName());
-							}
-							if (refactoring.getMethodName() == null) {
-								logger.error("NULL method name for " + refactoring.getRefactoringType() + " refactoring type: " + refactoring.getMethodName());
-							}
-							if (refactoring.getMethodName().contains("[") || refactoring.getMethodName().contains("]") || refactoring.getMethodName().contains(",") || refactoring.getMethodName().contains(" ")) {
-								logger.error("DIRTY method name for " + refactoring.getRefactoringType() + " refactoring type: " + refactoring.getMethodName());
-							}
-						}
-					}
-				}
-			}
-			Collections.sort(listRefactoringMergedIntoMaster);
 			
-			pmResultEvaluationMethods.write("REPOSITORY ANALYSIS REPORT");
-			pmResultEvaluationMethods.write("Total number of refactorings detected:", listRefactoringMergedIntoMaster.size());
-			pmResultEvaluationMethods.write("Number of refactorings related to operations in Methods.:", this.refactoringEvents.countTypes(getMethodRefactoringTypes()), getMethodRefactoringTypes());
-			pmResultEvaluationMethods.write("Number of refactoring related to " + MethodDataSmelly.LONG_METHOD + ":", this.refactoringEvents.countTypes(getLongMethodRefactoringTypes()), getLongMethodRefactoringTypes());
-			pmResultEvaluationMethods.write("Number of refactoring related to " + MethodDataSmelly.COMPLEX_METHOD + ":", this.refactoringEvents.countTypes(getComplexMethodRefactoringTypes()), getComplexMethodRefactoringTypes());
-			pmResultEvaluationMethods.write("Number of refactoring related to " + MethodDataSmelly.HIGH_EFFERENT_COUPLING + ":", this.refactoringEvents.countTypes(getHighEfferentCouplingRefactoringTypes()), getHighEfferentCouplingRefactoringTypes());
-			pmResultEvaluationMethods.write("Number of refactoring related to " + MethodDataSmelly.MANY_PARAMETERS + ":", this.refactoringEvents.countTypes(getManyParametersRefactoringTypes()), getManyParametersRefactoringTypes());
+			pmResultEvaluation.write("ANALYSIS OF PREDICTION OF REFACTORING IN METHODS");
+			pmResultEvaluation.write("Performed on:", Instant.now().atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME).replace( "T" , " "));
+			pmResultEvaluation.write("Repository url:", this.commitRange.getRepositoryUrl());
+			pmResultEvaluation.write("Commit range:", this.commitRange.getInitialCommitId(), this.commitRange.getFinalCommitId());
+			pmResultEvaluation.write("");
+			pmResultEvaluation.write("REFACTORINGS");
+			pmResultEvaluation.write("Total number of refactorings detected:", refactoringEvents.getAllMergedIntoMaster().size());
+			pmResultEvaluation.write("Refactorings related to methods:", this.refactoringEvents.countTypes(getMethodRefactoringTypes()));
 			for (String refactoringType: this.getMethodRefactoringTypes()) {
-				pmResultEvaluationMethods.write("Number of " + refactoringType + " refactorings:", this.refactoringEvents.countType(refactoringType));
+				pmResultEvaluation.write("Number of " + refactoringType + ":", this.refactoringEvents.countType(refactoringType));
 			}
-			pmResultEvaluationMethods.write("Number of commits to analyze smells:", this.smellCommitIds.size());
+			pmResultEvaluation.write("Refactorings on the initial commit were ignored");
+			pmResultEvaluation.write("");
+			pmResultEvaluation.write("SMELLS");
+			pmResultEvaluation.write("Initial number of commits to begin analysis:", this.smellCommitIds.size());
+			pmResultEvaluation.write("Threshold derivation techniques:", this.commitMethodSmell.getTechniquesThresholds().size(), this.commitMethodSmell.getTechniquesThresholds().keySet());
+			pmResultEvaluation.write("Smells on the final commit were ignored");
+			if (IGNORE_REPEATED_PREDICION_ON_NEXT_COMMIT) {
+				pmResultEvaluation.write("Unconfirmed predictions that were repeated following commit were ignored");
+			}
+			pmResultEvaluation.write("");
 			
 			methodOutputFiles.writeHeaders();
 
-			evaluateInDetailSmellChangeOperation(MethodDataSmelly.LONG_METHOD           , this.getLongMethodRefactoringTypes(), this.smellCommitIds, listRefactoringMergedIntoMaster);
-			evaluateInDetailSmellChangeOperation(MethodDataSmelly.COMPLEX_METHOD        , this.getComplexMethodRefactoringTypes(), this.smellCommitIds, listRefactoringMergedIntoMaster);
-			evaluateInDetailSmellChangeOperation(MethodDataSmelly.HIGH_EFFERENT_COUPLING, this.getHighEfferentCouplingRefactoringTypes(), this.smellCommitIds, listRefactoringMergedIntoMaster);
-			evaluateInDetailSmellChangeOperation(MethodDataSmelly.MANY_PARAMETERS       , this.getManyParametersRefactoringTypes(), this.smellCommitIds, listRefactoringMergedIntoMaster);
+			evaluateInDetailSmellChangeOperation(MethodDataSmelly.LONG_METHOD           , this.getLongMethodRefactoringTypes(), this.smellCommitIds);
+			evaluateInDetailSmellChangeOperation(MethodDataSmelly.COMPLEX_METHOD        , this.getComplexMethodRefactoringTypes(), this.smellCommitIds);
+			evaluateInDetailSmellChangeOperation(MethodDataSmelly.HIGH_EFFERENT_COUPLING, this.getHighEfferentCouplingRefactoringTypes(), this.smellCommitIds);
+			evaluateInDetailSmellChangeOperation(MethodDataSmelly.MANY_PARAMETERS       , this.getManyParametersRefactoringTypes(), this.smellCommitIds);
 			
 			methodOutputFiles.close();
 
@@ -177,26 +163,25 @@ public class SmellRefactoredMethod {
 		}
 	}
 
-	private void evaluateInDetailSmellChangeOperation(String smellType, HashSet<String> targetTefactoringTypes, ArrayList<String> smellCommitIds,
-			ArrayList<RefactoringEvent> listRefactoringMergedIntoMaster) throws Exception {
-		evaluateSmellChangeOperation(smellCommitIds, listRefactoringMergedIntoMaster, smellType, targetTefactoringTypes);
+	private void evaluateInDetailSmellChangeOperation(String smellType, HashSet<String> targetTefactoringTypes, ArrayList<String> smellCommitIds) throws Exception {
+		evaluateSmellChangeOperation(smellCommitIds, smellType, targetTefactoringTypes);
 		if ( (ANALYZE_EACH_REFACTORING_TYPE_BY_SMELL) && (targetTefactoringTypes.size() > 1) ) {
 			for (String targetTefactoringType : targetTefactoringTypes) {
-				evaluateSmellChangeOperation(smellCommitIds, listRefactoringMergedIntoMaster, smellType, new HashSet<String>(Arrays.asList(targetTefactoringType)));
+				evaluateSmellChangeOperation(smellCommitIds, smellType, new HashSet<String>(Arrays.asList(targetTefactoringType)));
 			}
 		}
 	}
 	
 	private void evaluateSmellChangeOperation(ArrayList<String> smellCommitIds,
-			ArrayList<RefactoringEvent> listRefactoring, String typeSmell, HashSet<String> targetTefactoringTypes) throws Exception {
+			String typeSmell, HashSet<String> targetTefactoringTypes) throws Exception {
 		ConfusionMatrixPredictors confusionMatrices = new ConfusionMatrixPredictors(typeSmell + " " + targetTefactoringTypes.toString(), this.commitMethodSmell.getTechniquesThresholds().keySet());
 		confusionMatrices.enableValidations(!IGNORE_REPEATED_PREDICION_ON_NEXT_COMMIT);
 		// TP and FN
-		computeTruePositiveAndFalseNegative(listRefactoring, typeSmell, targetTefactoringTypes, confusionMatrices);
+		computeTruePositiveAndFalseNegative(typeSmell, targetTefactoringTypes, confusionMatrices);
 		for (String smellCommitId: smellCommitIds) {
 			FilterSmellResult smellResult = this.commitMethodSmell.getSmellsFromCommit(smellCommitId);
 			// FP and TN
-			computeFalsePositiveAndTrueNegativeForAllTechniques(smellResult, listRefactoring, typeSmell, targetTefactoringTypes, confusionMatrices);
+			computeFalsePositiveAndTrueNegativeForAllTechniques(smellResult, typeSmell, targetTefactoringTypes, confusionMatrices);
 		}
 		/* 
          * Warning: The validation of the confusion matrix by the total of positive predictions 
@@ -209,14 +194,15 @@ public class SmellRefactoredMethod {
 		 * 	confusionMatrices.setValidationPositivePrediction(technique, positivePredictionExpected);
 		 * }
 		*/
-		pmResultEvaluationMethods.write("");
-		confusionMatrices.writeToCsvFile(pmResultEvaluationMethods);
+		pmResultEvaluation.write("");
+		confusionMatrices.addField("Total number of refactorings", this.refactoringEvents.countTypes(targetTefactoringTypes));
+		confusionMatrices.writeToCsvFile(pmResultEvaluation);
 		// confusionMatrices.saveToCsvFile(this.resultFileName + "-confusionMatrices-method-" + typeSmell + "-" + targetTefactoringTypes.toString() + ".csv");
 	}
 	
-	private void computeTruePositiveAndFalseNegative(ArrayList<RefactoringEvent> listRefactoring, String smellType,
+	private void computeTruePositiveAndFalseNegative(String smellType,
 			HashSet<String> targetTefactoringTypes, ConfusionMatrixPredictors confusionMatrices) throws Exception {
-		for (RefactoringEvent refactoring : listRefactoring) {
+		for (RefactoringEvent refactoring : refactoringEvents.getAllMergedIntoMaster()) {
 			if (!targetTefactoringTypes.contains(refactoring.getRefactoringType())) {
 				continue;
 			}
@@ -241,7 +227,7 @@ public class SmellRefactoredMethod {
 	}
 	
 	private void computeFalsePositiveAndTrueNegativeForAllTechniques(FilterSmellResult smellResult,
-			ArrayList<RefactoringEvent> listRefactoring, String smellType, HashSet<String> targetTefactoringTypes,
+			String smellType, HashSet<String> targetTefactoringTypes,
 			ConfusionMatrixPredictors confusionMatrices) throws Exception {
 		for (String technique : confusionMatrices.getPredictores()) {
 			computeFalsePositiveBySmellAndTechnique(smellResult, technique, smellType, targetTefactoringTypes, confusionMatrices.get(technique));
