@@ -1,5 +1,6 @@
 package org.smellrefactored;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -52,6 +53,12 @@ public class SmellRefactoredManager {
 		logger.info("******");
 		logger.info("** REPOSITORY: " + this.repositoryUrl + " ==>> " + this.repositoryPath);
 		logger.info("******");
+
+		String errorFileName = resultBaseFileName + "-error.txt";
+		File errorFileHander = new File(errorFileName);
+		if (errorFileHander.exists()) {
+			errorFileHander.delete();
+		}
 		try {
 			prepareSmellRefactored();
 		} catch (Exception e) {
@@ -60,7 +67,7 @@ public class SmellRefactoredManager {
 	            String exceptionAsString = sw.toString();
 	            System.out.println();
 				try {
-					Files.writeString(Paths.get(resultBaseFileName + "-error.txt"), exceptionAsString);
+					Files.writeString(Paths.get(errorFileName), exceptionAsString);
 				} catch (IOException e1) {
 					// do nothing
 				}
