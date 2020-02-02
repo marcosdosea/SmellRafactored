@@ -7,60 +7,62 @@ public class ConfusionMatrix {
 	private int trueNegative = 0;	
 	private int falseNegative = 0;	
 	
-
-	
 	public void setTruePositive(int truePositive) {
 		this.truePositive = truePositive;
 	}
+
 	public void incTruePositive() {
 		this.truePositive++;
 	}
+	
 	public int getTruePositive() {
 		return truePositive;
 	}
 
-	
-	
 	public void setFalsePositive(int falsePositive) {
 		this.falsePositive = falsePositive;
 	}
+
 	public void incFalsePositive() {
 		this.falsePositive++;
 	}
+	
 	public int getFalsePositive() {
 		return falsePositive;
 	}
+	
 	public int getType1Error() {
 		return this.getFalsePositive();
 	}
-
 	
 	public void setTrueNegative(int trueNegative) {
 		this.trueNegative = trueNegative;
 	}
+
 	public void incTrueNegative() {
 		this.trueNegative++;
 	}
+	
 	public int getTrueNegative() {
 		return trueNegative;
 	}
-
 	
 	public void setFalseNegative(int falseNegative) {
 		this.falseNegative = falseNegative;
 	}
+
 	public void incFalseNegative() {
 		this.falseNegative++;
 	}
+	
 	public int getFalseNegative() {
 		return falseNegative;
 	}
+	
 	public int getType2Error() {
 		return this.getFalseNegative();
 	}
 		
-
-	
 	public int getRealPositive() {
 		return (truePositive + falseNegative);
 	}
@@ -76,9 +78,7 @@ public class ConfusionMatrix {
 	public int getPredictedNegative() {
 		return (falseNegative + trueNegative);
 	}
-	
-
-	
+		
 	public int getSampleSize() {
 		return (this.getRealPositive() + this.getRealNegative());
 	}
@@ -86,6 +86,7 @@ public class ConfusionMatrix {
 	public int getRealSize() {
 		return (this.getRealPositive() + this.getRealNegative());
 	}
+	
 	public int getPredictedSize() {
 		return (this.getPredictedPositive() + this.getPredictedNegative());
 	}
@@ -97,12 +98,11 @@ public class ConfusionMatrix {
 	public int getMisses() {
 		return (falsePositive + falseNegative);
 	}
-	
-
-	
+		
 	public float getPrecision() {
 		return (truePositive / (float) this.getPredictedPositive());
 	}
+	
 	public float getPositivePredictiveValue() {
 		return (this.getPrecision());
 	}
@@ -110,12 +110,15 @@ public class ConfusionMatrix {
 	public float getRecall() {
 		return (truePositive / (float) this.getRealPositive());
 	}
+	
 	public float getSensitivity() {
 		return (this.getRecall());
 	}
+	
 	public float getHitRate() {
 		return (this.getRecall());
 	}
+	
 	public float getTruePositiveRate() {
 		return (this.getRecall());
 	}
@@ -123,9 +126,11 @@ public class ConfusionMatrix {
 	public float getSpecificity() {
 		return (trueNegative / (float) this.getRealNegative());
 	}
+	
 	public float getSelectivity() {
 		return (this.getSpecificity());
 	}
+	
 	public float getTrueNegativeRate() {
 		return (this.getSpecificity());
 	}
@@ -133,8 +138,7 @@ public class ConfusionMatrix {
 	public float getYoudensIndex() {
 		return (this.getSensitivity() - (1 - this.getSpecificity()));
 	} 
-	
-	
+		
 	public float getFMeasure(float beta) {
 		float precision = this.getPrecision();
 		float recall = this.getRecall();
@@ -146,9 +150,6 @@ public class ConfusionMatrix {
 		return (this.getFMeasure(1));
 	}
 
-	
-
-	
 	public float getPrevalence() {
 		return (this.getRealPositive() / (float) this.getSampleSize());
 	}
@@ -168,6 +169,7 @@ public class ConfusionMatrix {
 	public float getFalseNegativeRate() {
 		return (this.getFalseNegative() / (float) this.getRealPositive());
 	}
+	
 	public float getMissRate() {
 		return (this.getFalseNegativeRate());
 	}
@@ -175,6 +177,7 @@ public class ConfusionMatrix {
 	public float getFalsePositiveRate() {
 		return (this.getFalsePositive() / (float) this.getRealNegative());
 	}
+	
 	public float getFallOut() {
 		return (this.getFalsePositiveRate());
 	}
@@ -197,26 +200,27 @@ public class ConfusionMatrix {
 		float randomAccuracyDivider = (float) Math.pow(this.getSampleSize(), 2);
 		return (randomAccuracyNumerator / randomAccuracyDivider);
 	} 
+	
 	public float getKappa() {
 		float randomAccuracy = this.getKappaRandomAccuracy();
 		return (this.getAccuracy() - randomAccuracy) / (1 - randomAccuracy);
 	}
 
-	
 	// Based on http://standardwisdom.com/softwarejournal/2011/12/matthews-correlation-coefficient-how-well-does-it-do/
 	public float getNetReward(float truePositiveReward, float trueNegativeReward, float falsePositiveReward, float falseNegativeReward) {
 		float hitReward = (this.truePositive * truePositiveReward) + (this.trueNegative * trueNegativeReward); 
 		float errorReward = (this.falsePositive * falsePositiveReward) + (this.falseNegative * falseNegativeReward);
 		return (hitReward + errorReward); 
 	}
-	
-	
+		
 	public float getPositiveLikelihoodRatio( ) {
 		return (this.getTruePositiveRate() / this.getFalsePositiveRate());		
 	}
+	
 	public float getNegativeLikelihoodRatio() {
 		return (this.getFalseNegativeRate() / this.getTrueNegativeRate());
 	}
+	
 	public float getOddsRatio() {
 		return (this.getPositiveLikelihoodRatio() / this.getNegativeLikelihoodRatio());
 	} 

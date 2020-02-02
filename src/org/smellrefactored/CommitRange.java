@@ -27,7 +27,6 @@ public class CommitRange {
 	private String finalCommitId;
 	
 	private ArrayList<CommitData> commitsMergedIntoMaster = new ArrayList<CommitData>();
-	private ArrayList<CommitData> commitsNotMergedIntoMaster = new ArrayList<CommitData>();
 	
 	static Logger logger = LoggerFactory.getLogger(CommitRange.class);
 	
@@ -39,16 +38,28 @@ public class CommitRange {
 	}
 
 	private void processRangeOfCommitsFromRepository() throws Exception {
+		ArrayList<CommitData> commitsMergedIntoMasterTemp = new ArrayList<CommitData>();
+
 		GitService gitService = new GitServiceImpl();
 		Repository repo = gitService.openRepository(localFolder);
 		Git git = new Git(repo);
+
+		/*
+		ArrayList<CommitData> commitsOfBranch = new ArrayList<CommitData>();
+		String treeName = "refs/heads/master"; // tag or branch
+		for (RevCommit revCommit : git.log().add(repo.resolve(treeName)).call()) {
+			commitsOfBranch.add( newCommitData(revCommit) );
+		    System.out.println(revCommit.getName());
+		}
+		*/
+		
 		gitService.checkout(repo, finalCommitId);
 
 		RevWalk revWalk = new RevWalk(repo, 0);
 
 		List<Ref> branches = git.branchList().call();
 		for (Ref branch : branches) {
-			if (!branch.getName().equals("refs/heads/master")) {
+			if (!branch.getName().equals(Constants.R_HEADS + Constants.MASTER)) {
 				continue;
 			}
 			Iterable<RevCommit> revCommits = git.log().all().call();
@@ -68,15 +79,17 @@ public class CommitRange {
 						}
 					}
 				}
+				if ( (!isMergedIntoMaster) && (revCommit.getId().getName().equals(initialCommitId)) ) {
+					logger.error("Initial commit was not automatically added in commit range.");
+					isMergedIntoMaster = true;
+				}
 				if ( (!isMergedIntoMaster) && (revCommit.getId().getName().equals(finalCommitId)) ) {
 					logger.error("Final commit was not automatically added in commit range.");
 					isMergedIntoMaster = true;
 				}
 				CommitData commitData = newCommitData(revCommit);
 	            if (isMergedIntoMaster) {    
-	            	commitsMergedIntoMaster.add(commitData);
-	            } else {
-	            	commitsNotMergedIntoMaster.add(commitData);
+	            	commitsMergedIntoMasterTemp.add(commitData);
 	            }
 			}
 		}
@@ -84,8 +97,8 @@ public class CommitRange {
 		revWalk.dispose();
 		git.close();
 
-		Collections.sort(commitsMergedIntoMaster);
-		commitsMergedIntoMaster = getSegmentFromOrderedCommit(commitsMergedIntoMaster, initialCommitId, finalCommitId);
+		Collections.sort(commitsMergedIntoMasterTemp);
+		commitsMergedIntoMaster = getSegmentFromOrderedCommit(commitsMergedIntoMasterTemp, initialCommitId, finalCommitId);
 		chainOrderedCommits(commitsMergedIntoMaster);
 
 		// Checking inclusion of extreme commits in the list of commits.
@@ -95,9 +108,6 @@ public class CommitRange {
 		if (getCommitById(finalCommitId) == null) {
 			throw new Exception("final commit "  + finalCommitId + " not found."); 
 		}
-
-		// Collections.sort(commitsNotMergedIntoMaster);
-		// chainOrderedCommits(commitsNotMergedIntoMaster);
 	}
 
 	private CommitData newCommitData(RevCommit revCommit) {
@@ -145,11 +155,6 @@ public class CommitRange {
 	public ArrayList<CommitData> getCommitsMergedIntoMaster() {
 		return (this.commitsMergedIntoMaster);
 	}
-
-	public ArrayList<CommitData> getCommitsNotMergedIntoMaster() {
-		return (this.commitsNotMergedIntoMaster);
-	}
-
 	
 	public ArrayList<CommitData> getCommitsMergedIntoMasterByIds(HashSet<String> commitIds) {
 		ArrayList<CommitData> result = new ArrayList<CommitData>();
@@ -221,6 +226,10 @@ public class CommitRange {
 			result.add(commit.getId());
 		}
 		return (result);
+	}
+
+	public int size() {
+		return (commitsMergedIntoMaster.size());
 	}
 	
 }

@@ -32,4 +32,5 @@ public class RefactoringMinerWrapperDto {
 		this.leftSide = refactoring.leftSide();
 		this.rightSide = refactoring.rightSide();
 	}
+	
 }

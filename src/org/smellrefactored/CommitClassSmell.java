@@ -16,12 +16,12 @@ public class CommitClassSmell {
 		this.commitSmell = commitSmell;
 	}
 
-	public ArrayList<FilterSmellResult> obterSmellsCommits(ArrayList<String> commitIds) throws Exception {
-		return (this.commitSmell.obterSmellsCommits(commitIds));
+	public ArrayList<FilterSmellResult> getSmellsFromCommits(ArrayList<String> commitIds) throws Exception {
+		return (this.commitSmell.getSmellsFromCommits(commitIds));
 	}	
 	
-	public FilterSmellResult obterSmellsCommit(String commitId) throws Exception {
-		return (this.commitSmell.obterSmellsCommit(commitId));
+	public FilterSmellResult getSmellsFromCommit(String commitId) throws Exception {
+		return (this.commitSmell.getSmellsFromCommit(commitId));
 	}	
 	
 	public LinkedHashMap<String, LimiarTecnica> getTechniquesThresholds() {
@@ -30,7 +30,7 @@ public class CommitClassSmell {
 	
 	public boolean hasClassSmellPredictionForTechniqueInCommit(String commitId, String smellType, String technique, String filePath, String className) throws Exception {
 		boolean result = false;
-		FilterSmellResult smellsInCommit = this.commitSmell.obterSmellsCommit(commitId);
+		FilterSmellResult smellsInCommit = this.commitSmell.getSmellsFromCommit(commitId);
 		if (smellsInCommit != null) {
 			for(ClassDataSmelly smellInCommit: smellsInCommit.getClassesSmell() ) {
 				if (smellInCommit.getSmell().contains(smellType)) {
@@ -61,7 +61,7 @@ public class CommitClassSmell {
 
 	public ClassDataSmelly getSmellCommitForClass(String commitId, String filePath, String className, String smellType) throws Exception {
 		ClassDataSmelly result = null;
-		FilterSmellResult smellResult = this.commitSmell.obterSmellsCommit(commitId);
+		FilterSmellResult smellResult = this.commitSmell.getSmellsFromCommit(commitId);
 		if (smellResult != null) {
 			result = getSmellCommitForClassFromSmellResult(smellResult, filePath, className, smellType);
 		}
@@ -84,7 +84,7 @@ public class CommitClassSmell {
 
 	public ClassDataSmelly getNotSmellCommitForClass(String commitId, String filePath, String className) throws Exception {
 		ClassDataSmelly result = null;
-		FilterSmellResult smellResult = this.commitSmell.obterSmellsCommit(commitId);
+		FilterSmellResult smellResult = this.commitSmell.getSmellsFromCommit(commitId);
 		if (smellResult != null) {
 			result = getNotSmellCommitForClassFromSmellResult(smellResult, filePath, className);
 		}
@@ -105,7 +105,7 @@ public class CommitClassSmell {
 
 	public ClassDataSmelly getSmellOrNotSmellCommitForClass(String commitId, String filePath, String className, String smellType) throws Exception {
 		ClassDataSmelly result = null;
-		FilterSmellResult smellResult = this.commitSmell.obterSmellsCommit(commitId);
+		FilterSmellResult smellResult = this.commitSmell.getSmellsFromCommit(commitId);
 		if (smellResult != null) {
 			result = getSmellOrNotSmellCommitForClassFromSmellResult(smellResult, filePath, className, smellType);
 		}
@@ -119,8 +119,6 @@ public class CommitClassSmell {
 		}
 		return result;
 	}
-	
-
 	
 	public int countClassSmellPredictionForTechniqueInCommit(FilterSmellResult smellResult, String smellType, String technique) {
 		HashSet<ClassDataSmelly> smellyClasses = getSmellingClassesBySmellAndTechnique(smellResult, smellType, technique);
@@ -151,5 +149,4 @@ public class CommitClassSmell {
 		}
 	}
 
-	
 }

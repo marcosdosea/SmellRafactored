@@ -1,11 +1,14 @@
 package org.smellrefactored.statistics;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Set;
 
 import org.repodriller.persistence.PersistenceMechanism;
+import org.repodriller.persistence.csv.CSVFile;
 
 public class ConfusionMatrixPredictors {
 	
@@ -28,11 +31,15 @@ public class ConfusionMatrixPredictors {
 	public ConfusionMatrixPredictors(String titleToResult, Set<String> predictors) {
 		title = titleToResult;
 		subtitles.clear();
+		
+		List<String> sortedPredictors = new ArrayList<String>(predictors); 
+        Collections.sort(sortedPredictors); 
 		confusionMatrices = new LinkedHashMap<String, ConfusionMatrix>(); 
-		for (String predictor: predictors) {
+		for (String predictor: sortedPredictors) {
 			confusionMatrices.put(predictor, new ConfusionMatrix());
 		}
 	}
+
 	public Set<String> getPredictores() {
 		return (confusionMatrices.keySet());
 	}	
@@ -44,9 +51,6 @@ public class ConfusionMatrixPredictors {
 	public void addField(String name, String value) {
 		this.otherFields.put(name, value);
 	}
-	
-	
-	
 	
 	public void incFalseNegativeForAll() {
 		commonFalseNegative++;
@@ -82,7 +86,6 @@ public class ConfusionMatrixPredictors {
 		}
 	}
 
-		
 	public void incTrueNegativeForAllExcept(HashSet<String> exceptPredictors) {
 		for (String predictor: confusionMatrices.keySet()) {
 			if (!exceptPredictors.contains(predictor)) {
@@ -99,14 +102,15 @@ public class ConfusionMatrixPredictors {
 	public void setValidationRealPositive(int value) {
 		this.validationRealPositive = value;
 	}
+	
 	public void setValidationPrediction(int value) {
 		this.validationPreditive = value;
 	}
+	
 	public void setValidationPositivePrediction(String predictor, int value) {
 		this.validationPositivePrediction.put(predictor, value);
 	}
-	
-	
+		
 	public PredictionRound newRound() {
 		this.predictionRound = new PredictionRound(confusionMatrices.keySet());
 		return (this.predictionRound);
@@ -131,8 +135,7 @@ public class ConfusionMatrixPredictors {
 			e.printStackTrace();
 		}
 	}
-	
-	
+		
 	private void writeValidationRealPositiveToCsvFile(PersistenceMechanism persistenceMechanism) {
 		if (this.validationRealPositive!=null) {
 			for (String predictor: confusionMatrices.keySet()) {
@@ -188,7 +191,6 @@ public class ConfusionMatrixPredictors {
 			}
 		}
 	}
-
 	
 	private void writeValidationPredictionToCsvFile(PersistenceMechanism persistenceMechanism) {
 		for (String predictor: confusionMatrices.keySet()) {
@@ -205,6 +207,7 @@ public class ConfusionMatrixPredictors {
 			}
 		}
 	}
+	
 	private void writeValidationPredictionSizeToCsvFile(PersistenceMechanism persistenceMechanism) {
 		Integer sampleValue = null;
 		boolean isDiff = false;
@@ -220,6 +223,7 @@ public class ConfusionMatrixPredictors {
 			}
 		}
 	}
+
 	private void writeValidationPredictionSizeByRealSizeToCsvFile(PersistenceMechanism persistenceMechanism) {
 		for (String predictor : this.validationPositivePrediction.keySet()) {
 			int predictedSize = this.confusionMatrices.get(predictor).getPredictedSize();
@@ -237,7 +241,6 @@ public class ConfusionMatrixPredictors {
 
 	}
 
-	
 	private void writeValidationToCsvFile(PersistenceMechanism persistenceMechanism) {
 		writeValidationRealPositiveToCsvFile(persistenceMechanism);
 		writeValidationRealNegativeToCsvFile(persistenceMechanism);
@@ -245,17 +248,14 @@ public class ConfusionMatrixPredictors {
 		writeValidationPredictionToCsvFile(persistenceMechanism);
 		writeValidationPredictionSizeToCsvFile(persistenceMechanism);
 		writeValidationPredictionSizeByRealSizeToCsvFile(persistenceMechanism);
-		}
-	
-	
+	}
+		
 	public void enableValidations(boolean onOff) {
 		this.enableValidations = onOff;
 	}
-	
-	
-	
-	public void writeToCsvFile(PersistenceMechanism persistenceMechanism) {
 		
+	public void writeToCsvFile(PersistenceMechanism persistenceMechanism) {
+
 		persistenceMechanism.write(title.toUpperCase());
 
 		for (String subtitleLine: this.subtitles) {
@@ -269,11 +269,11 @@ public class ConfusionMatrixPredictors {
 		for (String fieldLabel: this.otherFields.keySet()) {
 			persistenceMechanism.write(fieldLabel + " = ", this.otherFields.get(fieldLabel));
 		}
-
 		
 		if (commonTrueNegative > 0) {
 			persistenceMechanism.write("Common True Negative = ", commonTrueNegative);
 		}
+
 		if (commonFalseNegative > 0) {
 			persistenceMechanism.write("Common False Negative = ", commonFalseNegative);
 		}
@@ -303,7 +303,6 @@ public class ConfusionMatrixPredictors {
 		for (String predictor: confusionMatrices.keySet()) {
 			persistenceMechanism.write("False Positive (" + predictor + ") = ", confusionMatrices.get(predictor).getFalsePositive());
 		}
-
 		
 		for (String predictor: confusionMatrices.keySet()) {
 			persistenceMechanism.write("Accuracy (" + predictor + ") = ", confusionMatrices.get(predictor).getAccuracy());
@@ -339,6 +338,16 @@ public class ConfusionMatrixPredictors {
 		}
 		*/
 		
-		}
+	}
 
+	public void saveToCsvFile(String filename) {
+		CSVFile csvFile = new CSVFile(filename, false);
+		csvFile.write("Predictor", "Sample Size", "True Negative", "False Negative", "True Positive", "False Positive", "Accuracy", "Precision", "Recall", "F-measure", "MCC", "Kappa");
+		for (String predictor: confusionMatrices.keySet()) {
+			ConfusionMatrix cm = confusionMatrices.get(predictor);
+			csvFile.write(predictor, cm.getSampleSize(), cm.getTrueNegative(), cm.getFalseNegative(), cm.getTruePositive(), cm.getFalsePositive(), cm.getAccuracy(), cm.getPrecision(), cm.getRecall(), cm.getF1Measure(), cm.getMatthewsCorrelationCoefficient(), cm.getKappa());
+		}
+		csvFile.close();
+	}
+	
 }

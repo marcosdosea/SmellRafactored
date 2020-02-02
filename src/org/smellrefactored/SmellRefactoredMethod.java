@@ -99,7 +99,6 @@ public class SmellRefactoredMethod {
 		refactoringTypes.addAll(this.getManyParametersRefactoringTypes());
 		return refactoringTypes;
 	}
-
 	
 	static private Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
 
@@ -123,7 +122,7 @@ public class SmellRefactoredMethod {
 	
 	public void getSmellRefactoredMethods() {
 		try {
-			logger.info("Starting method analysis...");
+			logger.info("** Starting method analysis [[[");
 			ArrayList<RefactoringEvent> listRefactoringMergedIntoMaster = new ArrayList<RefactoringEvent>();
 			for (RefactoringEvent refactoring : refactoringEvents.getAll()) {
 				for (CommitData commit : this.commitRange.getCommitsMergedIntoMaster()) {
@@ -151,18 +150,17 @@ public class SmellRefactoredMethod {
 			}
 			Collections.sort(listRefactoringMergedIntoMaster);
 			
-			pmResultEvaluationMethods.write("RELATORIO COMPLETO SISTEMA");
-			
-			pmResultEvaluationMethods.write("Numero total de refatoracoes detectadas:", listRefactoringMergedIntoMaster.size());
-			pmResultEvaluationMethods.write("Numero de refatoracoes relacionadas a operacoes em Metodos:", this.refactoringEvents.countTypes(getMethodRefactoringTypes()), getMethodRefactoringTypes());
-			pmResultEvaluationMethods.write("Numero de refatoracoes relacionadas a " + MethodDataSmelly.LONG_METHOD + ":", this.refactoringEvents.countTypes(getLongMethodRefactoringTypes()), getLongMethodRefactoringTypes());
-			pmResultEvaluationMethods.write("Numero de refatoracoes relacionadas a " + MethodDataSmelly.COMPLEX_METHOD + ":", this.refactoringEvents.countTypes(getComplexMethodRefactoringTypes()), getComplexMethodRefactoringTypes());
-			pmResultEvaluationMethods.write("Numero de refatoracoes relacionadas a " + MethodDataSmelly.HIGH_EFFERENT_COUPLING + ":", this.refactoringEvents.countTypes(getHighEfferentCouplingRefactoringTypes()), getHighEfferentCouplingRefactoringTypes());
-			pmResultEvaluationMethods.write("Numero de refatoracoes relacionadas a " + MethodDataSmelly.MANY_PARAMETERS + ":", this.refactoringEvents.countTypes(getManyParametersRefactoringTypes()), getManyParametersRefactoringTypes());
+			pmResultEvaluationMethods.write("REPOSITORY ANALYSIS REPORT");
+			pmResultEvaluationMethods.write("Total number of refactorings detected:", listRefactoringMergedIntoMaster.size());
+			pmResultEvaluationMethods.write("Number of refactorings related to operations in Methods.:", this.refactoringEvents.countTypes(getMethodRefactoringTypes()), getMethodRefactoringTypes());
+			pmResultEvaluationMethods.write("Number of refactoring related to " + MethodDataSmelly.LONG_METHOD + ":", this.refactoringEvents.countTypes(getLongMethodRefactoringTypes()), getLongMethodRefactoringTypes());
+			pmResultEvaluationMethods.write("Number of refactoring related to " + MethodDataSmelly.COMPLEX_METHOD + ":", this.refactoringEvents.countTypes(getComplexMethodRefactoringTypes()), getComplexMethodRefactoringTypes());
+			pmResultEvaluationMethods.write("Number of refactoring related to " + MethodDataSmelly.HIGH_EFFERENT_COUPLING + ":", this.refactoringEvents.countTypes(getHighEfferentCouplingRefactoringTypes()), getHighEfferentCouplingRefactoringTypes());
+			pmResultEvaluationMethods.write("Number of refactoring related to " + MethodDataSmelly.MANY_PARAMETERS + ":", this.refactoringEvents.countTypes(getManyParametersRefactoringTypes()), getManyParametersRefactoringTypes());
 			for (String refactoringType: this.getMethodRefactoringTypes()) {
-				pmResultEvaluationMethods.write("Numero de refatoracoes do tipo " + refactoringType + ":", this.refactoringEvents.countType(refactoringType));
+				pmResultEvaluationMethods.write("Number of " + refactoringType + " refactorings:", this.refactoringEvents.countType(refactoringType));
 			}
-			pmResultEvaluationMethods.write("Numero de commits a analisar smells:", this.smellCommitIds.size());
+			pmResultEvaluationMethods.write("Number of commits to analyze smells:", this.smellCommitIds.size());
 			
 			methodOutputFiles.writeHeaders();
 
@@ -173,7 +171,7 @@ public class SmellRefactoredMethod {
 			
 			methodOutputFiles.close();
 
-			logger.info("Mathod analyzes completed.");
+			logger.info("]]] Mathod analyzes completed.");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -191,18 +189,15 @@ public class SmellRefactoredMethod {
 	
 	private void evaluateSmellChangeOperation(ArrayList<String> smellCommitIds,
 			ArrayList<RefactoringEvent> listRefactoring, String typeSmell, HashSet<String> targetTefactoringTypes) throws Exception {
-
 		ConfusionMatrixPredictors confusionMatrices = new ConfusionMatrixPredictors(typeSmell + " " + targetTefactoringTypes.toString(), this.commitMethodSmell.getTechniquesThresholds().keySet());
 		confusionMatrices.enableValidations(!IGNORE_REPEATED_PREDICION_ON_NEXT_COMMIT);
-		
 		// TP and FN
 		computeTruePositiveAndFalseNegative(listRefactoring, typeSmell, targetTefactoringTypes, confusionMatrices);
 		for (String smellCommitId: smellCommitIds) {
-			FilterSmellResult smellResult = this.commitMethodSmell.obterSmellsCommit(smellCommitId);
+			FilterSmellResult smellResult = this.commitMethodSmell.getSmellsFromCommit(smellCommitId);
 			// FP and TN
 			computeFalsePositiveAndTrueNegativeForAllTechniques(smellResult, listRefactoring, typeSmell, targetTefactoringTypes, confusionMatrices);
 		}
-
 		/* 
          * Warning: The validation of the confusion matrix by the total of positive predictions 
          *          does not apply to the analysis of smells only from the initial commit.
@@ -214,9 +209,9 @@ public class SmellRefactoredMethod {
 		 * 	confusionMatrices.setValidationPositivePrediction(technique, positivePredictionExpected);
 		 * }
 		*/
-		
 		pmResultEvaluationMethods.write("");
 		confusionMatrices.writeToCsvFile(pmResultEvaluationMethods);
+		// confusionMatrices.saveToCsvFile(this.resultFileName + "-confusionMatrices-method-" + typeSmell + "-" + targetTefactoringTypes.toString() + ".csv");
 	}
 	
 	private void computeTruePositiveAndFalseNegative(ArrayList<RefactoringEvent> listRefactoring, String smellType,
@@ -291,6 +286,5 @@ public class SmellRefactoredMethod {
 			}	
 		}
 	}
-	
 	
 }

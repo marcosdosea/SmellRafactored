@@ -20,17 +20,18 @@ public class PredictionRound {
 	public void resetRound() {
 		round.clear();
 	}
-
 	
 	public void setDefaultCondition(Boolean defaultCondition) {
 		this.defaultCondition = defaultCondition;
 	}
+
 	public void setCondition(Boolean condition) throws Exception {
 		if ( (this.realCondition != null) && (condition != this.realCondition) ) {
 			throw new Exception("Condition has already been defined.");
 		}
 		this.realCondition = condition;
 	}
+	
 	public Boolean getCondition() throws Exception {
 		Boolean result = (this.realCondition != null ? this.realCondition : this.defaultCondition); 
 		if (result  == null) {
@@ -38,9 +39,7 @@ public class PredictionRound {
 		}
 		return result;
 	}
-	
-	
-	
+		
 	private void thowExceptionIfPredictorIsAlreadyInRound(String predictor, Boolean prediction) throws Exception {
 		if (round.containsKey(predictor)) {
 			if (round.get(predictor) != prediction) {
@@ -54,7 +53,6 @@ public class PredictionRound {
 			throw new Exception("predictor '" + predictor + "' does not exist in the round.");
 		}
 	}
-
 	
 	public void set(HashSet<String> predictors, Boolean prediction) throws Exception {
 		for (String predictor: predictors) {
@@ -62,16 +60,18 @@ public class PredictionRound {
 			round.put(predictor, prediction);
 		}
 	}
+
 	public void setTrue(HashSet<String> predictors) throws Exception {
 		set(predictors, true);
 	}
+	
 	public void setFalse(HashSet<String> predictors) throws Exception {
 		set(predictors, false);
 	}
+	
 	public void setNull(HashSet<String> predictors) throws Exception {
 		set(predictors, null);
 	}
-
 	
 	public void setAllExcept(HashSet<String> exceptPredictors, Boolean prediction) throws Exception {
 		for (String predictor: allPredictors) {
@@ -81,16 +81,18 @@ public class PredictionRound {
 			}
 		}
 	}
+
 	public void setTrueAllExcept(HashSet<String> exceptPredictors) throws Exception {
 		setAllExcept(exceptPredictors, true);
 	}
+	
 	public void setFalseAllExcept(HashSet<String> exceptPredictors) throws Exception {
 		setAllExcept(exceptPredictors, false);
 	}
+	
 	public void setNullAllExcept(HashSet<String> exceptPredictors) throws Exception {
 		setAllExcept(exceptPredictors, null);
 	}
-
 	
 	public void setIfOutOfRound(HashSet<String> predictors, Boolean prediction) {
 		for (String predictor: predictors) {
@@ -99,17 +101,19 @@ public class PredictionRound {
 			}
 		}
 	}
+
 	public void setTrueIfOutOfRound(HashSet<String> predictors) {
 		setIfOutOfRound(predictors, true);
 	}
+	
 	public void setFalseIfOutOfRound(HashSet<String> predictors) {
 		setIfOutOfRound(predictors, false);
 	}
+	
 	public void setNullIfOutOfRound(HashSet<String> predictors) {
 		setIfOutOfRound(predictors, null);
 	}
-	
-
+		
 	public void setForAllOutOfRound(Boolean prediction) {
 		for (String predictor: allPredictors) {
 			if (!round.containsKey(predictor)) {
@@ -117,16 +121,18 @@ public class PredictionRound {
 			}
 		}
 	}
+	
 	public void setTrueForAllOutOfRound() {
 		setForAllOutOfRound(true);
 	}
+	
 	public void setFalseForAllOutOfRound() {
 		setForAllOutOfRound(false);
 	}
+	
 	public void setNullForAllOutOfRound() {
 		setForAllOutOfRound(null);
 	}
-
 	
 	public void setForAllOutOfRoundExcept(HashSet<String> exceptPredictors, Boolean prediction) {
 		for (String predictor: allPredictors) {
@@ -137,12 +143,15 @@ public class PredictionRound {
 			}
 		}
 	}
+
 	public void setTrueForAllOutOfRoundExcept(HashSet<String> exceptPredictors) {
 		setForAllOutOfRoundExcept(exceptPredictors, true);
 	}
+	
 	public void setFalseForAllOutOfRoundExcept(HashSet<String> exceptPredictors) {
 		setForAllOutOfRoundExcept(exceptPredictors, false);
 	}
+	
 	public void setNullForAllOutOfRoundExcept(HashSet<String> exceptPredictors) {
 		setForAllOutOfRoundExcept(exceptPredictors, null);
 	}

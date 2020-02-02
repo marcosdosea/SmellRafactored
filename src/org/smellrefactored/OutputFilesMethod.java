@@ -17,13 +17,11 @@ public class OutputFilesMethod {
 	static Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
 	
 	public OutputFilesMethod(String baseFileName) {
-		
 		this.baseFileName = baseFileName;
 		
 		pmResultSmellRefactoredMethods = new CSVFile(this.baseFileName + "-smellRefactored-methods.csv", false);
 		pmResultSmellRefactoredMethodsMessage = new CSVFile(this.baseFileName + "-smellRefactored-methods-message.csv", false);
 		pmResultSmellRefactoredMethodsMachineLearning = new CSVFile(this.baseFileName + "-refactoredAndNotRefactored-methods-machineLearning.csv", false);
-
 	}
 	
 	public void writeHeaders() {
@@ -211,6 +209,7 @@ public class OutputFilesMethod {
 				, ""
 				);
 	}
+
 	public void writeNegativeToCsvFiles(MethodDataSmelly methodSmellyBuscar) {
 		pmResultSmellRefactoredMethodsMessage.write(
 				methodSmellyBuscar.getNomeClasse()
@@ -262,6 +261,5 @@ public class OutputFilesMethod {
 		pmResultSmellRefactoredMethodsMachineLearning.close();
 		
 	}
-	
 	
 }

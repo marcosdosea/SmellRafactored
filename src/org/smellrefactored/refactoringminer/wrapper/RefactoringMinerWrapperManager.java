@@ -63,6 +63,8 @@ public class RefactoringMinerWrapperManager {
 	}
 
 	private List<RefactoringMinerWrapperDto> getRefactoringDtoListFromRefactoringMiner() throws Exception {
+		final List<String> allCommitIds = new ArrayList<String>();
+		final List<String> refactoringCommitIds = new ArrayList<String>();
 		final List<RefactoringMinerWrapperDto> refactoringDtoList = new ArrayList<RefactoringMinerWrapperDto>();
 		final Gson gson = new Gson();
 		final String individualCacheBaseFileName = this.cacheBaseFileName;
@@ -79,6 +81,7 @@ public class RefactoringMinerWrapperManager {
 					commitDtoList.add(refactorinDto);
 					refactoringDtoList.add(refactorinDto);
 				}
+				
 				String commitCacheBaseFileName = individualCacheBaseFileName  + "-" + idCommit;
 				String commitCacheTempFileName = commitCacheBaseFileName + ".temp";
 				String commitCacheFileName = commitCacheBaseFileName + ".json";
@@ -97,12 +100,34 @@ public class RefactoringMinerWrapperManager {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
+				if (commitDtoList.size() > 0) {
+					refactoringCommitIds.add(idCommit);
+				}
+				allCommitIds.add(idCommit);
 			}
 		});
 		repo.close();
+		saveCommitIdsToFile(allCommitIds, this.fullCacheFileName + "-allCommits");
+		saveCommitIdsToFile(refactoringCommitIds, this.fullCacheFileName + "-refactoringsCommits");
 		return (refactoringDtoList);
 	}
 	
+	private void saveCommitIdsToFile(List<String> commitIds, String baseFileName) throws IOException {
+		String tempFileName = baseFileName + ".temp";
+		String fileName = baseFileName + ".commitList";
+		File existingTempFile = new File(tempFileName);
+		existingTempFile.delete();
+		File existingCacheFile = new File(fileName);
+		existingCacheFile.delete();
+		FileWriter tempFileHandler = new FileWriter(tempFileName);
+		for (String commitId: commitIds) {
+			tempFileHandler.write(commitId + "\n");
+		}
+		tempFileHandler.close();
+		File tempfile = new File(tempFileName);
+		File newfile = new File(fileName);
+		tempfile.renameTo(newfile);
+	}
 	
 	public HashSet<String> getCommitsWithRefactoringsFromRefactoringList(List<RefactoringMinerWrapperDto> refactoringDtoList) {
 		HashSet<String> commitsWithRefactorings = new HashSet<String>();
@@ -113,6 +138,5 @@ public class RefactoringMinerWrapperManager {
 		}
 		return (commitsWithRefactorings);
 	}
-
 	
 }

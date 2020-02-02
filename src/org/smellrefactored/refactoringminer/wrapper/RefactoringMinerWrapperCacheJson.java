@@ -53,7 +53,6 @@ public class RefactoringMinerWrapperCacheJson {
 		return (refactoringDtoList);
 	}
 
-
 	private RefactoringMinerWrapperDto[] getRefactoringDtoArrayFromFile(String fileRefactoringName) throws FileNotFoundException {
 		Gson gson = new Gson();  
 		JsonReader reader = new JsonReader(new FileReader(fileRefactoringName));

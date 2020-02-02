@@ -23,7 +23,6 @@ public class RefactoringEvent implements Comparable<RefactoringEvent> {
 	
 	private String className;
 	private String methodName;
-
 	
 	public RefactoringEvent(RefactoringMinerWrapperDto refactoringDto, String repositoryPath) {
 		this.repositoryPath = repositoryPath;

@@ -28,12 +28,12 @@ import com.google.gson.stream.JsonReader;
 
 public class CommitSmell {
 	
-	final private int MAXIMUM_COMMITS_IN_MEMORY_CACHE = 100;
+	final private int MAXIMUM_COMMITS_IN_MEMORY_CACHE = 50;
 	
 	private GitService gitService;
 	private Repository repo;
 	private String localFolder;
-	private List<LimiarTecnica> listaLimiarTecnica;
+	private List<LimiarTecnica> techniqueThresholds;
 
 	String resultFileName;
 	
@@ -51,14 +51,14 @@ public class CommitSmell {
 
 	public CommitSmell(String localFolder, ArrayList<CommitData> commitsWithRefactoringMergedIntoMaster, List<LimiarTecnica> listaLimiarTecnica, String resultFileName) throws Exception {
 		this.localFolder = localFolder;
-		this.listaLimiarTecnica = listaLimiarTecnica;
+		this.techniqueThresholds = listaLimiarTecnica;
 		this.resultFileName = resultFileName;
 		
 		gitService = new GitServiceImpl();
 		repo = gitService.openRepository(localFolder);
 		
 		techniquesThresholds = new LinkedHashMap<String, LimiarTecnica>();
-		for (LimiarTecnica limiarTecnica : this.listaLimiarTecnica) {
+		for (LimiarTecnica limiarTecnica : this.techniqueThresholds) {
 			techniquesThresholds.put(limiarTecnica.getTecnica(), limiarTecnica);
 		}
 
@@ -72,19 +72,19 @@ public class CommitSmell {
 			logger.warn("Use smells commit OLD CACHE only to speed of maintenance and development on this project.");
 			logger.warn("Clear or disable OLD CACHE whenever the weather is cloudy ;)");
 		} else {
-			logger.info("The smells commit OLD CACHE was turned OFF.");
+			logger.info("The smells commit old cache was turned OFF.");
 		}
 	}
 
-	public ArrayList<FilterSmellResult> obterSmellsCommits(ArrayList<String> commitIds) throws Exception {
+	public ArrayList<FilterSmellResult> getSmellsFromCommits(ArrayList<String> commitIds) throws Exception {
 		ArrayList<FilterSmellResult> result = new ArrayList<FilterSmellResult>();
 		for (String commitId: commitIds) {
-			result.add(obterSmellsCommit(commitId));
+			result.add(getSmellsFromCommit(commitId));
 		}
 		return (result);
 	}
 
-	public FilterSmellResult obterSmellsCommit(String commitId) throws Exception {
+	public FilterSmellResult getSmellsFromCommit(String commitId) throws Exception {
 		FilterSmellResult smellResult;
 		if (memoryCache.containsKey(commitId)) {
 			smellResult = memoryCache.get(commitId);
@@ -101,7 +101,7 @@ public class CommitSmell {
 			memoryCache.put(commitId, smellResult);
 		}
 		if (smellResult == null) {
-			throw new Exception("Null response to the smell query from commit " + commitId + ".");
+			throw new Exception("Null response to the smell query from commit " + this.localFolder + " " + commitId + ".");
 		}
 		return (smellResult);
 	}
@@ -124,11 +124,11 @@ public class CommitSmell {
 		File existingFile = new File(cacheFileName);
 		existingFile.mkdirs();
 		if (existingFile.exists()) {
-			logger.info("Erasing old cache for commit " + smellsCommit.getCommitId() + "...");
+			// logger.info("Erasing old cache for commit " + this.localFolder + " " + smellsCommit.getCommitId() + "...");
 			existingFile.delete();
 		}
 		String cacheFileNameTemp = cacheFileName.replace(".json", ".temp");
-		logger.info("Saving smells to cache for commit " + smellsCommit.getCommitId() + "...");
+		logger.info("Saving smells to cache for commit " + this.localFolder + " " + smellsCommit.getCommitId() + "...");
 		FileWriter cacheFileHandler = new FileWriter(cacheFileNameTemp);
 		cacheFileHandler.append(gson.toJson(smellsCommit));
 		cacheFileHandler.close();
@@ -138,7 +138,7 @@ public class CommitSmell {
 	}
 	
 	private FilterSmellResult getSmellsCommitFromCache(String commitId) throws Exception {
-		logger.info("Getting smells from cache for commit " + commitId + "...");
+		logger.info("Getting smells from cache for commit " + this.localFolder + " " + commitId + "...");
 		Gson gson = new Gson();  
 		String cacheFileName = getCacheFileName(commitId);
 		JsonReader reader = new JsonReader(new FileReader(cacheFileName));
@@ -163,8 +163,8 @@ public class CommitSmell {
 			listCommitEvaluated.add(commitId);
 			pmResultSmellRefactoredCommit.write(commitId, report.getNumberOfClasses(), report.getNumberOfMethods(), report.getSystemLOC());
 		}
-		logger.info("Gerando smells com a lista de problemas de design encontrados...");
-		FilterSmellResult smellResult = FilterSmells.filtrar(report.all(), listaLimiarTecnica, commitId);
+		logger.info("Detecting code smells based on threshold derivation techniques...");
+		FilterSmellResult smellResult = FilterSmells.filtrar(report.all(), techniqueThresholds, commitId);
 		// FilterSmells.gravarMetodosSmell(smellResult.getMetodosSmell(), resultFileName + "-smells-commit-" + commitId + "-method.csv");
 		// FilterSmells.gravarClassesSmell(smellResult.getClassesSmell(), resultFileName + "-smells-commit-" + commitId + "-class.csv");
 		CommitMethodSmell.consistMethodNotSmelly(smellResult);

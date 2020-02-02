@@ -17,7 +17,6 @@ public class OutputFilesClass {
 	static Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
 	
 	public OutputFilesClass(String baseFileName) {
-		
 		this.baseFileName = baseFileName;
 		
 		pmResultSmellRefactoredClasses = new CSVFile(this.baseFileName + "-smellRefactored-classes.csv", false);
@@ -195,13 +194,11 @@ public class OutputFilesClass {
 				);
 	}
 	
-	
 	public void close() {
 		pmResultSmellRefactoredClassesMessage.close();
 		pmResultSmellRefactoredClasses.close();
 		pmResultSmellRefactoredClassesMachineLearning.close();
 		
 	}
-	
 	
 }

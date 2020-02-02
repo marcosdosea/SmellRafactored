@@ -14,7 +14,6 @@ public class SmellRefactoredResult {
 	private HashSet<MethodDataSmelly> methodSmellyInitialNotRefactored;
 	private FilterSmellResult smellsCommit;
 	
-	
 	private ArrayList<RefactoringEvent> listRefactoring;
 	
 	public HashSet<MethodDataSmelly> getMethodInitialSmellyNotRefactored() {

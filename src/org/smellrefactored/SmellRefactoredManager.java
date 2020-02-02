@@ -1,5 +1,10 @@
 package org.smellrefactored;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -24,17 +29,15 @@ public class SmellRefactoredManager {
 	private String repositoryPath;
 	private String initialCommitId;
 	private String finalCommitId;
-	private List<LimiarTecnica> listaLimiarTecnica;
+	private List<LimiarTecnica> techniqueThresholds;
 
 	private CommitRange commitRange;
 	private RefactoringEvents refactoringEvents;
-	
 	
 	private ArrayList<String> smellCommitIds = new ArrayList<String>(); 
 	private CommitSmell commitSmell;
 	
 	private String resultBaseFileName;
-
 
 	HashSet<String> listCommitEvaluated = new HashSet<String>();
 	
@@ -44,12 +47,25 @@ public class SmellRefactoredManager {
 		this.repositoryPath = repositoryPath;
 		this.initialCommitId = initialCommitId;
 		this.finalCommitId = finalCommitId;
-		this.listaLimiarTecnica = listaLimiarTecnica;
+		this.techniqueThresholds = listaLimiarTecnica;
 		this.resultBaseFileName = resultBaseFileName;
 
+		logger.info("");
+		logger.info("******");
+		logger.info("** REPOSITORY: " + repositoryPath);
+		logger.info("******");
 		try {
 			prepareSmellRefactored();
 		} catch (Exception e) {
+			 StringWriter sw = new StringWriter();
+	            e.printStackTrace(new PrintWriter(sw));
+	            String exceptionAsString = sw.toString();
+	            System.out.println();
+				try {
+					Files.writeString(Paths.get(resultBaseFileName + "-error.txt"), exceptionAsString);
+				} catch (IOException e1) {
+					// do nothing
+				}
 			e.printStackTrace();
 		}
 	}
@@ -63,11 +79,12 @@ public class SmellRefactoredManager {
 		GitService gitService = new GitServiceImpl();
 		gitService.cloneIfNotExists(repositoryPath, urlRepository);
 		commitRange = new CommitRange(repositoryPath, initialCommitId, finalCommitId);
+		logger.info("Commits found: " + commitRange.size());
 		
 		RefactoringMinerWrapperManager refactoringMinerWrapperManager = new RefactoringMinerWrapperManager(repositoryPath, commitRange.getNextCommit(initialCommitId).getId(), finalCommitId, resultBaseFileName);
 		List<RefactoringMinerWrapperDto> refactoringDtoList = refactoringMinerWrapperManager.getRefactoringDtoListUsingJsonCache();
 		refactoringEvents = new RefactoringEvents(refactoringDtoList, this.repositoryPath);
-		logger.info("Total de refactorings encontrados: " + refactoringEvents.size());
+		logger.info("Refactorings found: " + refactoringEvents.size());
 
 		HashSet<String> commitsWithRefactorings = refactoringMinerWrapperManager.getCommitsWithRefactoringsFromRefactoringList(refactoringDtoList);
 		ArrayList<CommitData> commitsWithRefactoringMergedIntoMaster = commitRange.getCommitsMergedIntoMasterByIds(commitsWithRefactorings);
@@ -79,7 +96,7 @@ public class SmellRefactoredManager {
 			smellCommitIds.remove(finalCommitId);
 		}
 		
-		commitSmell = new CommitSmell(repositoryPath, commitsWithRefactoringMergedIntoMaster, listaLimiarTecnica, resultBaseFileName);
+		commitSmell = new CommitSmell(repositoryPath, commitsWithRefactoringMergedIntoMaster, techniqueThresholds, resultBaseFileName);
 		commitSmell.useOldCache(USE_SMELLS_COMMIT_OLD_CACHE);
 	}
 

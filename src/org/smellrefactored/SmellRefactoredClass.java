@@ -46,7 +46,6 @@ public class SmellRefactoredClass {
 		return refactoringTypes;
 	}
 
-
 	static Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
 
 	private RefactoringEvents refactoringEvents;
@@ -71,7 +70,7 @@ public class SmellRefactoredClass {
 	
 	public void getSmellRefactoredClasses() {
 		try {
-			logger.info("Starting class analysis...");
+			logger.info("** Starting class analysis [[[");
 			ArrayList<RefactoringEvent> listRefactoringMergedIntoMaster = new ArrayList<RefactoringEvent>();
 			for (RefactoringEvent refactoring : refactoringEvents.getAll()) {
 				for (CommitData commit : commitRange.getCommitsMergedIntoMaster() ) {
@@ -93,14 +92,14 @@ public class SmellRefactoredClass {
 			}
 			Collections.sort(listRefactoringMergedIntoMaster);
 			
-			pmResultEvaluationClass.write("RELATORIO COMPLETO SISTEMA");
-			pmResultEvaluationClass.write("Numero total de refatoracoes detectadas:", listRefactoringMergedIntoMaster.size(), this.refactoringEvents.size());
-			pmResultEvaluationClass.write("Numero de refatoracoes relacionadas a classes:", this.refactoringEvents.countTypes(getClassRefactoringTypes()), getClassRefactoringTypes());
-			pmResultEvaluationClass.write("Numero de refatoracoes relacionadas a " + ClassDataSmelly.LONG_CLASS + ":", this.refactoringEvents.countTypes(getLongClassRefactoringTypes()), getLongClassRefactoringTypes());
+			pmResultEvaluationClass.write("REPOSITORY ANALYSIS REPORT");
+			pmResultEvaluationClass.write("Total number of refactorings detected:", listRefactoringMergedIntoMaster.size(), this.refactoringEvents.size());
+			pmResultEvaluationClass.write("Number of refactoring related to classes:", this.refactoringEvents.countTypes(getClassRefactoringTypes()), getClassRefactoringTypes());
+			pmResultEvaluationClass.write("Number of refactoring related to  " + ClassDataSmelly.LONG_CLASS + ":", this.refactoringEvents.countTypes(getLongClassRefactoringTypes()), getLongClassRefactoringTypes());
 			for (String refactoringType: this.getClassRefactoringTypes()) {
-				pmResultEvaluationClass.write("Numero de refatoracoes do tipo " + refactoringType + ":", this.refactoringEvents.countType(refactoringType));
+				pmResultEvaluationClass.write("Number of " + refactoringType + " refactorings:", this.refactoringEvents.countType(refactoringType));
 			}
-			pmResultEvaluationClass.write("Numero de commits a analisar smells:", this.smellCommitIds.size());
+			pmResultEvaluationClass.write("Number of commits to analyze smells:", this.smellCommitIds.size());
 			
 			classOutputFiles.writeHeaders();
 
@@ -108,7 +107,7 @@ public class SmellRefactoredClass {
 			
 			classOutputFiles.close();
 
-			logger.info("Class analyzes completed.");
+			logger.info("]]] Class analyzes completed.");
 		} catch (Exception e) {
 			e.getStackTrace();
 		}
@@ -125,18 +124,15 @@ public class SmellRefactoredClass {
 	}
 	
 	private void evaluateSmellChangeClass(ArrayList<String> smellCommitIds, ArrayList<RefactoringEvent> listRefactoring, String typeSmell, HashSet<String> targetTefactoringTypes) throws Exception {
-
 		ConfusionMatrixPredictors confusionMatrices = new ConfusionMatrixPredictors(typeSmell + " " + targetTefactoringTypes.toString(), this.commitClassSmell.getTechniquesThresholds().keySet());
 		confusionMatrices.enableValidations(!IGNORE_REPEATED_PREDICION_ON_NEXT_COMMIT);
-	
 		// TP e FN
 		computeTruePositiveAndFalseNegative(listRefactoring, typeSmell, targetTefactoringTypes, confusionMatrices);
 		for (String smellCommitId: smellCommitIds) {
-			FilterSmellResult smellResult = this.commitClassSmell.obterSmellsCommit(smellCommitId);
+			FilterSmellResult smellResult = this.commitClassSmell.getSmellsFromCommit(smellCommitId);
 			// FP and TN
 			computeFalsePositiveAndTrueNegativeForAllTechniques(smellResult, listRefactoring, typeSmell, targetTefactoringTypes, confusionMatrices);
 		}
-		
 		/* 
 	     * Warning: The validation of the confusion matrix by the total of positive predictions 
 	     *          does not apply to the analysis of smells only from the initial commit.
@@ -148,9 +144,9 @@ public class SmellRefactoredClass {
 		 * 	confusionMatrices.setValidationPositivePrediction(technique, positivePredictionExpected);
 		 * }
 		*/
-
 		pmResultEvaluationClass.write("");
 		confusionMatrices.writeToCsvFile(pmResultEvaluationClass);
+		// confusionMatrices.saveToCsvFile(this.resultFileName + "-confusionMatrices-class-" + typeSmell + "-" + targetTefactoringTypes.toString() + ".csv");
 	}
 	
 	private void computeFalsePositiveAndTrueNegativeForAllTechniques(FilterSmellResult smellResult,
@@ -225,7 +221,5 @@ public class SmellRefactoredClass {
 			confusionMatrices.processPredictionRound(predictionRound);
 		}
 	}
-	
-	
 	
 }
