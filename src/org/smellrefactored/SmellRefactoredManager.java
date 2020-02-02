@@ -75,7 +75,6 @@ public class SmellRefactoredManager {
 		}
 	}
 
-
 	private void prepareSmellRefactored() throws Exception {
 		if (initialCommitId.equals(finalCommitId)) {
 			throw new Exception("At least 2 commits are required in the range of commits to be analyzed.");

@@ -155,11 +155,12 @@ public class SmellRefactoredClass {
 	}
 	
 	private void computeFalsePositiveBySmellAndTechnique(FilterSmellResult smellResult, String technique, String smellType, HashSet<String> targetTefactoringTypes, ConfusionMatrix confusionMtrix) throws Exception {
+		RefactoringClassEvents refactoringClassEvents = new RefactoringClassEvents(this.refactoringEvents);
 		HashSet<ClassDataSmelly> smellyClassesForSelectedTechniqueSmell = this.commitClassSmell.getSmellingClassesBySmellAndTechnique(smellResult, smellType, technique);
 		for (ClassDataSmelly classSmelly : smellyClassesForSelectedTechniqueSmell) {
 			CommitData nextCommit = this.commitRange.getNextCommit(classSmelly.getCommit());
 			if (nextCommit != null) {
- 				if (! this.refactoringEvents.hasClassRefactoringsInCommit(nextCommit.getId(), classSmelly.getDiretorioDaClasse(), classSmelly.getNomeClasse(), targetTefactoringTypes)) {
+ 				if (! refactoringClassEvents.hasRefactoringsInCommit(nextCommit.getId(), classSmelly.getDiretorioDaClasse(), classSmelly.getNomeClasse(), targetTefactoringTypes)) {
  					boolean ignoreCurrentPrediction = false;
  					if (IGNORE_REPEATED_PREDICION_ON_NEXT_COMMIT) {
  						ignoreCurrentPrediction = this.commitClassSmell.hasClassSmellPredictionForTechniqueInCommit(nextCommit.getId(), smellType, technique, classSmelly.getDiretorioDaClasse(), classSmelly.getNomeClasse()); 
@@ -177,11 +178,12 @@ public class SmellRefactoredClass {
 	}
 
 	private void computeTrueNegativeBySmellAndTechnique(FilterSmellResult smellResult, String technique, String smellType, HashSet<String> targetTefactoringTypes, ConfusionMatrix confusionMtrix) throws Exception {
+		RefactoringClassEvents refactoringClassEvents = new RefactoringClassEvents(this.refactoringEvents);
 		HashSet<ClassDataSmelly> notSmellyClassesForSelectedTechniqueSmell = this.commitClassSmell.getNotSmellingClassesBySmellAndTechnique(smellResult, smellType, technique); 
 		for (ClassDataSmelly classNotSmelly : notSmellyClassesForSelectedTechniqueSmell) {
 			CommitData nextCommit = this.commitRange.getNextCommit(classNotSmelly.getCommit());
 			if (nextCommit != null) {
-				if (!this.refactoringEvents.hasClassRefactoringsInCommit(nextCommit.getId(), classNotSmelly.getDiretorioDaClasse(), classNotSmelly.getNomeClasse(), targetTefactoringTypes)) {
+				if (!refactoringClassEvents.hasRefactoringsInCommit(nextCommit.getId(), classNotSmelly.getDiretorioDaClasse(), classNotSmelly.getNomeClasse(), targetTefactoringTypes)) {
 					confusionMtrix.incTrueNegative();
 					classOutputFiles.writeNegativeToCsvFiles(classNotSmelly);
 				}

@@ -68,7 +68,6 @@ public class OutputFilesMethod {
 				, "Refactoring"
 				);
 	}
-
 	
 	public void writeTruePositiveToCsvFiles(RefactoringEvent refactoring, MethodDataSmelly methodSmell) throws Exception {
 		pmResultSmellRefactoredMethodsMessage.write(

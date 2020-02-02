@@ -236,11 +236,12 @@ public class SmellRefactoredMethod {
 	}
 	
 	private void computeFalsePositiveBySmellAndTechnique(FilterSmellResult smellResult, String technique, String smellType, HashSet<String> targetTefactoringTypes, ConfusionMatrix confusionMtrix) throws Exception {
+		RefactoringMethodEvents refactoringMethodEvents = new RefactoringMethodEvents(this.refactoringEvents);
 		HashSet<MethodDataSmelly> smellyMethodsForSelectedTechniqueSmell = this.commitMethodSmell.getSmellingMethodsBySmellAndTechnique(smellResult, smellType, technique);
 		for (MethodDataSmelly methodSmelly : smellyMethodsForSelectedTechniqueSmell) {
 			CommitData nextCommit = this.commitRange.getNextCommit(methodSmelly.getCommit());
 			if (nextCommit != null) {
- 				if (!this.refactoringEvents.hasMethodRefactoringsInCommit(nextCommit.getId(), methodSmelly.getDiretorioDaClasse(), methodSmelly.getNomeClasse(), methodSmelly.getNomeMetodo(), targetTefactoringTypes)) {
+ 				if (!refactoringMethodEvents.hasRefactoringsInCommit(nextCommit.getId(), methodSmelly.getDiretorioDaClasse(), methodSmelly.getNomeClasse(), methodSmelly.getNomeMetodo(), targetTefactoringTypes)) {
  					boolean ignoreCurrentPrediction = false;
  					if (IGNORE_REPEATED_PREDICION_ON_NEXT_COMMIT) {
  						ignoreCurrentPrediction = this.commitMethodSmell.hasMethodSmellPredictionForTechniqueInCommit(nextCommit.getId(), smellType, technique, methodSmelly.getDiretorioDaClasse(), methodSmelly.getNomeClasse(), methodSmelly.getNomeMetodo()); 
@@ -258,11 +259,12 @@ public class SmellRefactoredMethod {
 	}
 	
 	private void computeTrueNegativeBySmellAndTechnique(FilterSmellResult smellResult, String technique, String smellType, HashSet<String> targetTefactoringTypes, ConfusionMatrix confusionMtrix) throws Exception {
+		RefactoringMethodEvents refactoringMethodEvents = new RefactoringMethodEvents(this.refactoringEvents);
 		HashSet<MethodDataSmelly> notSmellyMethodsForSelectedTechniqueSmell = this.commitMethodSmell.getNotSmellingMethodsBySmellAndTechnique(smellResult, smellType, technique); 
 		for (MethodDataSmelly methodNotSmelly : notSmellyMethodsForSelectedTechniqueSmell) {
 			CommitData nextCommit = this.commitRange.getNextCommit(methodNotSmelly.getCommit());
 			if (nextCommit != null) {
-				if (!this.refactoringEvents.hasMethodRefactoringsInCommit(nextCommit.getId(), methodNotSmelly.getDiretorioDaClasse(), methodNotSmelly.getNomeClasse(), methodNotSmelly.getNomeMetodo(), targetTefactoringTypes)) {
+				if (!refactoringMethodEvents.hasRefactoringsInCommit(nextCommit.getId(), methodNotSmelly.getDiretorioDaClasse(), methodNotSmelly.getNomeClasse(), methodNotSmelly.getNomeMetodo(), targetTefactoringTypes)) {
 					confusionMtrix.incTrueNegative();
 					this.methodOutputFiles.writeNegativeToCsvFiles(methodNotSmelly);
 				}

@@ -205,7 +205,6 @@ public class CommitRange {
 		}
 		return result;
 	}
-
 	
 	public CommitData getNextCommit(String commitId) throws Exception {
 		CommitData result = null;
@@ -236,7 +235,6 @@ public class CommitRange {
 		return (commitsMergedIntoMaster.size());
 	}
 	
-	
 	public String getRepositoryUrl() {
 		return (this.repositoryUrl);
 	}
@@ -252,6 +250,5 @@ public class CommitRange {
 	public String getFinalCommitId() {
 		return (this.finalCommitId);
 	}
-
 	
 }
