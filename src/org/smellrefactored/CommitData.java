@@ -3,6 +3,7 @@ package org.smellrefactored;
 import java.util.Date;
 
 public class CommitData implements Comparable<CommitData> {
+
 	private String id;
 	private Date date;
 	private String authorName;

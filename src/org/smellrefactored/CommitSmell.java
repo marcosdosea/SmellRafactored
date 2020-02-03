@@ -28,14 +28,14 @@ import com.google.gson.stream.JsonReader;
 
 public class CommitSmell {
 	
-	final private int MAXIMUM_COMMITS_IN_MEMORY_CACHE = 50;
+	final private int MAXIMUM_SMELLS_AND_NOT_SMELLS_IN_MEMORY_CACHE = 10 * 10000;
 	
 	private GitService gitService;
 	private Repository repo;
 	private String localFolder;
 	private List<LimiarTecnica> techniqueThresholds;
 
-	String resultFileName;
+	private String resultFileName;
 	
 	private Date startAt = new Date();
 	private boolean usingOldCache = false;
@@ -43,9 +43,12 @@ public class CommitSmell {
 	
 	private LinkedHashMap<String, LimiarTecnica> techniquesThresholds;
 	
-	PersistenceMechanism pmResultSmellRefactoredCommit;
+	private PersistenceMechanism pmResultSmellRefactoredCommit;
 
-	HashSet<String> listCommitEvaluated = new HashSet<String>();
+	private HashSet<String> listCommitEvaluated = new HashSet<String>();
+	
+	private int amountOfSmellsInMemoryCache = 0;
+	private int memoryCacheHits = 0;
 
 	static Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
 
@@ -88,6 +91,7 @@ public class CommitSmell {
 		FilterSmellResult smellResult;
 		if (memoryCache.containsKey(commitId)) {
 			smellResult = memoryCache.get(commitId);
+			memoryCacheHits++;
 		} else {
 			if ( (cacheExists(commitId)) && (usingOldCache || isRecentCache(commitId)) ) {
 				smellResult = getSmellsCommitFromCache(commitId);
@@ -95,15 +99,26 @@ public class CommitSmell {
 				smellResult = getSmellsCommitFromGitRepository(commitId);
 				saveSmellsCommitToCache(smellResult);
 			}
-			if (memoryCache.size() >= MAXIMUM_COMMITS_IN_MEMORY_CACHE) {
+			if ((amountOfSmellsInMemoryCache + countSmellsInSmellResult(smellResult)) >= MAXIMUM_SMELLS_AND_NOT_SMELLS_IN_MEMORY_CACHE) {
+				// logger.info("Clearing " + CommitSmell.class + " memory cache with " + amountOfSmellsInMemoryCache + " smells/not smells from " + memoryCache.size() + " commits.");
 				memoryCache.clear();
+				amountOfSmellsInMemoryCache = 0;
 			}
 			memoryCache.put(commitId, smellResult);
+			amountOfSmellsInMemoryCache += countSmellsInSmellResult(smellResult);
 		}
 		if (smellResult == null) {
 			throw new Exception("Null response to the smell query from commit " + this.localFolder + " " + commitId + ".");
 		}
 		return (smellResult);
+	}
+	
+	private int countSmellsInSmellResult(FilterSmellResult smellResult) {
+		return (smellResult.getClassesSmell().size() 
+				+ smellResult.getClassesNotSmelly().size()
+				+ smellResult.getMetodosSmell().size()
+				+ smellResult.getMetodosNotSmelly().size()
+		);
 	}
 
 	private boolean isRecentCache(String commitId) throws Exception {
@@ -176,4 +191,11 @@ public class CommitSmell {
  		return (this.techniquesThresholds);
 	}
 	
+	public void resetMemoryCacheHits() {
+		this.memoryCacheHits = 0;
+	}	
+
+	public int getMemoryCacheHits() {
+		return (this.memoryCacheHits);
+	}	
 }

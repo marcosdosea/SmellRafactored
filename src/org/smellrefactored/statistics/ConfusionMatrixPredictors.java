@@ -16,9 +16,6 @@ public class ConfusionMatrixPredictors {
 	private ArrayList<String> subtitles = new ArrayList<String>();
 	private LinkedHashMap<String, Integer> otherFields = new LinkedHashMap<String, Integer>();
 
-	private int commonFalseNegative = 0;
-	private int commonTrueNegative = 0;
-	
 	private LinkedHashMap<String, ConfusionMatrix> confusionMatrices;
 	private PredictionRound predictionRound = null;
 
@@ -53,14 +50,12 @@ public class ConfusionMatrixPredictors {
 	}
 	
 	public void incFalseNegativeForAll() {
-		commonFalseNegative++;
 		for (ConfusionMatrix confusionMatrix : confusionMatrices.values()) {
 			confusionMatrix.incFalseNegative();
 		}
 	}
 
 	public void incTrueNegativeForAll() {
-		commonTrueNegative++;
 		for (ConfusionMatrix confusionMatrix : confusionMatrices.values()) {
 			confusionMatrix.incTrueNegative();
 		}
@@ -255,88 +250,58 @@ public class ConfusionMatrixPredictors {
 	}
 		
 	public void writeToCsvFile(PersistenceMechanism persistenceMechanism) {
-
 		persistenceMechanism.write(title.toUpperCase());
-
 		for (String subtitleLine: this.subtitles) {
 			persistenceMechanism.write(subtitleLine);
 		}
-		
 		if (this.enableValidations) {
 			this.writeValidationToCsvFile(persistenceMechanism);
 		}
-
 		for (String fieldLabel: this.otherFields.keySet()) {
 			persistenceMechanism.write(fieldLabel + " = ", this.otherFields.get(fieldLabel));
 		}
-		
-		if (commonTrueNegative > 0) {
-			persistenceMechanism.write("Common True Negative = ", commonTrueNegative);
-		}
-
-		if (commonFalseNegative > 0) {
-			persistenceMechanism.write("Common False Negative = ", commonFalseNegative);
-		}
-
 		this.saveAsLinesToCsvFileHandler(persistenceMechanism);
 		// this.saveAsColumnsToCsvFileHandler(persistenceMechanism);
-		
 	}
 
 	public void saveAsLinesToCsvFileHandler(PersistenceMechanism persistenceMechanism) {
-		/*
-		for (String predictor: confusionMatrices.keySet()) {
-			persistenceMechanism.write("Predicted Size (" + predictor + ") = ", confusionMatrices.get(predictor).getPredictedSize() );
-		}
-		 */
-	
 		for (String predictor: confusionMatrices.keySet()) {
 			persistenceMechanism.write("Sample Size (" + predictor + ") = ", confusionMatrices.get(predictor).getSampleSize() );
 		}
-
 		for (String predictor: confusionMatrices.keySet()) {
 			persistenceMechanism.write("True Negative (" + predictor + ") = ", confusionMatrices.get(predictor).getTrueNegative());
 		}
-
 		for (String predictor : confusionMatrices.keySet()) {
 			persistenceMechanism.write("False Negative (" + predictor + ") = ",
 					confusionMatrices.get(predictor).getFalseNegative());
 		}
-
 		for (String predictor : confusionMatrices.keySet()) {
 			persistenceMechanism.write("True Positive (" + predictor + ") = ",
 					confusionMatrices.get(predictor).getTruePositive());
 		}
-
 		for (String predictor : confusionMatrices.keySet()) {
 			persistenceMechanism.write("False Positive (" + predictor + ") = ",
 					confusionMatrices.get(predictor).getFalsePositive());
 		}
-
 		for (String predictor : confusionMatrices.keySet()) {
 			persistenceMechanism.write("Accuracy (" + predictor + ") = ",
 					confusionMatrices.get(predictor).getAccuracy());
 		}
-
 		for (String predictor : confusionMatrices.keySet()) {
 			persistenceMechanism.write("Precision (" + predictor + ") = ",
 					confusionMatrices.get(predictor).getPrecision());
 		}
-
 		for (String predictor : confusionMatrices.keySet()) {
 			persistenceMechanism.write("Recall (" + predictor + ") = ", confusionMatrices.get(predictor).getRecall());
 		}
-
 		for (String predictor : confusionMatrices.keySet()) {
 			persistenceMechanism.write("F1-measure (" + predictor + ") = ",
 					confusionMatrices.get(predictor).getF1Measure());
 		}
-
 		for (String predictor : confusionMatrices.keySet()) {
 			persistenceMechanism.write("Matthews Correlation Coefficient (" + predictor + ") = ",
 					confusionMatrices.get(predictor).getMatthewsCorrelationCoefficient());
 		}
-
 		for (String predictor : confusionMatrices.keySet()) {
 			persistenceMechanism.write("Kappa (" + predictor + ") = ", confusionMatrices.get(predictor).getKappa());
 		}

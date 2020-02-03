@@ -80,7 +80,7 @@ public class SmellRefactoredClass {
 			pmResultEvaluation.write("Commit range:", this.commitRange.getInitialCommitId(), this.commitRange.getFinalCommitId());
 			pmResultEvaluation.write("");
 			pmResultEvaluation.write("REFACTORINGS");
-			pmResultEvaluation.write("Total number of refactorings detected:", refactoringEvents.getAllMergedIntoMaster().size(), this.refactoringEvents.size(), "except initial commit");
+			pmResultEvaluation.write("Total number of refactorings detected:", refactoringEvents.getAllMergedIntoMaster().size(), this.refactoringEvents.size());
 			pmResultEvaluation.write("Refactorings related to classes:", this.refactoringEvents.countTypes(getClassRefactoringTypes()));
 			for (String refactoringType: this.getClassRefactoringTypes()) {
 				pmResultEvaluation.write("Number of " + refactoringType + ":", this.refactoringEvents.countType(refactoringType));

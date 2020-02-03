@@ -101,8 +101,10 @@ public class SmellRefactoredManager {
 
 	public void getSmellRefactoredMethods() {
 		try {
+			commitSmell.resetMemoryCacheHits();
 			SmellRefactoredMethod smellRefactoredMethod = new SmellRefactoredMethod(refactoringEvents, smellCommitIds, commitRange, commitSmell, resultBaseFileName);
 			smellRefactoredMethod.getSmellRefactoredMethods();
+			logger.info("SmellResult memory cache hits = " + commitSmell.getMemoryCacheHits());
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 			e.printStackTrace();
@@ -111,8 +113,10 @@ public class SmellRefactoredManager {
 
 	public void getSmellRefactoredClasses() {
 		try {
+			commitSmell.resetMemoryCacheHits();
 			SmellRefactoredClass smellRefactoredClass = new SmellRefactoredClass(refactoringEvents, smellCommitIds, commitRange, commitSmell, resultBaseFileName);
 			smellRefactoredClass.getSmellRefactoredClasses();
+			logger.info("SmellResult memory cache hits = " + commitSmell.getMemoryCacheHits());
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 			e.printStackTrace();
