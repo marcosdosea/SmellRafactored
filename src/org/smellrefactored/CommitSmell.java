@@ -89,7 +89,7 @@ public class CommitSmell {
 
 	public FilterSmellResult getSmellsFromCommit(String commitId) throws Exception {
 		FilterSmellResult smellResult;
-		if (memoryCache.containsKey(commitId)) {
+		if ( (MAXIMUM_SMELLS_AND_NOT_SMELLS_IN_MEMORY_CACHE>0) && (memoryCache.containsKey(commitId)) ) {
 			smellResult = memoryCache.get(commitId);
 			memoryCacheHits++;
 		} else {
@@ -99,13 +99,15 @@ public class CommitSmell {
 				smellResult = getSmellsCommitFromGitRepository(commitId);
 				saveSmellsCommitToCache(smellResult);
 			}
-			if ((amountOfSmellsInMemoryCache + countSmellsInSmellResult(smellResult)) >= MAXIMUM_SMELLS_AND_NOT_SMELLS_IN_MEMORY_CACHE) {
-				// logger.info("Clearing " + CommitSmell.class + " memory cache with " + amountOfSmellsInMemoryCache + " smells/not smells from " + memoryCache.size() + " commits.");
-				memoryCache.clear();
-				amountOfSmellsInMemoryCache = 0;
+			if (MAXIMUM_SMELLS_AND_NOT_SMELLS_IN_MEMORY_CACHE>0) {
+				if ((amountOfSmellsInMemoryCache + countSmellsInSmellResult(smellResult)) >= MAXIMUM_SMELLS_AND_NOT_SMELLS_IN_MEMORY_CACHE) {
+					// logger.info("Clearing " + CommitSmell.class + " memory cache with " + amountOfSmellsInMemoryCache + " smells/not smells from " + memoryCache.size() + " commits.");
+					memoryCache.clear();
+					amountOfSmellsInMemoryCache = 0;
+				}
+				memoryCache.put(commitId, smellResult);
+				amountOfSmellsInMemoryCache += countSmellsInSmellResult(smellResult);
 			}
-			memoryCache.put(commitId, smellResult);
-			amountOfSmellsInMemoryCache += countSmellsInSmellResult(smellResult);
 		}
 		if (smellResult == null) {
 			throw new Exception("Null response to the smell query from commit " + this.localFolder + " " + commitId + ".");

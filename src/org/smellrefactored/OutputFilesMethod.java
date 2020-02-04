@@ -1,5 +1,7 @@
 package org.smellrefactored;
 
+import java.util.Date;
+
 import org.designroleminer.smelldetector.model.MethodDataSmelly;
 import org.repodriller.persistence.PersistenceMechanism;
 import org.repodriller.persistence.csv.CSVFile;
@@ -8,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 public class OutputFilesMethod {
 
+	private CommitRange commitRange;
 	String baseFileName;
 	
 	PersistenceMechanism pmResultSmellRefactoredMethods;
@@ -16,7 +19,8 @@ public class OutputFilesMethod {
 
 	static Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
 	
-	public OutputFilesMethod(String baseFileName) {
+	public OutputFilesMethod(CommitRange commitRange, String baseFileName) {
+		this.commitRange = commitRange;
 		this.baseFileName = baseFileName;
 		
 		pmResultSmellRefactoredMethods = new CSVFile(this.baseFileName + "-smellRefactored-methods.csv", false);
@@ -56,16 +60,17 @@ public class OutputFilesMethod {
 				);
 		pmResultSmellRefactoredMethodsMachineLearning.write(
 				"commitId"
+				, "commitDate"
 				, "filePath"
 				, "className"
 				, "methodName"
-				, "DesignRole"
-				, "LOC"
-				, "CC"
-				, "EC"
-				, "NOP"
+				, "designRole"
+				, "loc"
+				, "cc"
+				, "ec"
+				, "nop"
 				, "isRefactoring"
-				, "Refactoring"
+				, "refactoring"
 				);
 	}
 	
@@ -101,6 +106,7 @@ public class OutputFilesMethod {
 			);
 		pmResultSmellRefactoredMethodsMachineLearning.write(
 				methodSmell.getCommit()
+				, getCommitDateAsString(methodSmell.getCommit())
 				, refactoring.getFileNameAfter()
 				, refactoring.getClassName()
 				, refactoring.getMethodName()
@@ -147,6 +153,7 @@ public class OutputFilesMethod {
 				);
 		pmResultSmellRefactoredMethodsMachineLearning.write(
 				methodNotSmell.getCommit()
+				, getCommitDateAsString(methodNotSmell.getCommit())
 				, refactoring.getFileNameAfter()
 				, refactoring.getClassName()
 				, refactoring.getMethodName()
@@ -196,6 +203,7 @@ public class OutputFilesMethod {
 				);
 		pmResultSmellRefactoredMethodsMachineLearning.write(
 				methodNotSmell.getCommit()
+				, getCommitDateAsString(methodNotSmell.getCommit())
 				, refactoring.getFileNameAfter()
 				, refactoring.getClassName()
 				, refactoring.getMethodName()
@@ -241,6 +249,7 @@ public class OutputFilesMethod {
 			);
 		pmResultSmellRefactoredMethodsMachineLearning.write(
 				methodSmellyBuscar.getCommit()
+				, getCommitDateAsString(methodSmellyBuscar.getCommit())
 				, methodSmellyBuscar.getDiretorioDaClasse()
 				, methodSmellyBuscar.getNomeClasse()
 				, methodSmellyBuscar.getNomeMetodo()
@@ -259,6 +268,18 @@ public class OutputFilesMethod {
 		pmResultSmellRefactoredMethods.close();
 		pmResultSmellRefactoredMethodsMachineLearning.close();
 		
+	}
+	
+	private String getCommitDateAsString(String commitId) {
+		CommitData commit = null;
+		if (commitId != null) {
+			try {
+				commit = this.commitRange.getCommitById(commitId);
+			} catch (Exception e) {
+				// do nothing
+			}
+		}
+		return (commit != null ? commit.getDate().toString() : null);
 	}
 	
 }

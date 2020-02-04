@@ -67,7 +67,7 @@ public class SmellRefactoredClass {
 		this.commitClassSmell = new CommitClassSmell(commitSmell);
 		this.resultFileName = resultFileName;
 		pmResultEvaluation = new CSVFile(resultFileName + "-evaluation-classes.csv", false);
-		classOutputFiles = new OutputFilesClass(this.resultFileName);
+		classOutputFiles = new OutputFilesClass(this.commitRange, this.resultFileName);
 	}
 	
 	public void getSmellRefactoredClasses() {

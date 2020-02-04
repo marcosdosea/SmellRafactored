@@ -119,7 +119,7 @@ public class SmellRefactoredMethod {
 		this.commitMethodSmell = new CommitMethodSmell(commitSmell);
 		this.resultFileName = resultFileName;
 		pmResultEvaluation = new CSVFile(resultFileName + "-evaluation-methods.csv", false);
-		methodOutputFiles = new OutputFilesMethod(this.resultFileName);
+		methodOutputFiles = new OutputFilesMethod(this.commitRange, this.resultFileName);
 	}
 	
 	public void getSmellRefactoredMethods() {

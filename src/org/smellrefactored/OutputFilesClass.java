@@ -8,15 +8,17 @@ import org.slf4j.LoggerFactory;
 
 public class OutputFilesClass {
 
-	String baseFileName;
+	private CommitRange commitRange;
+	private String baseFileName;
 	
-	PersistenceMechanism pmResultSmellRefactoredClasses;
-	PersistenceMechanism pmResultSmellRefactoredClassesMessage;
-	PersistenceMechanism pmResultSmellRefactoredClassesMachineLearning;
+	private PersistenceMechanism pmResultSmellRefactoredClasses;
+	private PersistenceMechanism pmResultSmellRefactoredClassesMessage;
+	private PersistenceMechanism pmResultSmellRefactoredClassesMachineLearning;
 
-	static Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
+	static private Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
 	
-	public OutputFilesClass(String baseFileName) {
+	public OutputFilesClass(CommitRange commitRange, String baseFileName) {
+		this.commitRange = commitRange;
 		this.baseFileName = baseFileName;
 		
 		pmResultSmellRefactoredClasses = new CSVFile(this.baseFileName + "-smellRefactored-classes.csv", false);
@@ -48,12 +50,13 @@ public class OutputFilesClass {
 				);
 		pmResultSmellRefactoredClassesMachineLearning.write(
 				"commitId"
+				, "commitDate"
 				, "filePath"
 				, "className"
-				, "DesignRole"
-				, "CLOC"
+				, "designRole"
+				, "cloc"
 				, "isRefactoring"
-				, "Refactoring"
+				, "refactoring"
 				);
 	}
 
@@ -82,6 +85,8 @@ public class OutputFilesClass {
 				);
 		pmResultSmellRefactoredClassesMachineLearning.write(
 				classSmell.getCommit()
+				, getCommitDateAsString(classSmell.getCommit())
+				, classSmell
 				, refactoring.getFileNameAfter()
 				, refactoring.getClassName()
 				, classSmell.getClassDesignRole()
@@ -115,6 +120,7 @@ public class OutputFilesClass {
 				);
 		pmResultSmellRefactoredClassesMachineLearning.write(
 				classNotSmell.getCommit()
+				, getCommitDateAsString(classNotSmell.getCommit())
 				, refactoring.getFileNameAfter()
 				, refactoring.getClassName()
 				, classNotSmell.getClassDesignRole()
@@ -152,6 +158,7 @@ public class OutputFilesClass {
 				);
 		pmResultSmellRefactoredClassesMachineLearning.write(
 				classNotSmell.getCommit()
+				, getCommitDateAsString(classNotSmell.getCommit())
 				, refactoring.getFileNameAfter()
 				, refactoring.getClassName()
 				, classNotSmell.getClassDesignRole()
@@ -185,6 +192,7 @@ public class OutputFilesClass {
 				);
 		pmResultSmellRefactoredClassesMachineLearning.write(
 				classBuscar.getCommit() 
+				, getCommitDateAsString(classBuscar.getCommit())
 				, classBuscar.getDiretorioDaClasse()
 				, classBuscar.getNomeClasse()
 				, classBuscar.getClassDesignRole()
@@ -200,5 +208,17 @@ public class OutputFilesClass {
 		pmResultSmellRefactoredClassesMachineLearning.close();
 		
 	}
-	
+
+	private String getCommitDateAsString(String commitId) {
+		CommitData commit = null;
+		if (commitId != null) {
+			try {
+				commit = this.commitRange.getCommitById(commitId);
+			} catch (Exception e) {
+				// do nothing
+			}
+		}
+		return (commit != null ? commit.getDate().toString() : null);
+	}
+
 }
