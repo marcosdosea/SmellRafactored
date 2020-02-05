@@ -86,7 +86,6 @@ public class OutputFilesClass {
 		pmResultSmellRefactoredClassesMachineLearning.write(
 				classSmell.getCommit()
 				, getCommitDateAsString(classSmell.getCommit())
-				, classSmell
 				, refactoring.getFileNameAfter()
 				, refactoring.getClassName()
 				, classSmell.getClassDesignRole()
@@ -210,6 +209,7 @@ public class OutputFilesClass {
 	}
 
 	private String getCommitDateAsString(String commitId) {
+		String result = null;
 		CommitData commit = null;
 		if (commitId != null) {
 			try {
@@ -218,7 +218,10 @@ public class OutputFilesClass {
 				// do nothing
 			}
 		}
-		return (commit != null ? commit.getDate().toString() : null);
+		if (commit != null) {
+			result = String.valueOf(commit.getDate().getTime());
+		}		
+		return (result);
 	}
 
 }

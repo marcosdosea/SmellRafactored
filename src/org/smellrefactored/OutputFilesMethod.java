@@ -1,7 +1,5 @@
 package org.smellrefactored;
 
-import java.util.Date;
-
 import org.designroleminer.smelldetector.model.MethodDataSmelly;
 import org.repodriller.persistence.PersistenceMechanism;
 import org.repodriller.persistence.csv.CSVFile;
@@ -271,6 +269,7 @@ public class OutputFilesMethod {
 	}
 	
 	private String getCommitDateAsString(String commitId) {
+		String result = null;
 		CommitData commit = null;
 		if (commitId != null) {
 			try {
@@ -279,7 +278,10 @@ public class OutputFilesMethod {
 				// do nothing
 			}
 		}
-		return (commit != null ? commit.getDate().toString() : null);
+		if (commit != null) {
+			result = String.valueOf(commit.getDate().getTime());
+		}		
+		return (result);
 	}
 	
 }

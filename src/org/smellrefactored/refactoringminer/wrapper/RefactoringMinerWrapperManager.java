@@ -1,6 +1,8 @@
 package org.smellrefactored.refactoringminer.wrapper;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -19,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
+import com.google.gson.stream.JsonReader;
 
 
 public class RefactoringMinerWrapperManager {
@@ -73,13 +76,38 @@ public class RefactoringMinerWrapperManager {
 		GitHistoryRefactoringMiner miner = new GitHistoryRefactoringMinerImpl();
 		miner.detectBetweenCommits(repo, initialCommitId, finalCommitId, new RefactoringHandler() {
 			@Override
+			public boolean skipCommit(String commitId) {
+				boolean result = false;
+				String commitCacheFileName = individualCacheBaseFileName  + "-" + commitId + ".json";
+				File cacheFile = new File(commitCacheFileName);
+				if (cacheFile.exists()) {
+					Gson gson = new Gson();  
+					try {
+						JsonReader reader = new JsonReader(new FileReader(commitCacheFileName));
+						RefactoringMinerWrapperDto[] refactoringDtoArray = gson.fromJson(reader, RefactoringMinerWrapperDto[].class);
+						if (refactoringDtoArray.length > 0) {
+							refactoringCommitIds.add(commitId);
+							for (RefactoringMinerWrapperDto refactoringDto: refactoringDtoArray) {
+								refactoringDtoList.add(refactoringDto);
+							}
+						}
+						allCommitIds.add(commitId);
+						result = true;
+						logger.info("Commit " + commitId + " refactorings obtained from individual cache.");
+					} catch (FileNotFoundException e) {
+						// do nothing
+					}
+				}
+				return (result);  
+			}
+			@Override
 			public void handle(String idCommit, List<Refactoring> refactorings) {
 				final List<RefactoringMinerWrapperDto> commitDtoList = new ArrayList<RefactoringMinerWrapperDto>();
 				for (Refactoring ref : refactorings) {
-					RefactoringMinerWrapperDto refactorinDto = new RefactoringMinerWrapperDto();
-					refactorinDto.wrapper(idCommit, ref);
-					commitDtoList.add(refactorinDto);
-					refactoringDtoList.add(refactorinDto);
+					RefactoringMinerWrapperDto refactoringDto = new RefactoringMinerWrapperDto();
+					refactoringDto.wrapper(idCommit, ref);
+					commitDtoList.add(refactoringDto);
+					refactoringDtoList.add(refactoringDto);
 				}
 				
 				String commitCacheBaseFileName = individualCacheBaseFileName  + "-" + idCommit;
