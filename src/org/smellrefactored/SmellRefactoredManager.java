@@ -15,6 +15,8 @@ import org.refactoringminer.api.GitService;
 import org.refactoringminer.util.GitServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smellrefactored.classes.SmellRefactoredClass;
+import org.smellrefactored.methods.SmellRefactoredMethod;
 
 public class SmellRefactoredManager {
 
@@ -38,7 +40,7 @@ public class SmellRefactoredManager {
 	
 	private String resultBaseFileName;
 
-	HashSet<String> listCommitEvaluated = new HashSet<String>();
+	private HashSet<String> listCommitEvaluated = new HashSet<String>();
 	
 	public SmellRefactoredManager(String repositoryUrl, String repositoryPath, String initialCommitId, String finalCommitId,
 			List<LimiarTecnica> listaLimiarTecnica, String resultBaseFileName) {

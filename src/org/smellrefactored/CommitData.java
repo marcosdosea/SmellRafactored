@@ -1,11 +1,11 @@
 package org.smellrefactored;
 
-import java.util.Date;
+import java.time.ZonedDateTime;
 
 public class CommitData implements Comparable<CommitData> {
 
 	private String id;
-	private Date date;
+	private ZonedDateTime dateTimeUtc;
 	private String authorName;
 	private String authorEmail;
 	private String shortMessage;
@@ -21,12 +21,12 @@ public class CommitData implements Comparable<CommitData> {
 		this.id = idCommit;
 	}
 
-	public Date getDate() {
-		return date;
+	public ZonedDateTime getDateTimeUtc() {
+		return dateTimeUtc;
 	}
 
-	public void setDate(Date date) {
-		this.date = date;
+	public void setDateTimeUtc(ZonedDateTime dateTimeUtc) {
+		this.dateTimeUtc = dateTimeUtc;
 	}
 
 	public String getAuthorName() {
@@ -78,6 +78,6 @@ public class CommitData implements Comparable<CommitData> {
 	}
 	
 	public int compareTo(CommitData o) {
-		return getDate().compareTo(o.getDate());
+		return getDateTimeUtc().compareTo(o.getDateTimeUtc());
 	}	
 }

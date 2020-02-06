@@ -1,5 +1,6 @@
-package org.smellrefactored;
+package org.smellrefactored.classes;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -14,6 +15,12 @@ import org.repodriller.persistence.PersistenceMechanism;
 import org.repodriller.persistence.csv.CSVFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smellrefactored.CommitData;
+import org.smellrefactored.CommitRange;
+import org.smellrefactored.CommitSmell;
+import org.smellrefactored.RefactoringEvent;
+import org.smellrefactored.RefactoringEvents;
+import org.smellrefactored.SmellRefactoredManager;
 import org.smellrefactored.statistics.ConfusionMatrix;
 import org.smellrefactored.statistics.ConfusionMatrixPredictors;
 import org.smellrefactored.statistics.PredictionRound;
@@ -58,16 +65,16 @@ public class SmellRefactoredClass {
 	String resultFileName;
 	
 	PersistenceMechanism pmResultEvaluation;
-	OutputFilesClass classOutputFiles;
+	OutputClassFileManager classOutputFiles;
 	
-	public SmellRefactoredClass(RefactoringEvents refactoringEvents, ArrayList<String> smellCommitIds, CommitRange commitRange, CommitSmell commitSmell, String resultFileName) {
+	public SmellRefactoredClass(RefactoringEvents refactoringEvents, ArrayList<String> smellCommitIds, CommitRange commitRange, CommitSmell commitSmell, String resultFileName) throws IOException {
 		this.refactoringEvents = refactoringEvents;
 		this.smellCommitIds = smellCommitIds;
 		this.commitRange = commitRange;
 		this.commitClassSmell = new CommitClassSmell(commitSmell);
 		this.resultFileName = resultFileName;
 		pmResultEvaluation = new CSVFile(resultFileName + "-evaluation-classes.csv", false);
-		classOutputFiles = new OutputFilesClass(this.commitRange, this.resultFileName);
+		classOutputFiles = new OutputClassFileManager(this.commitRange, this.commitClassSmell.getTechniquesThresholds().keySet(), this.resultFileName);
 	}
 	
 	public void getSmellRefactoredClasses() {
@@ -167,12 +174,12 @@ public class SmellRefactoredClass {
  					}
 					if (!ignoreCurrentPrediction) {
 						confusionMtrix.incFalsePositive();
-						classOutputFiles.writeNegativeToCsvFiles(classSmelly);
+						classOutputFiles.writeFalsePositive(classSmelly);
 					}
 				}
 			} else {
 				confusionMtrix.incFalsePositive();
-				classOutputFiles.writeNegativeToCsvFiles(classSmelly);
+				classOutputFiles.writeFalsePositive(classSmelly);
 			}
 		}
 	}
@@ -185,11 +192,11 @@ public class SmellRefactoredClass {
 			if (nextCommit != null) {
 				if (!refactoringClassEvents.hasRefactoringsInCommit(nextCommit.getId(), classNotSmelly.getDiretorioDaClasse(), classNotSmelly.getNomeClasse(), targetTefactoringTypes)) {
 					confusionMtrix.incTrueNegative();
-					classOutputFiles.writeNegativeToCsvFiles(classNotSmelly);
+					classOutputFiles.writeTrueNegative(classNotSmelly);
 				}
 			} else {
 				confusionMtrix.incTrueNegative();
-				classOutputFiles.writeNegativeToCsvFiles(classNotSmelly);
+				classOutputFiles.writeTrueNegative(classNotSmelly);
 			}	
 		}
 	}
@@ -207,13 +214,13 @@ public class SmellRefactoredClass {
 			if ( (classSmellOrNotSmell != null) && (classSmellOrNotSmell.getSmell() != null) && (!classSmellOrNotSmell.getSmell().isEmpty()) ) {
 				predictionRound.setTrue(classSmellOrNotSmell.getListaTecnicas());
 				predictionRound.setFalseAllExcept(classSmellOrNotSmell.getListaTecnicas());
-				classOutputFiles.writeTruePositiveToCsvFiles(refactoring, classSmellOrNotSmell);
+				classOutputFiles.writeTruePositive(refactoring, classSmellOrNotSmell);
 				if (predictionRound.isAnyoneOutOfRound()) {
-					classOutputFiles.writeFalseNegativeToCsvFiles(refactoring, classSmellOrNotSmell);
+					classOutputFiles.writeFalseNegative(refactoring, classSmellOrNotSmell);
 				}
 			} else {
 				predictionRound.setFalseForAllOutOfRound();
-				classOutputFiles.writeFalsePositiveToCsvFiles(refactoring, classSmellOrNotSmell);
+				classOutputFiles.writeFalseNegative(refactoring, classSmellOrNotSmell);
 			}
 			predictionRound.setNullForAllOutOfRound();
 			confusionMatrices.processPredictionRound(predictionRound);

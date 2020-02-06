@@ -11,7 +11,7 @@ import org.smellrefactored.refactoringminer.wrapper.RefactoringMinerWrapperManag
 
 public class RefactoringEvents {
 	
-	LinkedHashMap<String, Integer> typeCounter = new LinkedHashMap<String, Integer>();  
+	private LinkedHashMap<String, Integer> typeCounter = new LinkedHashMap<String, Integer>();  
 	
 	private String repositoryPath;
 	private CommitRange commitRange;

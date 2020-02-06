@@ -1,5 +1,6 @@
-package org.smellrefactored;
+package org.smellrefactored.methods;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -14,6 +15,12 @@ import org.repodriller.persistence.PersistenceMechanism;
 import org.repodriller.persistence.csv.CSVFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smellrefactored.CommitData;
+import org.smellrefactored.CommitRange;
+import org.smellrefactored.CommitSmell;
+import org.smellrefactored.RefactoringEvent;
+import org.smellrefactored.RefactoringEvents;
+import org.smellrefactored.SmellRefactoredManager;
 import org.smellrefactored.statistics.ConfusionMatrix;
 import org.smellrefactored.statistics.ConfusionMatrixPredictors;
 import org.smellrefactored.statistics.PredictionRound;
@@ -110,16 +117,16 @@ public class SmellRefactoredMethod {
 	private CommitRange commitRange;
 	private String resultFileName;
 	private PersistenceMechanism pmResultEvaluation;
-	private OutputFilesMethod methodOutputFiles;
+	private OutputMethodFileManager methodOutputFiles;
 
-	public SmellRefactoredMethod(RefactoringEvents refactoringEvents, ArrayList<String> smellCommitIds, CommitRange commitRange, CommitSmell commitSmell, String resultFileName) {
+	public SmellRefactoredMethod(RefactoringEvents refactoringEvents, ArrayList<String> smellCommitIds, CommitRange commitRange, CommitSmell commitSmell, String resultFileName) throws IOException {
 		this.refactoringEvents = refactoringEvents;
 		this.smellCommitIds = smellCommitIds;
 		this.commitRange = commitRange;
 		this.commitMethodSmell = new CommitMethodSmell(commitSmell);
 		this.resultFileName = resultFileName;
 		pmResultEvaluation = new CSVFile(resultFileName + "-evaluation-methods.csv", false);
-		methodOutputFiles = new OutputFilesMethod(this.commitRange, this.resultFileName);
+		methodOutputFiles = new OutputMethodFileManager(this.commitRange, this.commitMethodSmell.getTechniquesThresholds().keySet(), this.resultFileName);
 	}
 	
 	public void getSmellRefactoredMethods() {
@@ -213,13 +220,13 @@ public class SmellRefactoredMethod {
 			if ( (methodSmellOrNotSmell != null) && (methodSmellOrNotSmell.getSmell() != null) && (!methodSmellOrNotSmell.getSmell().isEmpty()) ) {
 				predictionRound.setTrue(methodSmellOrNotSmell.getListaTecnicas());
 				predictionRound.setFalseAllExcept(methodSmellOrNotSmell.getListaTecnicas());
-				this.methodOutputFiles.writeTruePositiveToCsvFiles(refactoring, methodSmellOrNotSmell);
+				this.methodOutputFiles.writeTruePositive(refactoring, methodSmellOrNotSmell);
 				if (predictionRound.isAnyoneOutOfRound()) {
-					this.methodOutputFiles.writeFalseNegativeToCsvFiles(refactoring, methodSmellOrNotSmell);
+					this.methodOutputFiles.writeFalseNegative(refactoring, methodSmellOrNotSmell);
 				}
 			} else {
 				predictionRound.setFalseForAllOutOfRound();
-				this.methodOutputFiles.writeFalsePositiveToCsvFiles(refactoring, methodSmellOrNotSmell);
+				this.methodOutputFiles.writeFalseNegative(refactoring, methodSmellOrNotSmell);
 			}
 			predictionRound.setNullForAllOutOfRound();
 			confusionMatrices.processPredictionRound(predictionRound);
@@ -248,12 +255,12 @@ public class SmellRefactoredMethod {
  					}
 					if (!ignoreCurrentPrediction) {
 						confusionMtrix.incFalsePositive();
-						this.methodOutputFiles.writeNegativeToCsvFiles(methodSmelly);
+						this.methodOutputFiles.writeFalsePositive(methodSmelly);
 					}
 				}
 			} else {
 				confusionMtrix.incFalsePositive();
-				this.methodOutputFiles.writeNegativeToCsvFiles(methodSmelly);
+				this.methodOutputFiles.writeFalsePositive(methodSmelly);
 			}
 		}
 	}
@@ -266,11 +273,11 @@ public class SmellRefactoredMethod {
 			if (nextCommit != null) {
 				if (!refactoringMethodEvents.hasRefactoringsInCommit(nextCommit.getId(), methodNotSmelly.getDiretorioDaClasse(), methodNotSmelly.getNomeClasse(), methodNotSmelly.getNomeMetodo(), targetTefactoringTypes)) {
 					confusionMtrix.incTrueNegative();
-					this.methodOutputFiles.writeNegativeToCsvFiles(methodNotSmelly);
+					this.methodOutputFiles.writeTrueNegative(methodNotSmelly);
 				}
 			} else {
 				confusionMtrix.incTrueNegative();
-				this.methodOutputFiles.writeNegativeToCsvFiles(methodNotSmelly);
+				this.methodOutputFiles.writeTrueNegative(methodNotSmelly);
 			}	
 		}
 	}

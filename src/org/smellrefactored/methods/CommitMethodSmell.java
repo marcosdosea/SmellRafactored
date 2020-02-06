@@ -1,4 +1,4 @@
-package org.smellrefactored;
+package org.smellrefactored.methods;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import org.designroleminer.smelldetector.model.FilterSmellResult;
 import org.designroleminer.smelldetector.model.LimiarTecnica;
 import org.designroleminer.smelldetector.model.MethodDataSmelly;
+import org.smellrefactored.CommitSmell;
 
 public class CommitMethodSmell {
 

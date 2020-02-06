@@ -1,10 +1,13 @@
-package org.smellrefactored;
+package org.smellrefactored.methods;
 
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 
 import org.refactoringminer.api.RefactoringType;
+import org.smellrefactored.RefactoringEvent;
+import org.smellrefactored.RefactoringEvents;
+import org.smellrefactored.classes.RefactoringClassEvents;
 
 public class RefactoringMethodEvents {
 
@@ -43,7 +46,7 @@ public class RefactoringMethodEvents {
 		String className = originalClassName;
 		String methodName = originalMethodName;
 		boolean renamedMethod;
-		Date dateCommitRenamed = null;
+		ZonedDateTime dateTimeUtcCommitRenamed = null;
 		do {
 			renamedMethod = false;
 			String pathRenamedName = null;
@@ -63,11 +66,11 @@ public class RefactoringMethodEvents {
 					continue;
 				}
 				if (RefactoringClassEvents.getClassRenameRefactoringTypes().contains(event.getRefactoringType())) {
-					if ((dateCommitRenamed == null) || ( (dateCommitRenamed != null)
-							&& (dateCommitRenamed.compareTo(event.getCommitData().getDate()) < 0)) ) {
+					if ((dateTimeUtcCommitRenamed == null) || ( (dateTimeUtcCommitRenamed != null)
+							&& (dateTimeUtcCommitRenamed.compareTo(event.getCommitData().getDateTimeUtc()) < 0)) ) {
 						renamedMethod = true;
 						// Change it
-						dateCommitRenamed = event.getCommitData().getDate();
+						dateTimeUtcCommitRenamed = event.getCommitData().getDateTimeUtc();
 						pathRenamedName = event.getFileNameBefore();
 						classRenamedName = event.getNewNameForClassWhenRenameClass();
 						// Do not change
@@ -84,14 +87,14 @@ public class RefactoringMethodEvents {
 					result.add(event);
 				}
 				if (RefactoringMethodEvents.getMethodRenameRefactoringTypes().contains(event.getRefactoringType())) {
-					if ((dateCommitRenamed == null) || ( (dateCommitRenamed != null)
-							&& (dateCommitRenamed.compareTo(event.getCommitData().getDate()) < 0)) ) {
+					if ((dateTimeUtcCommitRenamed == null) || ( (dateTimeUtcCommitRenamed != null)
+							&& (dateTimeUtcCommitRenamed.compareTo(event.getCommitData().getDateTimeUtc()) < 0)) ) {
 						renamedMethod = true;
 						// Do not change
 						pathRenamedName = filePath;
 						classRenamedName = className;
 						// Change it
-						dateCommitRenamed = event.getCommitData().getDate();
+						dateTimeUtcCommitRenamed = event.getCommitData().getDateTimeUtc();
 						methodRenamedName = event.getNewNameForMethodWhenRenameMethod();
 					}
 				}
@@ -101,7 +104,7 @@ public class RefactoringMethodEvents {
 				className = classRenamedName;
 				methodName = methodRenamedName;
 			} else {
-				dateCommitRenamed = null;
+				dateTimeUtcCommitRenamed = null;
 			}
 		} while (renamedMethod);
 		return (result);

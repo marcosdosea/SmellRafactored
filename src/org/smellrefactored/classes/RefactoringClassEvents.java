@@ -1,10 +1,12 @@
-package org.smellrefactored;
+package org.smellrefactored.classes;
 
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 
 import org.refactoringminer.api.RefactoringType;
+import org.smellrefactored.RefactoringEvent;
+import org.smellrefactored.RefactoringEvents;
 
 public class RefactoringClassEvents {
 
@@ -35,7 +37,7 @@ public class RefactoringClassEvents {
 		String filePath = originalFilePath;
 		String className = originalClassName;
 		boolean renamedClass;
-		Date dateCommitRenamed = null;
+		ZonedDateTime dateTimeUtcCommitRenamed = null;
 		do {
 			renamedClass = false;
 			String pathRenamedName = null;
@@ -60,10 +62,10 @@ public class RefactoringClassEvents {
 					result.add(event);
 				}
 				if (RefactoringClassEvents.getClassRenameRefactoringTypes().contains(event.getRefactoringType())) {
-					if ((dateCommitRenamed == null) || ( (dateCommitRenamed != null)
-							&& (dateCommitRenamed.compareTo(event.getCommitData().getDate()) < 0)) ) {
+					if ((dateTimeUtcCommitRenamed == null) || ( (dateTimeUtcCommitRenamed != null)
+							&& (dateTimeUtcCommitRenamed.compareTo(event.getCommitData().getDateTimeUtc()) < 0)) ) {
 						renamedClass = true;
-						dateCommitRenamed = event.getCommitData().getDate();
+						dateTimeUtcCommitRenamed = event.getCommitData().getDateTimeUtc();
 						pathRenamedName = event.getFileNameAfter();
 						classRenamedName = event.getNewNameForClassWhenRenameClass();
 					}
@@ -73,7 +75,7 @@ public class RefactoringClassEvents {
 				filePath = pathRenamedName;
 				className = classRenamedName;
 			} else {
-				dateCommitRenamed = null;
+				dateTimeUtcCommitRenamed = null;
 			}
 		} while (renamedClass);
 		return (result);

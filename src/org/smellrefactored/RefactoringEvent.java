@@ -138,7 +138,7 @@ public class RefactoringEvent implements Comparable<RefactoringEvent> {
 	}
 
 	public int compareTo(RefactoringEvent o) {
-		return this.commitData.getDate().compareTo(o.getCommitData().getDate());
+		return this.commitData.getDateTimeUtc().compareTo(o.getCommitData().getDateTimeUtc());
 	}
 	
 	private String makeFilePathCompatibleWithDesignRoleSmell(String filePath) {

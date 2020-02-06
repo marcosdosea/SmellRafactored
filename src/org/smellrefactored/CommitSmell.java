@@ -22,6 +22,8 @@ import org.repodriller.persistence.PersistenceMechanism;
 import org.repodriller.persistence.csv.CSVFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smellrefactored.classes.CommitClassSmell;
+import org.smellrefactored.methods.CommitMethodSmell;
 
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
@@ -39,7 +41,7 @@ public class CommitSmell {
 	
 	private Date startAt = new Date();
 	private boolean usingOldCache = false;
-	LinkedHashMap<String, FilterSmellResult> memoryCache = new LinkedHashMap<String, FilterSmellResult>();  
+	private LinkedHashMap<String, FilterSmellResult> memoryCache = new LinkedHashMap<String, FilterSmellResult>();  
 	
 	private LinkedHashMap<String, LimiarTecnica> techniquesThresholds;
 	

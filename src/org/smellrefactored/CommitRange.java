@@ -1,8 +1,10 @@
 package org.smellrefactored;
 
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -117,7 +119,7 @@ public class CommitRange {
 	private CommitData newCommitData(RevCommit revCommit) {
 		CommitData commitData = new CommitData();
 		commitData.setId(revCommit.getId().getName());
-		commitData.setDate(new Date(revCommit.getCommitTime() * 1000L));
+		commitData.setDateTimeUtc(ZonedDateTime.ofInstant(Instant.ofEpochSecond(revCommit.getCommitTime()), ZoneOffset.UTC));
 		commitData.setAuthorName(revCommit.getAuthorIdent().getName());
 		commitData.setAuthorEmail(revCommit.getAuthorIdent().getEmailAddress());
 		commitData.setFullMessage(revCommit.getFullMessage());
@@ -249,6 +251,22 @@ public class CommitRange {
 	
 	public String getFinalCommitId() {
 		return (this.finalCommitId);
+	}
+
+	public String getCommitDateAsString(String commitId) {
+		String result = null;
+		CommitData commit = null;
+		if (commitId != null) {
+			try {
+				commit = this.getCommitById(commitId);
+			} catch (Exception e) {
+				// do nothing
+			}
+		}
+		if (commit != null) {
+			result = String.valueOf(commit.getDateTimeUtc());
+		}		
+		return (result);
 	}
 	
 }
