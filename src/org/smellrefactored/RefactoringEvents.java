@@ -77,4 +77,8 @@ public class RefactoringEvents {
 		return (this.events.size());
 	}
 	
+	public CommitRange getCommitRange() {
+		return (this.commitRange);
+	}
+	
 }

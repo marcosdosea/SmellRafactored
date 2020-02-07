@@ -15,20 +15,23 @@ import com.opencsv.CSVWriter;
 
 public class OutputClassFilePlotCsv {
 
+	final String RECORD_TYPE_REFACTORING   = "Refactoring";
+	final String RECORD_TYPE_SMELL         = "Smell";
+	final String RECORD_TYPE_IGNORED_SMELL = "Ignored Smell";
+	
 	private CommitRange commitRange;
-	// private Set<String> techniques;
 	private String baseFileName;
 	
 	private CSVWriter csvFile;
 
 	// static private Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
 	
-	public OutputClassFilePlotCsv(CommitRange commitRange, Set<String> techniques, String baseFileName) throws IOException {
+	public OutputClassFilePlotCsv(CommitRange commitRange, String baseFileName) throws IOException {
 		this.commitRange = commitRange;
-		// this.techniques = techniques;
 		this.baseFileName = baseFileName;
 		
-		csvFile = new CSVWriter(new FileWriter(this.baseFileName + "-refactoredAndNotRefactored-classes-plot.csv"));
+		// csvFile = new CSVWriter(new FileWriter(this.baseFileName + "-" + this.commitRange.getInitialCommitId() + "-" + this.commitRange.getFinalCommitId() + "-classes-plot.csv"));
+		csvFile = new CSVWriter(new FileWriter(this.baseFileName + "-classes-plot.csv"));
 	}
 	
 	public void writeHeader() {
@@ -39,8 +42,8 @@ public class OutputClassFilePlotCsv {
 		fields.add("className");
 		fields.add("designRole");
 		fields.add("cloc");
-		fields.add("isRefactoring");
-		fields.add("refactoring");
+		fields.add("recordType");
+		fields.add("entityName");
 		fields.add("techniques");
 		csvFile.writeNext(fields.toArray(new String[0]));
 	}
@@ -58,8 +61,8 @@ public class OutputClassFilePlotCsv {
 		fields.add(classSmell.getNomeClasse());
 		fields.add(classSmell.getClassDesignRole());
 		fields.add(String.valueOf(classSmell.getLinesOfCode()));
-		fields.add("false");
-		fields.add("");
+		fields.add(RECORD_TYPE_SMELL);
+		fields.add(classSmell.getSmell());
 		fields.add(classSmell.getListaTecnicas() != null ? classSmell.getListaTecnicas().toString() : null);
 		csvFile.writeNext(fields.toArray(new String[0]));
 	}
@@ -72,7 +75,7 @@ public class OutputClassFilePlotCsv {
 		fields.add(refactoring.getClassName());
 		fields.add(classSmell.getClassDesignRole());
 		fields.add(String.valueOf(classSmell.getLinesOfCode()));
-		fields.add("true");
+		fields.add(RECORD_TYPE_REFACTORING);
 		fields.add(refactoring.getRefactoringType());
 		fields.add("");
 		csvFile.writeNext(fields.toArray(new String[0]));
@@ -87,7 +90,7 @@ public class OutputClassFilePlotCsv {
 		fields.add(refactoring.getClassName());
 		fields.add(classNotSmell.getClassDesignRole());
 		fields.add(String.valueOf(classNotSmell.getLinesOfCode()));
-		fields.add("true");
+		fields.add(RECORD_TYPE_REFACTORING);
 		fields.add(refactoring.getRefactoringType());
 		fields.add("");
 		csvFile.writeNext(fields.toArray(new String[0]));
@@ -102,8 +105,23 @@ public class OutputClassFilePlotCsv {
 		fields.add(classSmell.getNomeClasse());
 		fields.add(classSmell.getClassDesignRole());
 		fields.add(String.valueOf(classSmell.getLinesOfCode()));
-		fields.add("false");
-		fields.add("");
+		fields.add(RECORD_TYPE_SMELL);
+		fields.add(classSmell.getSmell());
+		fields.add(classSmell.getListaTecnicas() != null ? classSmell.getListaTecnicas().toString() : null);
+		csvFile.writeNext(fields.toArray(new String[0]));
+	}
+	
+	public void writeIgnoredFalsePositive(ClassDataSmelly classSmell) {
+		ArrayList<String> fields = new ArrayList<String>();
+		// Smell
+		fields.add(classSmell.getCommit());
+		fields.add(this.commitRange.getCommitDateAsString(classSmell.getCommit()));
+		fields.add(classSmell.getDiretorioDaClasse());
+		fields.add(classSmell.getNomeClasse());
+		fields.add(classSmell.getClassDesignRole());
+		fields.add(String.valueOf(classSmell.getLinesOfCode()));
+		fields.add(RECORD_TYPE_IGNORED_SMELL);
+		fields.add(classSmell.getSmell());
 		fields.add(classSmell.getListaTecnicas() != null ? classSmell.getListaTecnicas().toString() : null);
 		csvFile.writeNext(fields.toArray(new String[0]));
 	}

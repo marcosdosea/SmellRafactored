@@ -97,16 +97,16 @@ public class SmellRefactoredManager {
 			smellCommitIds.remove(finalCommitId);
 		}
 		
-		commitSmell = new CommitSmell(repositoryPath, techniqueThresholds, resultBaseFileName);
-		commitSmell.useOldCache(USE_SMELLS_COMMIT_OLD_CACHE);
+		this.commitSmell = new CommitSmell(repositoryPath, techniqueThresholds, resultBaseFileName);
+		this.commitSmell.useOldCache(USE_SMELLS_COMMIT_OLD_CACHE);
 	}
 
 	public void getSmellRefactoredMethods() {
 		try {
-			commitSmell.resetMemoryCacheHits();
+			this.commitSmell.resetMemoryCacheHits();
 			SmellRefactoredMethod smellRefactoredMethod = new SmellRefactoredMethod(refactoringEvents, smellCommitIds, commitRange, commitSmell, resultBaseFileName);
 			smellRefactoredMethod.getSmellRefactoredMethods();
-			logger.info("SmellResult memory cache hits = " + commitSmell.getMemoryCacheHits());
+			logger.info("SmellResult memory cache hits = " + this.commitSmell.getMemoryCacheHits());
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 			e.printStackTrace();
@@ -115,10 +115,10 @@ public class SmellRefactoredManager {
 
 	public void getSmellRefactoredClasses() {
 		try {
-			commitSmell.resetMemoryCacheHits();
+			this.commitSmell.resetMemoryCacheHits();
 			SmellRefactoredClass smellRefactoredClass = new SmellRefactoredClass(refactoringEvents, smellCommitIds, commitRange, commitSmell, resultBaseFileName);
 			smellRefactoredClass.getSmellRefactoredClasses();
-			logger.info("SmellResult memory cache hits = " + commitSmell.getMemoryCacheHits());
+			logger.info("SmellResult memory cache hits = " + this.commitSmell.getMemoryCacheHits());
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 			e.printStackTrace();

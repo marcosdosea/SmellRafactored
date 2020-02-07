@@ -15,20 +15,23 @@ import com.opencsv.CSVWriter;
 
 public class OutputMethodFilePlotCsv {
 
+	final String RECORD_TYPE_REFACTORING   = "Refactoring";
+	final String RECORD_TYPE_SMELL         = "Smell";
+	final String RECORD_TYPE_IGNORED_SMELL = "Ignored Smell";
+
 	private CommitRange commitRange;
-	// private Set<String> techniques;
 	private String baseFileName;
 	
 	private CSVWriter csvFile;
 
-	static private Logger logger = LoggerFactory.getLogger(OutputMethodFilePlotCsv.class);
+	// static private Logger logger = LoggerFactory.getLogger(OutputMethodFilePlotCsv.class);
 	
-	public OutputMethodFilePlotCsv(CommitRange commitRange, Set<String> techniques, String baseFileName) throws IOException {
+	public OutputMethodFilePlotCsv(CommitRange commitRange, String baseFileName) throws IOException {
 		this.commitRange = commitRange;
-		// this.techniques = techniques;
 		this.baseFileName = baseFileName;
 		
-		csvFile = new CSVWriter(new FileWriter(this.baseFileName + "-refactoredAndNotRefactored-methods-plot.csv"));
+		// csvFile = new CSVWriter(new FileWriter(this.baseFileName + "-" + this.commitRange.getInitialCommitId() + "-" + this.commitRange.getFinalCommitId() + "-methods-plot.csv"));
+		csvFile = new CSVWriter(new FileWriter(this.baseFileName + "-methods-plot.csv"));
 	}
 	
 	public void writeHeader() {
@@ -43,8 +46,8 @@ public class OutputMethodFilePlotCsv {
 		fields.add("cc");
 		fields.add("ec");
 		fields.add("nop");
-		fields.add("isRefactoring");
-		fields.add("refactoring");
+		fields.add("recordType");
+		fields.add("entityName");
 		fields.add("techniques");
 		csvFile.writeNext(fields.toArray(new String[0]));
 	}
@@ -66,8 +69,8 @@ public class OutputMethodFilePlotCsv {
 		fields.add(String.valueOf(methodSmell.getComplexity()));
 		fields.add(String.valueOf(methodSmell.getEfferent()));
 		fields.add(String.valueOf(methodSmell.getNumberOfParameters()));
-		fields.add("false");
-		fields.add("");
+		fields.add(RECORD_TYPE_SMELL);
+		fields.add(methodSmell.getSmell());
 		fields.add(methodSmell.getListaTecnicas() != null ? methodSmell.getListaTecnicas().toString() : null);
 		csvFile.writeNext(fields.toArray(new String[0]));
 	}
@@ -84,7 +87,7 @@ public class OutputMethodFilePlotCsv {
 		fields.add(String.valueOf(methodSmell.getComplexity()));
 		fields.add(String.valueOf(methodSmell.getEfferent()));
 		fields.add(String.valueOf(methodSmell.getNumberOfParameters()));
-		fields.add("true");
+		fields.add(RECORD_TYPE_REFACTORING);
 		fields.add(refactoring.getRefactoringType());
 		fields.add("");
 		csvFile.writeNext(fields.toArray(new String[0]));
@@ -103,7 +106,7 @@ public class OutputMethodFilePlotCsv {
 		fields.add(String.valueOf(methodNotSmell.getComplexity()));
 		fields.add(String.valueOf(methodNotSmell.getEfferent()));
 		fields.add(String.valueOf(methodNotSmell.getNumberOfParameters()));
-		fields.add("true");
+		fields.add(RECORD_TYPE_REFACTORING);
 		fields.add(refactoring.getRefactoringType());
 		fields.add("");
 		csvFile.writeNext(fields.toArray(new String[0]));
@@ -122,8 +125,27 @@ public class OutputMethodFilePlotCsv {
 		fields.add(String.valueOf(methodSmell.getComplexity()));
 		fields.add(String.valueOf(methodSmell.getEfferent()));
 		fields.add(String.valueOf(methodSmell.getNumberOfParameters()));
-		fields.add("false");
-		fields.add("");
+		fields.add(RECORD_TYPE_SMELL);
+		fields.add(methodSmell.getSmell());
+		fields.add(methodSmell.getListaTecnicas() != null ? methodSmell.getListaTecnicas().toString() : null);
+		csvFile.writeNext(fields.toArray(new String[0]));
+	}
+	
+	public void writeIgnoredFalsePositive(MethodDataSmelly methodSmell) {
+		ArrayList<String> fields = new ArrayList<String>();
+		// Smell
+		fields.add(methodSmell.getCommit());
+		fields.add(this.commitRange.getCommitDateAsString(methodSmell.getCommit()));
+		fields.add(methodSmell.getDiretorioDaClasse());
+		fields.add(methodSmell.getClassDesignRole());
+		fields.add(methodSmell.getNomeClasse());
+		fields.add(methodSmell.getNomeMetodo());
+		fields.add(String.valueOf(methodSmell.getLinesOfCode()));
+		fields.add(String.valueOf(methodSmell.getComplexity()));
+		fields.add(String.valueOf(methodSmell.getEfferent()));
+		fields.add(String.valueOf(methodSmell.getNumberOfParameters()));
+		fields.add(RECORD_TYPE_IGNORED_SMELL);
+		fields.add(methodSmell.getSmell());
 		fields.add(methodSmell.getListaTecnicas() != null ? methodSmell.getListaTecnicas().toString() : null);
 		csvFile.writeNext(fields.toArray(new String[0]));
 	}

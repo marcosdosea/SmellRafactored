@@ -1,15 +1,15 @@
 library(rstudioapi)
 scriptFilePath <- getActiveDocumentContext()$path
 scriptFileDir <- dirname(scriptFilePath)
-source(paste(scriptFileDir, "/plotClassToPngFile-function.r", sep="", collapse=NULL))
+source(paste(scriptFileDir, "/plotMethodToPngFile-function.r", sep="", collapse=NULL))
 
 workDir <- paste(scriptFileDir, "/../../MiningStudies/refactoring", sep="", collapse=NULL)
 setwd(workDir)
 
-classFiles <- list.files(path=workDir, pattern="-classes-plot.csv$", full.names=TRUE, recursive=FALSE)
-lapply(classFiles, function(x) {
+methodFiles <- list.files(path=workDir, pattern="-methods-plot.csv$", full.names=TRUE, recursive=FALSE)
+lapply(methodFiles, function(x) {
   result = tryCatch({
-    plotClassToPngFile(x)
+    plotMethodToPngFile(x)
   }, warning = function(warning_condition) {
     warning_condition
     warnings()
@@ -18,4 +18,3 @@ lapply(classFiles, function(x) {
     rlang::last_error()
   })
 })
-

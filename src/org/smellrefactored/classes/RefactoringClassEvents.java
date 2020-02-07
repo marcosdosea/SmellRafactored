@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 import org.refactoringminer.api.RefactoringType;
+import org.smellrefactored.CommitData;
 import org.smellrefactored.RefactoringEvent;
 import org.smellrefactored.RefactoringEvents;
 
@@ -28,12 +29,18 @@ public class RefactoringClassEvents {
 	}
 	
 	public boolean hasRefactoringsInCommit(String commitId, String originalFilePath, String originalClassName, HashSet<String> targetTefactoringTypes) throws Exception {
-		ArrayList<RefactoringEvent> refactoringsForCommit = getRefactoringsInCommit(commitId, originalFilePath, originalClassName, targetTefactoringTypes);
+		ArrayList<RefactoringEvent> refactoringsForCommit = getRefactoringsInCommit(commitId, originalFilePath, originalClassName, targetTefactoringTypes, false);
 		return (refactoringsForCommit.size()>0);		 
 	}
 	
-	private ArrayList<RefactoringEvent> getRefactoringsInCommit(String commitId, String originalFilePath, String originalClassName, HashSet<String> targetTefactoringTypes) throws Exception {
-		ArrayList<RefactoringEvent> result = new ArrayList<RefactoringEvent>(); 
+	public boolean hasRefactoringInThisCommitOrInFuture(String commitId, String originalFilePath, String originalClassName, HashSet<String> targetTefactoringTypes) throws Exception {
+		ArrayList<RefactoringEvent> refactoringsForCommit = getRefactoringsInCommit(commitId, originalFilePath, originalClassName, targetTefactoringTypes, true);
+		return (refactoringsForCommit.size()>0);		 
+	}
+	
+	private ArrayList<RefactoringEvent> getRefactoringsInCommit(String commitId, String originalFilePath, String originalClassName, HashSet<String> targetTefactoringTypes, boolean walkUntilFindOne) throws Exception {
+		ArrayList<RefactoringEvent> result = new ArrayList<RefactoringEvent>();
+		CommitData commit = this.refactoringEvents.getCommitRange().getCommitById(commitId);
 		String filePath = originalFilePath;
 		String className = originalClassName;
 		boolean renamedClass;
@@ -43,8 +50,17 @@ public class RefactoringClassEvents {
 			String pathRenamedName = null;
 			String classRenamedName = null;
 			for (RefactoringEvent event : this.refactoringEvents.getAllMergedIntoMaster()) {
-				if (!event.getCommitId().equals(commitId)) {
-					continue;
+				if (walkUntilFindOne) {
+					if (result.size() > 0) {
+						break;
+					}
+					if (commit.compareTo(event.getCommitData()) > 0) {
+						continue;
+					}
+				} else {
+					if (!event.getCommitId().equals(commitId)) {
+						continue;
+					}
 				}
 				if ( (!RefactoringClassEvents.getClassRenameRefactoringTypes().contains(event.getRefactoringType())) && (!targetTefactoringTypes.contains(event.getRefactoringType())) ) {
 					continue;
@@ -80,7 +96,7 @@ public class RefactoringClassEvents {
 		} while (renamedClass);
 		return (result);
 	}
-
+	
 	static public void validateClassRefactoring(RefactoringEvent event) throws Exception {
 		if (event.getClassName() == null) {
 			throw new Exception("NULL class name for " + event.getRefactoringType() + " refactoring type");

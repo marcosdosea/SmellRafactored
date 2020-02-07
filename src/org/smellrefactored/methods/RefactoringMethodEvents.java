@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 import org.refactoringminer.api.RefactoringType;
+import org.smellrefactored.CommitData;
 import org.smellrefactored.RefactoringEvent;
 import org.smellrefactored.RefactoringEvents;
 import org.smellrefactored.classes.RefactoringClassEvents;
@@ -36,12 +37,18 @@ public class RefactoringMethodEvents {
 	}
 	
 	public boolean hasRefactoringsInCommit(String commitId, String originalFilePath, String originalClassName, String originalMethodName, HashSet<String> targetTefactoringTypes) throws Exception {
-		ArrayList<RefactoringEvent> refactoringsForCommit = getRefactoringsInCommit(commitId, originalFilePath, originalClassName, originalMethodName, targetTefactoringTypes);
+		ArrayList<RefactoringEvent> refactoringsForCommit = getRefactoringsInCommit(commitId, originalFilePath, originalClassName, originalMethodName, targetTefactoringTypes, false);
 		return (refactoringsForCommit.size()>0);		 
 	}
 	
-	private ArrayList<RefactoringEvent> getRefactoringsInCommit(String commitId, String originalFilePath, String originalClassName, String originalMethodName, HashSet<String> targetTefactoringTypes) throws Exception {
+	public boolean hasRefactoringInThisCommitOrInFuture(String commitId, String originalFilePath, String originalClassName, String originalMethodName, HashSet<String> targetTefactoringTypes) throws Exception {
+		ArrayList<RefactoringEvent> refactoringsForCommit = getRefactoringsInCommit(commitId, originalFilePath, originalClassName, originalMethodName, targetTefactoringTypes, true);
+		return (refactoringsForCommit.size()>0);		 
+	}
+	
+	private ArrayList<RefactoringEvent> getRefactoringsInCommit(String commitId, String originalFilePath, String originalClassName, String originalMethodName, HashSet<String> targetTefactoringTypes, boolean walkUntilFindOne) throws Exception {
 		ArrayList<RefactoringEvent> result = new ArrayList<RefactoringEvent>(); 
+		CommitData commit = this.refactoringEvents.getCommitRange().getCommitById(commitId);
 		String filePath = originalFilePath;
 		String className = originalClassName;
 		String methodName = originalMethodName;
@@ -53,8 +60,17 @@ public class RefactoringMethodEvents {
 			String classRenamedName = null;
 			String methodRenamedName = null;
 			for (RefactoringEvent event : this.refactoringEvents.getAllMergedIntoMaster()) {
-				if (!event.getCommitId().equals(commitId)) {
-					continue;
+				if (walkUntilFindOne) {
+					if (result.size() > 0) {
+						break;
+					}
+					if (commit.compareTo(event.getCommitData()) > 0) {
+						continue;
+					}
+				} else {
+					if (!event.getCommitId().equals(commitId)) {
+						continue;
+					}
 				}
 				if ( (!RefactoringClassEvents.getClassRenameRefactoringTypes().contains(event.getRefactoringType())) && (!RefactoringMethodEvents.getMethodRenameRefactoringTypes().contains(event.getRefactoringType())) && (!targetTefactoringTypes.contains(event.getRefactoringType())) ) {
 					continue;
