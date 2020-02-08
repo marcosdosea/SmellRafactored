@@ -227,7 +227,11 @@ public class SmellRefactoredMethod {
  				if (!refactoringMethodEvents.hasRefactoringsInCommit(nextCommit.getId(), methodSmelly.getDiretorioDaClasse(), methodSmelly.getNomeClasse(), methodSmelly.getNomeMetodo(), targetTefactoringTypes)) {
  					boolean ignoreCurrentPrediction = false;
  					if (IGNORE_REPEATED_PREDICION_ON_NEXT_COMMIT) {
- 						ignoreCurrentPrediction = refactoringMethodEvents.hasRefactoringInThisCommitOrInFuture(nextCommit.getId(), methodSmelly.getDiretorioDaClasse(), methodSmelly.getNomeClasse(), methodSmelly.getNomeMetodo(), targetTefactoringTypes);
+ 						if (SmellRefactoredManager.ANALYZE_FIRST_COMMIT_ONLY) {
+ 							ignoreCurrentPrediction = refactoringMethodEvents.hasRefactoringInThisCommitOrInFuture(nextCommit.getId(), methodSmelly.getDiretorioDaClasse(), methodSmelly.getNomeClasse(), methodSmelly.getNomeMetodo(), targetTefactoringTypes);
+ 						} else {
+ 							ignoreCurrentPrediction = this.commitMethodSmell.hasMethodSmellPredictionForTechniqueInCommit(nextCommit.getId(), smellType, technique, methodSmelly.getDiretorioDaClasse(), methodSmelly.getNomeClasse(), methodSmelly.getNomeMetodo());  							
+ 						}
  					}
 					if (ignoreCurrentPrediction) {
 						this.methodOutputFiles.writeIgnoredFalsePositive(methodSmelly);

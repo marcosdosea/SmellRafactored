@@ -22,7 +22,7 @@ public class SmellRefactoredManager {
 
 	final boolean ANALYZE_FIRST_COMMIT_ONLY = true; // Very, very, very slow!
 
-	final boolean USE_SMELLS_COMMIT_OLD_CACHE = false; // This can ignore new adjustments in DesignRoleMiner.
+	static final boolean USE_SMELLS_COMMIT_OLD_CACHE = false; // This can ignore new adjustments in DesignRoleMiner.
 
 	static Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
 

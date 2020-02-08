@@ -172,7 +172,11 @@ public class SmellRefactoredClass {
  				if (! refactoringClassEvents.hasRefactoringsInCommit(nextCommit.getId(), classSmelly.getDiretorioDaClasse(), classSmelly.getNomeClasse(), targetTefactoringTypes)) {
  					boolean ignoreCurrentPrediction = false;
  					if (IGNORE_REPEATED_PREDICION_ON_NEXT_COMMIT) {
- 						ignoreCurrentPrediction = refactoringClassEvents.hasRefactoringInThisCommitOrInFuture(nextCommit.getId(), classSmelly.getDiretorioDaClasse(), classSmelly.getNomeClasse(), targetTefactoringTypes);
+ 						if (SmellRefactoredManager.ANALYZE_FIRST_COMMIT_ONLY) {
+ 	 						ignoreCurrentPrediction = refactoringClassEvents.hasRefactoringInThisCommitOrInFuture(nextCommit.getId(), classSmelly.getDiretorioDaClasse(), classSmelly.getNomeClasse(), targetTefactoringTypes);
+ 						} else {
+ 	 						ignoreCurrentPrediction = this.commitClassSmell.hasClassSmellPredictionForTechniqueInCommit(nextCommit.getId(), smellType, technique, classSmelly.getDiretorioDaClasse(), classSmelly.getNomeClasse()); 
+ 						}
  					}
 					if (ignoreCurrentPrediction) {
 						classOutputFiles.writeIgnoredFalsePositive(classSmelly);

@@ -4,8 +4,8 @@ library(stringr)
 library(ggalt)
 
 plotClassToPngFile <- function(csvClassFileName) {
-  # csvClassFileName <- "aet-Class_Longa-A-18-15-22-7-19-23-21-2-9-8-17-classes-plot.csv"
-  # csvClassFileName <- "aet-Class_Longa-A-CONVERT_ANONYMOUS_CLASS_TO_TYPE-classes-plot.csv"
+  # csvClassFileName <- "ice-Class_Longa-A-18-15-22-7-19-23-21-2-9-8-17-classes-plot.csv"
+  # csvClassFileName <- "ice-Class_Longa-R-CONVERT_ANONYMOUS_CLASS_TO_TYPE-classes-plot.csv"
   fileIsEmpty <- file.info(csvClassFileName)$size == 0
   if (fileIsEmpty) {
     print(paste("Empty file:", csvClassFileName))
@@ -14,7 +14,7 @@ plotClassToPngFile <- function(csvClassFileName) {
   print(csvClassFileName)
   projectName <- basename(csvClassFileName)
   
-  data <- read.csv(csvClassFileName)
+  data <- read.csv(csvClassFileName, stringsAsFactors = TRUE)
   data[data=="null"] <- NA
   data <- na.omit(data)
 
@@ -25,20 +25,11 @@ plotClassToPngFile <- function(csvClassFileName) {
   data$cloc <-as.numeric(as.character(data$cloc))
   data <- data[order(data$commitDateTime, data$className),]
   
-  typeColors <- as.character(c("grey1", "blue1", "red1"))
-  typeScale <- scale_colour_manual(name="Legend", values=typeColors)
-  
-  #typeColors <- as.character(c("red1", "grey1", "blue1"))
-  #recordTypes <- as.character(c("Smell", "Smell Ignored", "Refactoring"))
-  #typeScale <- scale_colour_manual(name=recordTypes, values=typeColors)
-  #typeFill <- scale_fill_manual(values = c("red1", "grey1", "blue1"),
-  #                  labels = c("Smell", "Smell Ignored", "Refactoring"), 
-  #                  drop = FALSE)
-  
-  
+  typeValuesColors <- c("Smell" = "red1", "Ignored Smell" = "grey1", "Refactoring" = "blue1")
+
   resultPlot <- 
-    ggplot(data, aes(x=data$commitDateTime, y=data$className, color=data$recordType)) +
-    geom_point(alpha=0.3) +
+    ggplot(data, aes(x=data$commitDateTime, y=data$className)) +
+    geom_point(aes(colour=data$recordType), alpha=0.3) +
     # labs(color = "Type") +
     labs(title = projectName,
          # subtitle = "Classes by commit",
@@ -47,11 +38,12 @@ plotClassToPngFile <- function(csvClassFileName) {
          , fill = "Legend") +
     theme(
       axis.text.x = element_blank()
+      # axis.text.x = element_text(angle = 90, hjust = 1)
       , axis.text.y = element_blank()
+      , legend.position = "bottom"
       ) +
-    # typeFill
-    typeScale
-  
+    scale_colour_manual("Legend:", values = typeValuesColors)  
+
 
   imgFileName <-sub(".csv", ".png", csvClassFileName)
   ggsave(imgFileName, plot = resultPlot, "png", path = NULL,
@@ -59,3 +51,4 @@ plotClassToPngFile <- function(csvClassFileName) {
          dpi = 300, limitsize = FALSE)
   #return (resultPlot)
 }
+

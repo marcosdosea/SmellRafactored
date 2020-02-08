@@ -3,17 +3,17 @@ library(dplyr)
 library(stringr) 
 library(ggalt)
 
-plotMethodToPngFile <- function(csvFileName) {
-  # csvFileName <- "aet-Metodo_Longo-A-0-7-21-8-methods-plot.csv"
-  fileIsEmpty <- file.info(csvFileName)$size == 0
+plotMethodToPngFile <- function(csvMethodFileName) {
+  # csvMethodFileName <- "aet-Metodo_Longo-A-0-7-21-8-methods-plot.csv"
+  fileIsEmpty <- file.info(csvMethodFileName)$size == 0
   if (fileIsEmpty) {
-    print(paste("Empty file:", csvFileName))
+    print(paste("Empty file:", csvMethodFileName))
     return ();
   }
-  print(csvFileName)
-  projectName <- basename(csvFileName)
+  print(csvMethodFileName)
+  projectName <- basename(csvMethodFileName)
   
-  data <- read.csv(csvFileName)
+  data <- read.csv(csvMethodFileName)
   data[data=="null"] <- NA
   data <- na.omit(data)
   
@@ -24,12 +24,11 @@ plotMethodToPngFile <- function(csvFileName) {
   data$loc <-as.numeric(as.character(data$loc))
   data <- data[order(data$commitDateTime, data$className, data$methodName),]
   
-  typeColors <- as.character(c("grey1", "blue1", "red1"))
-  typeScale <- scale_colour_manual(name="Legend", values=typeColors)
+  typeValuesColors <- c("Smell" = "red1", "Ignored Smell" = "grey1", "Refactoring" = "blue1")
   
   resultPlot <- 
-    ggplot(data, aes(x=data$commitDateTime, y=data$methodName, color=data$recordType) ) +
-    geom_point(alpha=0.3) +
+    ggplot(data, aes(x=data$commitDateTime, y=data$methodName) ) +
+    geom_point(aes(colour=data$recordType), alpha=0.3) +
     # labs(color = "Type") +
     labs(title = projectName,
          # subtitle = "Method by commit",
@@ -39,10 +38,11 @@ plotMethodToPngFile <- function(csvFileName) {
     theme(
       axis.text.x = element_blank()
       , axis.text.y = element_blank()
+      , legend.position = "bottom"
     ) +
-    typeScale
+    scale_colour_manual("Legend:", values = typeValuesColors)  
   
-  imgFileName <-sub(".csv", ".png", csvFileName)
+  imgFileName <-sub(".csv", ".png", csvMethodFileName)
   ggsave(imgFileName, plot = resultPlot, "png", path = NULL,
          scale = 1, width = NA, height = NA, units = c("in", "cm", "mm"),
          dpi = 300, limitsize = FALSE)
