@@ -1,21 +1,23 @@
+rm(list = ls())
+
 library(rstudioapi)
 scriptFilePath <- getActiveDocumentContext()$path
 scriptFileDir <- dirname(scriptFilePath)
-source(paste(scriptFileDir, "/plotMethodToPngFile-function.r", sep="", collapse=NULL))
+source(paste(scriptFileDir, "/plotMethodDensityByMetricsToPngFile-function.R", sep="", collapse=NULL))
 
 workDir <- paste(scriptFileDir, "/../../MiningStudies/refactoring", sep="", collapse=NULL)
 setwd(workDir)
 
-methodFiles <- list.files(path=workDir, pattern="-methods-plot.csv$", full.names=TRUE, recursive=FALSE)
-lapply(methodFiles, function(x) {
-  result = tryCatch({
-    plotMethodToPngFile(x)
+files <- list.files(path=workDir, pattern="-methods-plot.csv$", full.names=TRUE, recursive=FALSE)
+lapply(files, function(x) {
+  tryCatch({
+    plotMethodDensityByMetricsToPngFile(x)
   }, warning = function(warning_condition) {
     warning_condition
-    warnings()
+    # warnings()
   }, error = function(error_condition) {
     error_condition
-    rlang::last_error()
+    # rlang::last_error()
   })
 })
 

@@ -1,15 +1,17 @@
+rm(list = ls())
+
 library(rstudioapi)
 scriptFilePath <- getActiveDocumentContext()$path
 scriptFileDir <- dirname(scriptFilePath)
-source(paste(scriptFileDir, "/plot3dMethodToHtmlFile-function.r", sep="", collapse=NULL))
+source(paste(scriptFileDir, "/plotClassDistributionByClassAndCommitToPngFile-function.R", sep="", collapse=NULL))
 
 workDir <- paste(scriptFileDir, "/../../MiningStudies/refactoring", sep="", collapse=NULL)
 setwd(workDir)
 
-classFiles <- list.files(path=workDir, pattern="-methods-plot.csv$", full.names=TRUE, recursive=FALSE)
-lapply(classFiles, function(x) {
+files <- list.files(path=workDir, pattern="-classes-plot.csv$", full.names=TRUE, recursive=FALSE)
+lapply(files, function(x) {
   result = tryCatch({
-      plot3MethodToHtmlFile(x)
+    plotClassDistributionByClassAndCommitToPngFile(x)
   }, warning = function(warning_condition) {
     warning_condition
     warnings()
@@ -18,3 +20,4 @@ lapply(classFiles, function(x) {
     rlang::last_error()
   })
 })
+

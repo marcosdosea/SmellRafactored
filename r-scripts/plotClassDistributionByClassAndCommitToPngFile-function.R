@@ -3,7 +3,7 @@ library(dplyr)
 library(stringr) 
 library(ggalt)
 
-plotClassToPngFile <- function(csvClassFileName) {
+plotClassDistributionByClassAndCommitToPngFile <- function(csvClassFileName) {
   # csvClassFileName <- "ice-Class_Longa-A-18-15-22-7-19-23-21-2-9-8-17-classes-plot.csv"
   # csvClassFileName <- "ice-Class_Longa-R-CONVERT_ANONYMOUS_CLASS_TO_TYPE-classes-plot.csv"
   fileIsEmpty <- file.info(csvClassFileName)$size == 0
@@ -31,7 +31,8 @@ plotClassToPngFile <- function(csvClassFileName) {
     ggplot(data, aes(x=data$commitDateTime, y=data$className)) +
     geom_point(aes(colour=data$recordType), alpha=0.3) +
     # labs(color = "Type") +
-    labs(title = projectName,
+    labs(
+        # title = projectName,
          # subtitle = "Classes by commit",
          # caption = "Only first commit with smells, commit with refactorings and their predecessors", 
          x = "Commits with observations", y = "Classes with observations"
@@ -45,7 +46,7 @@ plotClassToPngFile <- function(csvClassFileName) {
     scale_colour_manual("Legend:", values = typeValuesColors)  
 
 
-  imgFileName <-sub(".csv", ".png", csvClassFileName)
+  imgFileName <-sub(".csv", "-DistribuitionByClassAndCommit.png", csvClassFileName)
   ggsave(imgFileName, plot = resultPlot, "png", path = NULL,
          scale = 1, width = NA, height = NA, units = c("in", "cm", "mm"),
          dpi = 300, limitsize = FALSE)

@@ -1,8 +1,8 @@
 library(rgl)
 
 
-plot3MethodToHtmlFile <- function(csvMethodFileName) {
-  csvMethodFileName <- "Weasis-Metodo_Longo-V-0-7-21-8-methods-plot.csv"
+plot3dMethodDistribuitionByCcEcLocNopToHtmlFile <- function(csvMethodFileName) {
+  # csvMethodFileName <- "Weasis-Metodo_Longo-V-0-7-21-8-methods-plot.csv"
   fileIsEmpty <- file.info(csvMethodFileName)$size == 0
   if (fileIsEmpty) {
     print(paste("Empty file:", csvMethodFileName))

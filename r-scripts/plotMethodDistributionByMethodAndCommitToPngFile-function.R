@@ -1,10 +1,12 @@
-library(ggplot2)
-library(dplyr)
-library(stringr) 
-library(ggalt)
 
-plotMethodToPngFile <- function(csvMethodFileName) {
-  # csvMethodFileName <- "aet-Metodo_Longo-A-0-7-21-8-methods-plot.csv"
+plotMethodDistributionByMethodAndCommitToPngFile <- function(csvMethodFileName) {
+  library(ggplot2)
+  library(dplyr)
+  library(stringr) 
+  library(ggalt)
+
+    # csvMethodFileName <- "aet-Metodo_Longo-A-0-7-21-8-methods-plot.csv"
+  # csvMethodFileName <- "Weasis-Alto_Acoplamento_Efferent-D-EXTRACT_AND_MOVE_OPERATION-methods-plot.csv"
   fileIsEmpty <- file.info(csvMethodFileName)$size == 0
   if (fileIsEmpty) {
     print(paste("Empty file:", csvMethodFileName))
@@ -23,14 +25,16 @@ plotMethodToPngFile <- function(csvMethodFileName) {
   #data$commitDate <-as.numeric(as.character(data$commitDate))
   data$loc <-as.numeric(as.character(data$loc))
   data <- data[order(data$commitDateTime, data$className, data$methodName),]
+  data$classNameMethodName <- paste(data$className, ".", data$methodName)
   
   typeValuesColors <- c("Smell" = "red1", "Ignored Smell" = "grey1", "Refactoring" = "blue1")
   
   resultPlot <- 
-    ggplot(data, aes(x=data$commitDateTime, y=data$methodName) ) +
+    ggplot(data, aes(x=data$commitDateTime, y=data$classNameMethodName) ) +
     geom_point(aes(colour=data$recordType), alpha=0.3) +
     # labs(color = "Type") +
-    labs(title = projectName,
+    labs(
+         # title = projectName,
          # subtitle = "Method by commit",
          # caption = "Only first commit with smells, commit with refactorings and their predecessors", 
          x = "Commits with observations", y = "Methods with observations"
@@ -42,7 +46,7 @@ plotMethodToPngFile <- function(csvMethodFileName) {
     ) +
     scale_colour_manual("Legend:", values = typeValuesColors)  
   
-  imgFileName <-sub(".csv", ".png", csvMethodFileName)
+  imgFileName <-sub(".csv", "-DistribuitionByMethodAndCommit.png", csvMethodFileName)
   ggsave(imgFileName, plot = resultPlot, "png", path = NULL,
          scale = 1, width = NA, height = NA, units = c("in", "cm", "mm"),
          dpi = 300, limitsize = FALSE)
