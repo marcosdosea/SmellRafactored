@@ -14,7 +14,6 @@ public class RefactoringMethodEvents {
 
 	public static HashSet<String> getMethodRenameRefactoringTypes() {
 		HashSet<String> refactoringTypes = new HashSet<String>();
-		// Original: refactoringTypes.add(RefactoringType.RENAME_METHOD.toString());
 		refactoringTypes.add(RefactoringType.RENAME_METHOD.toString());
 		refactoringTypes.add(RefactoringType.MOVE_OPERATION.toString());
 		refactoringTypes.add(RefactoringType.MOVE_AND_RENAME_OPERATION.toString());
@@ -22,11 +21,6 @@ public class RefactoringMethodEvents {
 		refactoringTypes.add(RefactoringType.PUSH_DOWN_OPERATION.toString());
 		refactoringTypes.add(RefactoringType.EXTRACT_AND_MOVE_OPERATION.toString());
 		refactoringTypes.add(RefactoringType.MOVE_AND_INLINE_OPERATION.toString());
-		refactoringTypes.add(RefactoringType.RENAME_CLASS.toString());
-		refactoringTypes.add(RefactoringType.MOVE_CLASS.toString());
-		refactoringTypes.add(RefactoringType.MOVE_RENAME_CLASS.toString());
-		/// refactoringTypes.add(RefactoringType.MOVE_SOURCE_FOLDER.toString());
-		/// refactoringTypes.add(RefactoringType.RENAME_PACKAGE.toString());
 		return refactoringTypes;
 	}
 	
@@ -56,7 +50,7 @@ public class RefactoringMethodEvents {
 		ZonedDateTime dateTimeUtcCommitRenamed = null;
 		do {
 			renamedMethod = false;
-			String pathRenamedName = null;
+			String filePathRenamedName = null;
 			String classRenamedName = null;
 			String methodRenamedName = null;
 			for (RefactoringEvent event : this.refactoringEvents.getAllMergedIntoMaster()) {
@@ -72,11 +66,26 @@ public class RefactoringMethodEvents {
 						continue;
 					}
 				}
-				if ( (!RefactoringClassEvents.getClassRenameRefactoringTypes().contains(event.getRefactoringType())) && (!RefactoringMethodEvents.getMethodRenameRefactoringTypes().contains(event.getRefactoringType())) && (!targetTefactoringTypes.contains(event.getRefactoringType())) ) {
+				if ( (!RefactoringClassEvents.getFilePathRenameRefactoringTypes().contains(event.getRefactoringType()))
+						&& (!RefactoringClassEvents.getClassRenameRefactoringTypes().contains(event.getRefactoringType())) 
+						&& (!RefactoringMethodEvents.getMethodRenameRefactoringTypes().contains(event.getRefactoringType())) 
+						&& (!targetTefactoringTypes.contains(event.getRefactoringType())) ) {
 					continue;
 				}
 				if (!event.getFileNameBefore().equals(filePath)) {
 					continue;
+				}
+				if (RefactoringClassEvents.getFilePathRenameRefactoringTypes().contains(event.getRefactoringType())) {
+					if ((dateTimeUtcCommitRenamed == null) || ( (dateTimeUtcCommitRenamed != null)
+							&& (dateTimeUtcCommitRenamed.compareTo(event.getCommitData().getDateTimeUtc()) < 0)) ) {
+						renamedMethod = true;
+						// Change it
+						dateTimeUtcCommitRenamed = event.getCommitData().getDateTimeUtc();
+						filePathRenamedName = event.getFileNameBefore();
+						// Do not change
+						classRenamedName = className;
+						methodRenamedName = methodName;
+					}
 				}
 				if (!event.isSameClassRefactored(className)) {
 					continue;
@@ -87,7 +96,7 @@ public class RefactoringMethodEvents {
 						renamedMethod = true;
 						// Change it
 						dateTimeUtcCommitRenamed = event.getCommitData().getDateTimeUtc();
-						pathRenamedName = event.getFileNameBefore();
+						filePathRenamedName = event.getFileNameBefore();
 						classRenamedName = event.getNewNameForClassWhenRenameClass();
 						// Do not change
 						methodRenamedName = methodName;
@@ -107,7 +116,7 @@ public class RefactoringMethodEvents {
 							&& (dateTimeUtcCommitRenamed.compareTo(event.getCommitData().getDateTimeUtc()) < 0)) ) {
 						renamedMethod = true;
 						// Do not change
-						pathRenamedName = filePath;
+						filePathRenamedName = filePath;
 						classRenamedName = className;
 						// Change it
 						dateTimeUtcCommitRenamed = event.getCommitData().getDateTimeUtc();
@@ -116,7 +125,7 @@ public class RefactoringMethodEvents {
 				}
 			}
 			if (renamedMethod) {
-				filePath = pathRenamedName;
+				filePath = filePathRenamedName;
 				className = classRenamedName;
 				methodName = methodRenamedName;
 			} else {

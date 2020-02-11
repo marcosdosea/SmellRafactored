@@ -11,13 +11,23 @@ import org.smellrefactored.RefactoringEvents;
 
 public class RefactoringClassEvents {
 
+	public static HashSet<String> getFilePathRenameRefactoringTypes() {
+		HashSet<String> refactoringTypes = new HashSet<String>();
+		refactoringTypes.add(RefactoringType.MOVE_SOURCE_FOLDER.toString());
+		return refactoringTypes;
+	}
+
+	// public static HashSet<String> getPackageRenameRefactoringTypes() {
+	// 	HashSet<String> refactoringTypes = new HashSet<String>();
+	// 	refactoringTypes.add(RefactoringType.RENAME_PACKAGE.toString());
+	// 	return refactoringTypes;
+	// }
+
 	public static HashSet<String> getClassRenameRefactoringTypes() {
 		HashSet<String> refactoringTypes = new HashSet<String>();
 		refactoringTypes.add(RefactoringType.RENAME_CLASS.toString());
 		refactoringTypes.add(RefactoringType.MOVE_CLASS.toString());
 		refactoringTypes.add(RefactoringType.MOVE_RENAME_CLASS.toString());
-		/// refactoringTypes.add(RefactoringType.MOVE_SOURCE_FOLDER.toString());
-		/// refactoringTypes.add(RefactoringType.RENAME_PACKAGE.toString());
 		return refactoringTypes;
 	}
 	
@@ -47,7 +57,7 @@ public class RefactoringClassEvents {
 		ZonedDateTime dateTimeUtcCommitRenamed = null;
 		do {
 			renamedClass = false;
-			String pathRenamedName = null;
+			String filePathRenamedName = null;
 			String classRenamedName = null;
 			for (RefactoringEvent event : this.refactoringEvents.getAllMergedIntoMaster()) {
 				if (walkUntilFindOne) {
@@ -62,7 +72,9 @@ public class RefactoringClassEvents {
 						continue;
 					}
 				}
-				if ( (!RefactoringClassEvents.getClassRenameRefactoringTypes().contains(event.getRefactoringType())) && (!targetTefactoringTypes.contains(event.getRefactoringType())) ) {
+				if ( (!RefactoringClassEvents.getFilePathRenameRefactoringTypes().contains(event.getRefactoringType()))
+						&& (!RefactoringClassEvents.getClassRenameRefactoringTypes().contains(event.getRefactoringType())) 
+						&& (!targetTefactoringTypes.contains(event.getRefactoringType())) ) {
 					continue;
 				}
 				if (targetTefactoringTypes.contains(event.getRefactoringType())) {
@@ -70,6 +82,17 @@ public class RefactoringClassEvents {
 				}
 				if (!event.getFileNameBefore().equals(filePath)) {
 					continue;
+				}
+				if (RefactoringClassEvents.getFilePathRenameRefactoringTypes().contains(event.getRefactoringType())) {
+					if ((dateTimeUtcCommitRenamed == null) || ( (dateTimeUtcCommitRenamed != null)
+							&& (dateTimeUtcCommitRenamed.compareTo(event.getCommitData().getDateTimeUtc()) < 0)) ) {
+						renamedClass = true;
+						// Change it
+						dateTimeUtcCommitRenamed = event.getCommitData().getDateTimeUtc();
+						filePathRenamedName = event.getFileNameAfter();
+						// Do not change
+						classRenamedName = className;
+					}
 				}
 				if (!event.isSameClassRefactored(className))  {
 					continue;
@@ -82,13 +105,13 @@ public class RefactoringClassEvents {
 							&& (dateTimeUtcCommitRenamed.compareTo(event.getCommitData().getDateTimeUtc()) < 0)) ) {
 						renamedClass = true;
 						dateTimeUtcCommitRenamed = event.getCommitData().getDateTimeUtc();
-						pathRenamedName = event.getFileNameAfter();
+						filePathRenamedName = event.getFileNameAfter();
 						classRenamedName = event.getNewNameForClassWhenRenameClass();
 					}
 				}
 			}
 			if (renamedClass) {
-				filePath = pathRenamedName;
+				filePath = filePathRenamedName;
 				className = classRenamedName;
 			} else {
 				dateTimeUtcCommitRenamed = null;

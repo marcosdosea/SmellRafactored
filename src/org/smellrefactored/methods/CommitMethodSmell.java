@@ -25,7 +25,7 @@ public class CommitMethodSmell {
 		return (this.commitSmell.getSmellsFromCommit(commitId));
 	}	
 	
-	public FilterSmellResult getSmellsFromCommitSmellTechnique(String commitId, String smellType, String technique) throws Exception {
+	public FilterSmellResult getSmellsFromCommitSmellTypeTechnique(String commitId, String smellType, String technique) throws Exception {
 		FilterSmellResult result = new FilterSmellResult(commitId);
 		HashSet<MethodDataSmelly> smells = new HashSet<MethodDataSmelly>();
 		HashSet<MethodDataSmelly> notSmells = new HashSet<MethodDataSmelly>();

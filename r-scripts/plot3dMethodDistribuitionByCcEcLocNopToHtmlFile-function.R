@@ -1,8 +1,9 @@
 library(rgl)
-
+library(dplyr)
+library(rmarkdown)
 
 plot3dMethodDistribuitionByCcEcLocNopToHtmlFile <- function(csvMethodFileName) {
-  # csvMethodFileName <- "Weasis-Metodo_Longo-V-0-7-21-8-methods-plot.csv"
+  # csvMethodFileName <- "aet-Metodo_Longo-D-0-7-21-8-methods-plot.csv"
   fileIsEmpty <- file.info(csvMethodFileName)$size == 0
   if (fileIsEmpty) {
     print(paste("Empty file:", csvMethodFileName))
@@ -22,6 +23,9 @@ plot3dMethodDistribuitionByCcEcLocNopToHtmlFile <- function(csvMethodFileName) {
   data$ec <-as.numeric(as.character(data$ec))
   data$nop <-as.numeric(as.character(data$nop))
   
+  data$ec <- jitter(data$ec)
+  data$nop <- jitter(data$nop)
+  
 
   # Add a new column with color
   # typeValuesColors <- c("Smell" = "red1", "Ignored Smell" = "grey1", "Refactoring" = "blue1")
@@ -32,17 +36,18 @@ plot3dMethodDistribuitionByCcEcLocNopToHtmlFile <- function(csvMethodFileName) {
   ## data$color <- mycolors[ as.numeric(data$recordType) ]
   # data$color <- typeValuesColors[as.numeric(data$recordType)]
   
-  # Plot
-  par(mar=c(0,0,0,0))
-  plot3d( 
-    x=data$nop, y=data$ec, z=data$loc, 
-    col = data$color, 
-    alpha = 0.3,
-    type = 's', 
-    radius = 3,
-    xlab="nop", ylab="ec", zlab="loc"
-    )
-  htmlFileName <-sub(".csv", "-3dscatter.html", csvMethodFileName)
-  writeWebGL(filename=htmlFileName,  width=600, height=600)
+  if (length(data[, 1]) > 0) {
+    par(mar=c(0,0,0,0))
+    plot3d( 
+      x=data$nop, y=data$ec, z=data$loc, 
+      col = data$color, 
+      alpha = 0.3,
+      type = 's', 
+      radius = 3,
+      xlab="nop", ylab="ec", zlab="loc"
+      )
+    htmlFileName <-sub(".csv", "-3dscatter.html", csvMethodFileName)
+    writeWebGL(filename=htmlFileName,  width=600, height=600)
+  }
 
 }

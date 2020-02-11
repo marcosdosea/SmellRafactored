@@ -14,9 +14,10 @@ lapply(files, function(x) {
     plot3dMethodDistribuitionByCcEcLocNopToHtmlFile(x)
   }, warning = function(warning_condition) {
     warning_condition
-    warnings()
+    # warnings()
   }, error = function(error_condition) {
     error_condition
-    rlang::last_error()
+    # rlang::last_error()
   })
 })
+

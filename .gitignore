@@ -2,3 +2,5 @@
 /target/
 /r-scripts/.Rproj.user/
 
+.Rproj.user
+.Rhistory

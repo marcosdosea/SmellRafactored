@@ -176,7 +176,7 @@ public class SmellRefactoredMethod {
 			// TP and FN
 			computeTruePositiveAndFalseNegative(smellType, technique, targetTefactoringTypes, confusionMatrix);
 			for (String smellCommitId: smellCommitIds) {
-				FilterSmellResult smellResultForCommitSmellTechnique = this.commitMethodSmell.getSmellsFromCommitSmellTechnique(smellCommitId, smellType, technique);
+				FilterSmellResult smellResultForCommitSmellTechnique = this.commitMethodSmell.getSmellsFromCommitSmellTypeTechnique(smellCommitId, smellType, technique);
 				// FP and TN
 				computeFalsePositiveBySmellAndTechnique(smellResultForCommitSmellTechnique, technique, smellType, targetTefactoringTypes, confusionMatrix);
 				computeTrueNegativeBySmellAndTechnique(smellResultForCommitSmellTechnique, technique, smellType, targetTefactoringTypes, confusionMatrix);

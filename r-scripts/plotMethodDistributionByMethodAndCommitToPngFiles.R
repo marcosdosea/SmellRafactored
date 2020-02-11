@@ -6,7 +6,7 @@ scriptFileDir <- dirname(scriptFilePath)
 source(paste(scriptFileDir, "/plotMethodDistributionByMethodAndCommitToPngFile-function.R", sep="", collapse=NULL))
 
 workDir <- paste(scriptFileDir, "/../../MiningStudies/refactoring", sep="", collapse=NULL)
-setwd(workDir)
+# setwd(workDir)
 
 files <- list.files(path=workDir, pattern="-methods-plot.csv$", full.names=TRUE, recursive=FALSE)
 lapply(files, function(x) {

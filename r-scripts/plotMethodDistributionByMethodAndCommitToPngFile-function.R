@@ -1,11 +1,14 @@
+library(rstudioapi)
+source(paste(dirname(getActiveDocumentContext()$path), "/common.R", sep="", collapse=NULL))
+
+library(ggplot2)
+library(dplyr)
+library(stringr) 
+library(ggalt)
 
 plotMethodDistributionByMethodAndCommitToPngFile <- function(csvMethodFileName) {
-  library(ggplot2)
-  library(dplyr)
-  library(stringr) 
-  library(ggalt)
 
-    # csvMethodFileName <- "aet-Metodo_Longo-A-0-7-21-8-methods-plot.csv"
+  # csvMethodFileName <- "aet-Metodo_Longo-A-0-7-21-8-methods-plot.csv"
   # csvMethodFileName <- "Weasis-Alto_Acoplamento_Efferent-D-EXTRACT_AND_MOVE_OPERATION-methods-plot.csv"
   fileIsEmpty <- file.info(csvMethodFileName)$size == 0
   if (fileIsEmpty) {
@@ -24,31 +27,31 @@ plotMethodDistributionByMethodAndCommitToPngFile <- function(csvMethodFileName) 
   
   #data$commitDate <-as.numeric(as.character(data$commitDate))
   data$loc <-as.numeric(as.character(data$loc))
-  data <- data[order(data$commitDateTime, data$className, data$methodName),]
-  data$classNameMethodName <- paste(data$className, ".", data$methodName)
+  data$classMethodName <- paste0(data$className, ".", data$methodName)
+  data <- data[order(data$commitDateTime, data$classMethodName),]
   
-  typeValuesColors <- c("Smell" = "red1", "Ignored Smell" = "grey1", "Refactoring" = "blue1")
-  
-  resultPlot <- 
-    ggplot(data, aes(x=data$commitDateTime, y=data$classNameMethodName) ) +
-    geom_point(aes(colour=data$recordType), alpha=0.3) +
-    # labs(color = "Type") +
-    labs(
+  if (length(data[, 1]) > 0) {
+    resultPlot <- 
+      ggplot(data, aes(x=data$commitDateTime, y=data$classMethodName) ) +
+      geom_point(aes(shape=recordType, colour=recordType, fill=recordType), alpha=0.3) +
+      # labs(color = "Type") +
+      labs(
          # title = projectName,
          # subtitle = "Method by commit",
          # caption = "Only first commit with smells, commit with refactorings and their predecessors", 
          x = "Commits with observations", y = "Methods with observations"
-         , fill = "Legend") +
-    theme(
-      axis.text.x = element_blank()
-      , axis.text.y = element_blank()
-      , legend.position = "bottom"
-    ) +
-    scale_colour_manual("Legend:", values = typeValuesColors)  
+         ) +
+      theme(
+        axis.text.x = element_blank()
+        , axis.text.y = element_blank()
+        , legend.position = "bottom"
+      ) +
+      scale_colour_manual(getRecordTypeLegend(), values = getRecordTypeColors()) +  
+      scale_fill_manual(getRecordTypeLegend(), values = getRecordTypeFills()) +  
+      scale_shape_manual(getRecordTypeLegend(), values = getRecordTypeShapes())  
   
-  imgFileName <-sub(".csv", "-DistribuitionByMethodAndCommit.png", csvMethodFileName)
-  ggsave(imgFileName, plot = resultPlot, "png", path = NULL,
-         scale = 1, width = NA, height = NA, units = c("in", "cm", "mm"),
-         dpi = 300, limitsize = FALSE)
+    imgFileName <-sub(".csv", "-DistribuitionByMethodAndCommit.png", csvMethodFileName)
+    savePlotToPngFile(resultPlot, imgFileName)
+  }
   #return (resultPlot)
 }
