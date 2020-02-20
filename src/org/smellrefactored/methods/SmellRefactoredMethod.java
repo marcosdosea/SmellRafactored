@@ -28,7 +28,7 @@ public class SmellRefactoredMethod {
 
 	final private boolean ANALYZE_EACH_REFACTORING_TYPE_BY_SMELL = true; // Increases processing time.
 	
-	final private boolean IGNORE_REPEATED_PREDICION_ON_NEXT_COMMIT = true; // Increases processing time.
+	final private boolean IGNORE_PREDICTION_FOR_DELAYED_REFACTORINGS = true; // Increases processing time.
 	
 	private HashSet<String> getLongMethodRefactoringTypes() {
 		HashSet<String> refactoringTypes = new HashSet<String>();
@@ -135,7 +135,7 @@ public class SmellRefactoredMethod {
 		pmResultEvaluation.write("Commit range:", this.commitRange.getInitialCommitId(), this.commitRange.getFinalCommitId());
 		pmResultEvaluation.write("");
 		pmResultEvaluation.write("REFACTORINGS");
-		pmResultEvaluation.write("Total number of refactorings detected:", refactoringEvents.getAllMergedIntoMaster().size());
+		pmResultEvaluation.write("Total number of refactorings detected:", this.refactoringEvents.getAllMergedIntoMaster().size(), this.refactoringEvents.size());
 		pmResultEvaluation.write("Refactorings related to methods:", this.refactoringEvents.countTypes(getMethodRefactoringTypes()));
 		for (String refactoringType: this.getMethodRefactoringTypes()) {
 			pmResultEvaluation.write("Number of " + refactoringType + ":", this.refactoringEvents.countType(refactoringType));
@@ -146,7 +146,7 @@ public class SmellRefactoredMethod {
 		pmResultEvaluation.write("Initial number of commits to begin analysis:", this.smellCommitIds.size());
 		pmResultEvaluation.write("Threshold derivation techniques:", this.commitMethodSmell.getTechniquesThresholds().size(), this.commitMethodSmell.getTechniquesThresholds().keySet());
 		pmResultEvaluation.write("Smells on the final commit were ignored");
-		if (IGNORE_REPEATED_PREDICION_ON_NEXT_COMMIT) {
+		if (IGNORE_PREDICTION_FOR_DELAYED_REFACTORINGS) {
 			pmResultEvaluation.write("Unconfirmed predictions that were repeated following commit were ignored");
 		}
 		pmResultEvaluation.write("");
@@ -168,7 +168,7 @@ public class SmellRefactoredMethod {
 	
 	private void evaluateSmellChangeOperation(ArrayList<String> smellCommitIds, String smellType, HashSet<String> targetTefactoringTypes) throws Exception {
 		ConfusionMatrixPredictors confusionMatrices = new ConfusionMatrixPredictors(smellType + " " + targetTefactoringTypes.toString(), this.commitMethodSmell.getTechniquesThresholds().keySet());
-		confusionMatrices.enableValidations(!IGNORE_REPEATED_PREDICION_ON_NEXT_COMMIT);
+		confusionMatrices.enableValidations(!IGNORE_PREDICTION_FOR_DELAYED_REFACTORINGS);
 		for (String technique: this.commitMethodSmell.getTechniquesThresholds().keySet()) {
 			methodOutputFiles = new OutputMethodFileManager(this.commitRange, smellType, technique, targetTefactoringTypes, this.resultFileName);
 			methodOutputFiles.writeHeaders();
@@ -177,6 +177,12 @@ public class SmellRefactoredMethod {
 			computeTruePositiveAndFalseNegative(smellType, technique, targetTefactoringTypes, confusionMatrix);
 			for (String smellCommitId: smellCommitIds) {
 				FilterSmellResult smellResultForCommitSmellTechnique = this.commitMethodSmell.getSmellsFromCommitSmellTypeTechnique(smellCommitId, smellType, technique);
+				if (smellCommitId.equals(smellCommitIds.get(0)) ) {
+					int methodsWithSmellOnFirstCommitCount = (smellResultForCommitSmellTechnique.getMetodosSmell() == null ? 0 : smellResultForCommitSmellTechnique.getMetodosSmell().size());
+					confusionMatrices.addField("Methods with the " + smellType + " smell in the first commit (" + technique + ")", methodsWithSmellOnFirstCommitCount);
+					int methodsWithoutSmellOnFirstCommitCount = (smellResultForCommitSmellTechnique.getMetodosNotSmelly() == null ? 0 : smellResultForCommitSmellTechnique.getMetodosNotSmelly().size());
+					confusionMatrices.addField("Methods without the " + smellType + " smell in the first commit (" + technique + ")", methodsWithoutSmellOnFirstCommitCount);
+				}
 				// FP and TN
 				computeFalsePositiveBySmellAndTechnique(smellResultForCommitSmellTechnique, technique, smellType, targetTefactoringTypes, confusionMatrix);
 				computeTrueNegativeBySmellAndTechnique(smellResultForCommitSmellTechnique, technique, smellType, targetTefactoringTypes, confusionMatrix);
@@ -226,7 +232,7 @@ public class SmellRefactoredMethod {
 			if (nextCommit != null) {
  				if (!refactoringMethodEvents.hasRefactoringsInCommit(nextCommit.getId(), methodSmelly.getDiretorioDaClasse(), methodSmelly.getNomeClasse(), methodSmelly.getNomeMetodo(), targetTefactoringTypes)) {
  					boolean ignoreCurrentPrediction = false;
- 					if (IGNORE_REPEATED_PREDICION_ON_NEXT_COMMIT) {
+ 					if (IGNORE_PREDICTION_FOR_DELAYED_REFACTORINGS) {
  						if (SmellRefactoredManager.ANALYZE_FIRST_COMMIT_ONLY) {
  							ignoreCurrentPrediction = refactoringMethodEvents.hasRefactoringInThisCommitOrInFuture(nextCommit.getId(), methodSmelly.getDiretorioDaClasse(), methodSmelly.getNomeClasse(), methodSmelly.getNomeMetodo(), targetTefactoringTypes);
  						} else {
