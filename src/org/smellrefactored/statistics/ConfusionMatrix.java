@@ -206,6 +206,20 @@ public class ConfusionMatrix {
 		return (this.getAccuracy() - randomAccuracy) / (1 - randomAccuracy);
 	}
 
+	// Based on https://repositorio.unb.br/bitstream/10482/13435/1/2013_DenilsonPereiraPasso.pdf
+	public float getTau() {
+		float p0 = this.getAccuracy();
+		float m = 2; // number of classes
+		float pr = (1/m);
+		return ( (p0 - pr) / (1 - pr) );
+	}
+
+	// Based on http://www.bioinfopublication.org/files/articles/2_1_1_JMLT.pdf
+	public float getAucByTrapezoidalMethod() {
+		return ( (this.getTruePositiveRate() + this.getTrueNegativeRate())/2 ); 
+		// return (1 - (this.getFalsePositiveRate()+ this.getFalseNegativeRate())/2);
+	}
+			
 	// Based on http://standardwisdom.com/softwarejournal/2011/12/matthews-correlation-coefficient-how-well-does-it-do/
 	public float getNetReward(float truePositiveReward, float trueNegativeReward, float falsePositiveReward, float falseNegativeReward) {
 		float hitReward = (this.truePositive * truePositiveReward) + (this.trueNegative * trueNegativeReward); 

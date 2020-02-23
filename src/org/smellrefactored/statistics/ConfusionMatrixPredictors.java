@@ -305,6 +305,12 @@ public class ConfusionMatrixPredictors {
 		for (String predictor : confusionMatrices.keySet()) {
 			persistenceMechanism.write("Kappa (" + predictor + ") = ", confusionMatrices.get(predictor).getKappa());
 		}
+		for (String predictor : confusionMatrices.keySet()) {
+			persistenceMechanism.write("Tau (" + predictor + ") = ", confusionMatrices.get(predictor).getTau());
+		}
+		for (String predictor : confusionMatrices.keySet()) {
+			persistenceMechanism.write("AuC (" + predictor + ") = ", confusionMatrices.get(predictor).getAucByTrapezoidalMethod());
+		}
 	}
 	
 	public void saveAsColumnsToCsvFile(String filename) {
