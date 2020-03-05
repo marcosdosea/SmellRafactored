@@ -133,6 +133,7 @@ public class SmellRefactoredMethod {
 		pmResultEvaluation.write("Performed on:", Instant.now().atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME).replace( "T" , " "));
 		pmResultEvaluation.write("Repository url:", this.commitRange.getRepositoryUrl());
 		pmResultEvaluation.write("Commit range:", this.commitRange.getInitialCommitId(), this.commitRange.getFinalCommitId());
+		pmResultEvaluation.write("Number of commits detected in the range:", this.commitRange.size());
 		pmResultEvaluation.write("");
 		pmResultEvaluation.write("REFACTORINGS");
 		pmResultEvaluation.write("Total number of refactorings detected:", this.refactoringEvents.getAllMergedIntoMaster().size(), this.refactoringEvents.size());
