@@ -21,18 +21,15 @@ public class RefactoringEvents {
 		this.repositoryPath = repositoryPath;
 		this.commitRange = commitRange;
 		
-		ArrayList<CommitData> commitsMergedIntoMaster = this.commitRange.getCommitsMergedIntoMaster();
 		RefactoringMinerWrapperManager refactoringMinerWrapperManager = new RefactoringMinerWrapperManager(repositoryPath, this.commitRange.getNextCommit(this.commitRange.getInitialCommitId()).getId(), this.commitRange.getFinalCommitId(), resultBaseFileName);
 		List<RefactoringMinerWrapperDto> refactoringDtoList = refactoringMinerWrapperManager.getRefactoringDtoListUsingJsonCache();
 		for (RefactoringMinerWrapperDto refactoringDto : refactoringDtoList) {
 			if (refactoringDto != null) {
-				for (CommitData commitMergedIntoMaster: commitsMergedIntoMaster) {
-					if (refactoringDto.commitId.equals(commitMergedIntoMaster.getId())) {
-						RefactoringEvent refactoringData = new RefactoringEvent(refactoringDto, this.repositoryPath);
-						refactoringData.setCommitData(commitMergedIntoMaster);
-						events.add(refactoringData);
-						break;
-					}
+				if (this.commitRange.exists(refactoringDto.commitId)) {
+					CommitData commitData = this.commitRange.getCommitByIdAddingIfNotExists(refactoringDto.commitId);
+					RefactoringEvent refactoringData = new RefactoringEvent(refactoringDto, this.repositoryPath);
+					refactoringData.setCommitData(commitData);
+					events.add(refactoringData);
 				}
 			}
 		}

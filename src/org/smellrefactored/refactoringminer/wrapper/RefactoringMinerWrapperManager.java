@@ -78,11 +78,12 @@ public class RefactoringMinerWrapperManager {
 			@Override
 			public boolean skipCommit(String commitId) {
 				boolean result = false;
+				// logger.info("Skip commit " + commitId + "?");
 				String commitCacheFileName = individualCacheBaseFileName  + "-" + commitId + ".json";
 				File cacheFile = new File(commitCacheFileName);
 				if (cacheFile.exists()) {
-					Gson gson = new Gson();  
 					try {
+						Gson gson = new Gson();  
 						JsonReader reader = new JsonReader(new FileReader(commitCacheFileName));
 						RefactoringMinerWrapperDto[] refactoringDtoArray = gson.fromJson(reader, RefactoringMinerWrapperDto[].class);
 						if (refactoringDtoArray.length > 0) {
@@ -95,6 +96,8 @@ public class RefactoringMinerWrapperManager {
 						result = true;
 						logger.info("Commit " + commitId + " refactorings obtained from individual cache.");
 					} catch (FileNotFoundException e) {
+						logger.error("Commit " + commitId + " refactorings obtained from individual cache.");
+						e.printStackTrace();
 						// do nothing
 					}
 				}
