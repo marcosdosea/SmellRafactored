@@ -22,7 +22,9 @@ public class RefactoringEvents {
 		this.commitRange = commitRange;
 		
 		RefactoringMinerWrapperManager refactoringMinerWrapperManager = new RefactoringMinerWrapperManager(repositoryPath, this.commitRange.getNextCommit(this.commitRange.getInitialCommitId()).getId(), this.commitRange.getFinalCommitId(), resultBaseFileName);
-		List<RefactoringMinerWrapperDto> refactoringDtoList = refactoringMinerWrapperManager.getRefactoringDtoListUsingJsonCache();
+		// List<RefactoringMinerWrapperDto> refactoringDtoList = refactoringMinerWrapperManager.getRefactoringDtoListWithoutCache();
+		// List<RefactoringMinerWrapperDto> refactoringDtoList = refactoringMinerWrapperManager.getRefactoringDtoListUsingJsonCache();
+		List<RefactoringMinerWrapperDto> refactoringDtoList = refactoringMinerWrapperManager.getRefactoringDtoListUsingJsonIndividualCache();
 		for (RefactoringMinerWrapperDto refactoringDto : refactoringDtoList) {
 			if (refactoringDto != null) {
 				if (this.commitRange.exists(refactoringDto.commitId)) {

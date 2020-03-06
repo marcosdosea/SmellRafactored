@@ -7,7 +7,6 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 import org.designroleminer.smelldetector.model.LimiarTecnica;
@@ -40,8 +39,6 @@ public class SmellRefactoredManager {
 	
 	private String resultBaseFileName;
 
-	private HashSet<String> listCommitEvaluated = new HashSet<String>();
-	
 	public SmellRefactoredManager(String repositoryUrl, String repositoryPath, String initialCommitId, String finalCommitId,
 			List<LimiarTecnica> listaLimiarTecnica, String resultBaseFileName) {
 		this.repositoryUrl = repositoryUrl;

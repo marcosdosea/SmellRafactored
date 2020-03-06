@@ -8,9 +8,11 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.refactoringminer.api.GitHistoryRefactoringMiner;
 import org.refactoringminer.api.GitService;
 import org.refactoringminer.api.Refactoring;
@@ -65,74 +67,107 @@ public class RefactoringMinerWrapperManager {
 		return (refactoringDtoList);
 	}
 
+	public List<RefactoringMinerWrapperDto> getRefactoringDtoListUsingJsonIndividualCache() throws Exception {
+		List<RefactoringMinerWrapperDto> result = new ArrayList<RefactoringMinerWrapperDto>();
+		List<String> commitIds = new ArrayList<String>();
+		GitService gitService = new GitServiceImpl();
+		Repository repo = gitService.openRepository(this.repositoryPath);
+	    Iterable<RevCommit> walk = gitService.createRevsWalkBetweenCommits(repo, this.initialCommitId, this.finalCommitId);
+	    Iterator<RevCommit> walkIterator = walk.iterator();
+	    while (walkIterator.hasNext()) {
+	        RevCommit commit = walkIterator.next();
+	        String commitId = commit.getId().getName();
+	        commitIds.add(commitId);
+	        addRefactoringDtosFromCommitIdToList(commitId, result);
+	    }	
+	    return (result);
+	}
+	
+	private void addRefactoringDtosFromCommitIdToList(String commitId, List<RefactoringMinerWrapperDto> refactoringMinerWrapperDtos) throws Exception {
+		final String individualCacheBaseFileName = this.cacheBaseFileName + "-" + commitId;
+		String commitCacheFileName = individualCacheBaseFileName + ".json";
+		File cacheFile = new File(commitCacheFileName);
+		if (cacheFile.exists()) {
+			logger.info("Getting list of refactorings for the " + commitId + " commit from the individual cache file");
+			addRefactoringDtoListFromJsonCommitCacheToList(commitCacheFileName, refactoringMinerWrapperDtos);
+		} else {
+			logger.info("Getting list of refactorings for the " + commitId + " commit from RefactoringMinwe");
+			List<RefactoringMinerWrapperDto> newDtos = getRefactoringDtoListFromRefactoringMiner(commitId);
+			logger.info("Saving the " + commitId + " commit refactor list to the individual cache file");
+			saveRefactoringDtoListToJsonCommitCache(newDtos, commitCacheFileName);
+			for (RefactoringMinerWrapperDto newDto: newDtos) {
+				refactoringMinerWrapperDtos.add(newDto);
+			}
+		}
+	}
+
+	private void addRefactoringDtoListFromJsonCommitCacheToList(String commitCacheFileName, List<RefactoringMinerWrapperDto> refactoringMinerWrapperDtos) throws FileNotFoundException {
+		Gson gson = new Gson();  
+		JsonReader reader = new JsonReader(new FileReader(commitCacheFileName));
+		RefactoringMinerWrapperDto[] refactoringDtoArray = gson.fromJson(reader, RefactoringMinerWrapperDto[].class);
+			for (RefactoringMinerWrapperDto refactoringDto: refactoringDtoArray) {
+				refactoringMinerWrapperDtos.add(refactoringDto);
+			}
+	}
+
+	private static void saveRefactoringDtoListToJsonCommitCache(List<RefactoringMinerWrapperDto> refactoringDtoList, String commitCacheFileName) throws IOException {
+		String commitCacheTempFileName = commitCacheFileName.replace(".json", ".temp");
+		Gson gson = new Gson();
+		File existingTempFile = new File(commitCacheTempFileName);
+		if (existingTempFile.exists()) {
+			existingTempFile.delete();
+		}
+		File existingCacheFile = new File(commitCacheFileName);
+		if (existingCacheFile.exists()) {
+			existingCacheFile.delete();
+		}
+		FileWriter commitCacheTempFileHandler;
+		commitCacheTempFileHandler = new FileWriter(commitCacheTempFileName);
+		commitCacheTempFileHandler.append(gson.toJson(refactoringDtoList));
+		commitCacheTempFileHandler.close();
+		File tempfile = new File(commitCacheTempFileName);
+		File newfile = new File(commitCacheFileName);
+		tempfile.renameTo(newfile);
+	}
+	
+	private List<RefactoringMinerWrapperDto> getRefactoringDtoListFromRefactoringMiner(String commitId) throws Exception {
+		final List<RefactoringMinerWrapperDto> result = new ArrayList<RefactoringMinerWrapperDto>();
+		GitService gitService = new GitServiceImpl();
+		Repository repo = gitService.openRepository(this.repositoryPath);
+		GitHistoryRefactoringMiner miner = new GitHistoryRefactoringMinerImpl();
+		miner.detectAtCommit(repo, commitId, new RefactoringHandler() {
+			@Override
+			public void handle(String idCommit, List<Refactoring> refactorings) {
+				for (Refactoring ref : refactorings) {
+					RefactoringMinerWrapperDto refactoringDto = new RefactoringMinerWrapperDto();
+					refactoringDto.wrapper(idCommit, ref);
+					result.add(refactoringDto);
+				}
+			}
+		});
+		repo.close();
+		return (result);
+	}
+	
 	private List<RefactoringMinerWrapperDto> getRefactoringDtoListFromRefactoringMiner() throws Exception {
 		final List<String> allCommitIds = new ArrayList<String>();
 		final List<String> refactoringCommitIds = new ArrayList<String>();
 		final List<RefactoringMinerWrapperDto> refactoringDtoList = new ArrayList<RefactoringMinerWrapperDto>();
-		final Gson gson = new Gson();
-		final String individualCacheBaseFileName = this.cacheBaseFileName;
 		GitService gitService = new GitServiceImpl();
 		Repository repo = gitService.openRepository(this.repositoryPath);
 		GitHistoryRefactoringMiner miner = new GitHistoryRefactoringMinerImpl();
 		miner.detectBetweenCommits(repo, initialCommitId, finalCommitId, new RefactoringHandler() {
-			@Override
-			public boolean skipCommit(String commitId) {
-				boolean result = false;
-				// logger.info("Skip commit " + commitId + "?");
-				String commitCacheFileName = individualCacheBaseFileName  + "-" + commitId + ".json";
-				File cacheFile = new File(commitCacheFileName);
-				if (cacheFile.exists()) {
-					try {
-						Gson gson = new Gson();  
-						JsonReader reader = new JsonReader(new FileReader(commitCacheFileName));
-						RefactoringMinerWrapperDto[] refactoringDtoArray = gson.fromJson(reader, RefactoringMinerWrapperDto[].class);
-						if (refactoringDtoArray.length > 0) {
-							refactoringCommitIds.add(commitId);
-							for (RefactoringMinerWrapperDto refactoringDto: refactoringDtoArray) {
-								refactoringDtoList.add(refactoringDto);
-							}
-						}
-						allCommitIds.add(commitId);
-						result = true;
-						logger.info("Commit " + commitId + " refactorings obtained from individual cache.");
-					} catch (FileNotFoundException e) {
-						logger.error("Commit " + commitId + " refactorings obtained from individual cache.");
-						e.printStackTrace();
-						// do nothing
-					}
-				}
-				return (result);  
-			}
 			@Override
 			public void handle(String idCommit, List<Refactoring> refactorings) {
 				final List<RefactoringMinerWrapperDto> commitDtoList = new ArrayList<RefactoringMinerWrapperDto>();
 				for (Refactoring ref : refactorings) {
 					RefactoringMinerWrapperDto refactoringDto = new RefactoringMinerWrapperDto();
 					refactoringDto.wrapper(idCommit, ref);
-					commitDtoList.add(refactoringDto);
+					// commitDtoList.add(refactoringDto);
 					refactoringDtoList.add(refactoringDto);
 				}
-				
-				String commitCacheBaseFileName = individualCacheBaseFileName  + "-" + idCommit;
-				String commitCacheTempFileName = commitCacheBaseFileName + ".temp";
-				String commitCacheFileName = commitCacheBaseFileName + ".json";
-				try {
-					File existingTempFile = new File(commitCacheTempFileName);
-					existingTempFile.delete();
-					File existingCacheFile = new File(commitCacheFileName);
-					existingCacheFile.delete();
-					FileWriter commitCacheTempFileHandler;
-					commitCacheTempFileHandler = new FileWriter(commitCacheTempFileName);
-					commitCacheTempFileHandler.append(gson.toJson(commitDtoList));
-					commitCacheTempFileHandler.close();
-					File tempfile = new File(commitCacheTempFileName);
-					File newfile = new File(commitCacheFileName);
-					tempfile.renameTo(newfile);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
 				if (commitDtoList.size() > 0) {
-					refactoringCommitIds.add(idCommit);
+				 	refactoringCommitIds.add(idCommit);
 				}
 				allCommitIds.add(idCommit);
 			}
