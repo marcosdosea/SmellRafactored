@@ -91,7 +91,7 @@ public class RefactoringMinerWrapperManager {
 			logger.info("Getting list of refactorings for the " + commitId + " commit from the individual cache file");
 			addRefactoringDtoListFromJsonCommitCacheToList(commitCacheFileName, refactoringMinerWrapperDtos);
 		} else {
-			logger.info("Getting list of refactorings for the " + commitId + " commit from RefactoringMinwe");
+			logger.info("Getting list of refactorings for the " + commitId + " commit from RefactoringMiner");
 			List<RefactoringMinerWrapperDto> newDtos = getRefactoringDtoListFromRefactoringMiner(commitId);
 			logger.info("Saving the " + commitId + " commit refactor list to the individual cache file");
 			saveRefactoringDtoListToJsonCommitCache(newDtos, commitCacheFileName);

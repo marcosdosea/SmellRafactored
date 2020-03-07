@@ -35,8 +35,8 @@ public class SmellRefactoredClass {
 		refactoringTypes.add(RefactoringType.EXTRACT_CLASS.toString());
 		refactoringTypes.add(RefactoringType.EXTRACT_SUBCLASS.toString());
 		refactoringTypes.add(RefactoringType.EXTRACT_SUPERCLASS.toString());
-		refactoringTypes.add(RefactoringType.CONVERT_ANONYMOUS_CLASS_TO_TYPE.toString());
-		// // refactoringTypes.add(RefactoringType.INTRODUCE_POLYMORPHISM.toString());
+		// refactoringTypes.add(RefactoringType.CONVERT_ANONYMOUS_CLASS_TO_TYPE.toString());
+		// refactoringTypes.add(RefactoringType.INTRODUCE_POLYMORPHISM.toString());
 		refactoringTypes.add(RefactoringType.EXTRACT_AND_MOVE_OPERATION.toString());
 		refactoringTypes.add(RefactoringType.MOVE_AND_INLINE_OPERATION.toString());
 		refactoringTypes.add(RefactoringType.MOVE_ATTRIBUTE.toString());
