@@ -265,6 +265,34 @@ public class ConfusionMatrixPredictors {
 	}
 
 	public void saveAsLinesToCsvFileHandler(PersistenceMechanism persistenceMechanism) {
+		int realPositives = 0;
+		for (String predictor: confusionMatrices.keySet()) {
+			persistenceMechanism.write("Observed Positives (" + predictor + ") = ", confusionMatrices.get(predictor).getRealPositive() );
+			realPositives += confusionMatrices.get(predictor).getRealPositive();
+		}
+		float averageOfObservedPositives = 0;
+		if (confusionMatrices.size() > 0) {
+			averageOfObservedPositives = (float) realPositives / confusionMatrices.size();
+			persistenceMechanism.write("Average of Observed Positives = ", averageOfObservedPositives );
+		}
+
+		int positivePredictions = 0;
+		for (String predictor: confusionMatrices.keySet()) {
+			persistenceMechanism.write("Positive Predictions (" + predictor + ") = ", confusionMatrices.get(predictor).getPredictedPositive() );
+			positivePredictions += confusionMatrices.get(predictor).getPredictedPositive();
+		}
+		float averageOfPositivePredictions = 0;
+		if (confusionMatrices.size() > 0) {
+			averageOfPositivePredictions = (float) positivePredictions / confusionMatrices.size();
+			persistenceMechanism.write("Average of Positive Predictions = ", averageOfPositivePredictions );
+		}
+		
+		if ( (confusionMatrices.size() > 0) /* && (averageOfObservedPositives>0) */ ) {
+			persistenceMechanism.write("Average of Predicted Over Average of Observed = ", (float) averageOfPositivePredictions / averageOfObservedPositives );
+		}
+		
+
+		
 		for (String predictor: confusionMatrices.keySet()) {
 			persistenceMechanism.write("Sample Size (" + predictor + ") = ", confusionMatrices.get(predictor).getSampleSize() );
 		}
