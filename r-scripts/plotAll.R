@@ -11,7 +11,7 @@ source(paste(scriptFileDir, "/plotClassFreqPolyByMetricsToPngFiles.R", sep="", c
 
 source(paste(scriptFileDir, "/plotMethodDistributionByMethodAndCommitToPngFiles.R", sep="", collapse=NULL))
 source(paste(scriptFileDir, "/plotMethodBoxplotByMetricsToPngFiles.R", sep="", collapse=NULL))
-source(paste(scriptFileDir, "/plotMethodDensityByMetricsToPngFiles.R", sep="", collapse=NULL))
+# source(paste(scriptFileDir, "/plotMethodDensityByMetricsToPngFiles.R", sep="", collapse=NULL))
 source(paste(scriptFileDir, "/plot3dMethodDistribuitionByCcEcLocNopToHtmlFiles.R", sep="", collapse=NULL))
 
 "Finished!"

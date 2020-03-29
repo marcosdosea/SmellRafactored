@@ -44,7 +44,7 @@ plotClassFreqPolyByClocToPngFile <- function(data, projectName, csvClassFileName
   imgFileName <-sub(".csv", "-freqpoly-cloc.png", csvClassFileName)
   savePlotToPngFile(resultPlot, imgFileName)
 
-  plotClassFreqPolyByClocDesignRoleToPngFile(data, projectName, imgFileName)
+  ### plotClassFreqPolyByClocDesignRoleToPngFile(data, projectName, imgFileName)
   
   # return(densityPlot)
 }

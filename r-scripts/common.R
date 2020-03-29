@@ -20,7 +20,7 @@ getRecordTypeFills <- function() {
 savePlotToPngFile <- function(plotToSave, imgFileName) {
   print(basename(imgFileName))
   ggsave(imgFileName, plot = plotToSave, "png", path = NULL,
-       scale = 1, width = NA, height = NA, units = "mm",
+       scale = 0.3, width = NA, height = NA, units = "mm",
        dpi = 300, limitsize = FALSE)
 }
 
