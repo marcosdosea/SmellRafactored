@@ -1,0 +1,52 @@
+
+plotBoxplotByMetricDesignRoleToPngFile <- function(data, projectName, imgFileName, metricCode, yLabel) {
+  designRoles <- data$designRole
+  designRoles <- unique(designRoles)
+  for (dr in designRoles){
+    dataDr <- filter(data, designRole == dr)
+    if ( (length(recordTypes) >= 2) & (length(dataDr$designRole) > 1) ) {
+      print(dr)
+      print(length(dataDr$designRole))
+      resultDrPlot <- ggplot(dataDr, aes(x=recordType, y=metricCode, group=recordType)) +
+        geom_boxplot(aes(colour=recordType, fill=recordType), alpha=0.3) +
+        # theme_ipsum() +
+        # ggtitle(projectName) +
+        xlab("") +
+        ylab(yLabel) +
+        theme(legend.position="none") +
+        scale_colour_manual(getRecordTypeLegend(), values = getRecordTypeColors()) +  
+        scale_fill_manual(getRecordTypeLegend(), values = getRecordTypeFills()) 
+      drSuffix <- paste0("-", dr, ".png")
+      imgDrFileName <-sub(".png", drSuffix, imgFileName)
+      savePlotToPngFile(resultDrPlot, imgDrFileName)
+    }
+  }
+  # return(resultDrPlot)
+}
+
+
+plotBoxplotByMetricToPngFile <- function(data, projectName, csvFileName, metricCode, yLabel, deepenForDesignRole) {
+  recordTypes <- data$recordType
+  recordTypes <- unique(recordTypes)
+  if (length(recordTypes) >= 2) { # (length(data[, 1]) > 0)
+    resultPlot <- ggplot(data=data, aes(x=recordType, y=targetMetric, group=recordType)) +
+      geom_boxplot(aes(colour=recordType, fill=recordType), alpha=0.3) +
+      # geom_boxplot(aes(colour=recordType, fill=recordType), alpha=0.3, outlier.shape = NA) + 
+      # scale_y_continuous(limits = quantile(data$targetMetric, c(0.1, 0.9))) +
+      # theme_ipsum() +
+      # ggtitle(projectName) +
+      xlab("") +
+      ylab(yLabel) +
+      theme(legend.position="none") +
+      scale_colour_manual(getRecordTypeLegend(), values = getRecordTypeColors()) +  
+      scale_fill_manual(getRecordTypeLegend(), values = getRecordTypeFills()) 
+    fileSuffix <- paste0("-boxplot-", metricCode, ".png")
+    imgFileName <-sub(".csv", fileSuffix, csvFileName)
+    savePlotToPngFile(resultPlot, imgFileName)
+    # deepenForDesignRole <- TRUE
+    if (deepenForDesignRole) {
+      plotBoxplotByMetricDesignRoleToPngFile(data, projectName, imgFileName, metricCode, yLabel)
+    }
+  }
+  # return(resultPlot)
+}

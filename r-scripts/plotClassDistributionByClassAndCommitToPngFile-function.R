@@ -1,12 +1,14 @@
 library(rstudioapi)
 source(paste(dirname(getActiveDocumentContext()$path), "/common.R", sep="", collapse=NULL))
+source(paste(dirname(getActiveDocumentContext()$path), "/common-class.R", sep="", collapse=NULL))
+source(paste(dirname(getActiveDocumentContext()$path), "/plotDistributionByEntityAndCommitToPngFile-function.R", sep="", collapse=NULL))
 
 library(ggplot2)
 library(dplyr)
 library(stringr) 
 library(ggalt)
 
-plotClassDistributionByClassAndCommitToPngFile <- function(csvClassFileName) {
+plotClassDistributionByClassAndCommitToPngFile <- function(csvClassFileName, deepenForDesignRole) {
   
   # csvClassFileName <- "ice-Class_Longa-A-18-15-22-7-19-23-21-2-9-8-17-classes-plot.csv"
   # csvClassFileName <- "ice-Class_Longa-R-CONVERT_ANONYMOUS_CLASS_TO_TYPE-classes-plot.csv"
@@ -22,37 +24,26 @@ plotClassDistributionByClassAndCommitToPngFile <- function(csvClassFileName) {
   data[data=="null"] <- NA
   data <- na.omit(data)
 
-  data <- select(data, commitDateTime, className, cloc, recordType, techniques)
+  data <- select(data, commitDateTime, className, cloc, recordType, techniques, designRole)
   data <- unique(data)
   
   #data$commitDate <-as.numeric(as.character(data$commitDate))
-  data$cloc <-as.numeric(as.character(data$cloc))
-  data <- data[order(data$commitDateTime, data$className),]
+  data$entityName <- data$className
+  data <- data[order(data$commitDateTime, data$entityName),]
 
-  if (length(data[, 1]) > 0) {
-    resultPlot <- 
-      ggplot(data, aes(x=data$commitDateTime, y=data$className)) +
-      geom_point(aes(shape=recordType, colour=recordType, fill=recordType), alpha=0.3) +
-      # labs(color = "Type") +
-      labs(
-        # title = projectName,
-         # subtitle = "Classes by commit",
-         # caption = "Only first commit with smells, commit with refactorings and their predecessors", 
-         x = "Commits with observations", y = "Classes with observations"
-         ) +
-      theme(
-        axis.text.x = element_blank()
-        # axis.text.x = element_text(angle = 90, hjust = 1)
-        , axis.text.y = element_blank()
-        , legend.position = "bottom"
-        ) +
-      scale_colour_manual(getRecordTypeLegend(), values = getRecordTypeColors()) +  
-      scale_fill_manual(getRecordTypeLegend(), values = getRecordTypeFills()) +  
-      scale_shape_manual(getRecordTypeLegend(), values = getRecordTypeShapes())  
+  plotDistribuitionByEntityAndCommitToPngFile(data, projectName, csvClassFileName, "Classes with observations", deepenForDesignRole)
+}
 
-    imgFileName <-sub(".csv", "-DistribuitionByClassAndCommit.png", csvClassFileName)
-    savePlotToPngFile(resultPlot, imgFileName)
-  }
-  #return (resultPlot)
+
+
+plotClassDistributionByClassAndCommitToPngFiles <- function(csvClassFileNames, deepenForDesignRole) {
+  lapply(csvClassFileNames, function(csvClassFileName) {
+    executeFunctionWithCsvFileAndDeepenForDesignRole(plotClassDistributionByClassAndCommitToPngFile, csvClassFileName, deepenForDesignRole)
+  })
+}
+
+plotClassDistributionByClassAndCommitFromDirToPngFiles <- function(workDir, deepenForDesignRole) {
+  csvClassFileNames <- getClassPlotCsvFiles(workDir)
+  plotClassDistributionByClassAndCommitToPngFiles(csvClassFileNames, deepenForDesignRole)
 }
 

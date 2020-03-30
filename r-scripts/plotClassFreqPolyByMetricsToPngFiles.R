@@ -1,23 +1,11 @@
 rm(list = ls())
 
 library(rstudioapi)
-scriptFilePath <- getActiveDocumentContext()$path
-scriptFileDir <- dirname(scriptFilePath)
-source(paste(scriptFileDir, "/plotClassFreqPolyByMetricsToPngFile-function.R", sep="", collapse=NULL))
+source(paste(dirname(getActiveDocumentContext()$path), "/common.R", sep="", collapse=NULL))
+source(paste(dirname(getActiveDocumentContext()$path), "/common-class.R", sep="", collapse=NULL))
+source(paste(dirname(getActiveDocumentContext()$path), "/plotClassFreqPolyByMetricsToPngFile-function.R", sep="", collapse=NULL))
 
-workDir <- paste(scriptFileDir, "/../../MiningStudies/refactoring", sep="", collapse=NULL)
-setwd(workDir)
+setupWorkDir()
 
-files <- list.files(path=workDir, pattern="-classes-plot.csv$", full.names=TRUE, recursive=FALSE)
-lapply(files, function(x) {
-  tryCatch({
-    plotClassFreqPolyByMetricsToPngFile(x)
-  }, warning = function(warning_condition) {
-    warning_condition
-    # warnings()
-  }, error = function(error_condition) {
-    error_condition
-    # rlang::last_error()
-  })
-})
-
+deepenForDesignRole <- FALSE
+plotClassFreqPolyByMetricsFromDirToPngFiles(getWorkDir(), deepenForDesignRole)

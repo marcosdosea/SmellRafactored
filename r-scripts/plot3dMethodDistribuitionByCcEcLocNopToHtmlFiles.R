@@ -1,14 +1,13 @@
 rm(list = ls())
 
 library(rstudioapi)
-scriptFilePath <- getActiveDocumentContext()$path
-scriptFileDir <- dirname(scriptFilePath)
-source(paste(scriptFileDir, "/plot3dMethodDistribuitionByCcEcLocNopToHtmlFile-function.R", sep="", collapse=NULL))
+source(paste(dirname(getActiveDocumentContext()$path), "/common.R", sep="", collapse=NULL))
+source(paste(dirname(getActiveDocumentContext()$path), "/common-method.R", sep="", collapse=NULL))
+source(paste(dirname(getActiveDocumentContext()$path), "/plot3dMethodDistribuitionByCcEcLocNopToHtmlFile-function.R", sep="", collapse=NULL))
 
-workDir <- paste(scriptFileDir, "/../../MiningStudies/refactoring", sep="", collapse=NULL)
-setwd(workDir)
+setupWorkDir()
 
-files <- list.files(path=workDir, pattern="-methods-plot.csv$", full.names=TRUE, recursive=FALSE)
+files <- list.files(path=getWorkDir(), pattern="-methods-plot.csv$", full.names=TRUE, recursive=FALSE)
 lapply(files, function(x) {
   result = tryCatch({
     plot3dMethodDistribuitionByCcEcLocNopToHtmlFile(x)

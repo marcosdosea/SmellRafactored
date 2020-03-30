@@ -1,18 +1,20 @@
 rm(list = ls())
 
 library(rstudioapi)
-scriptFilePath <- getActiveDocumentContext()$path
-scriptFileDir <- dirname(scriptFilePath)
+source(paste(dirname(getActiveDocumentContext()$path), "/common.R", sep="", collapse=NULL))
+setupWorkDir()
 
-source(paste(scriptFileDir, "/plotClassDistributionByClassAndCommitToPngFiles.R", sep="", collapse=NULL))
-source(paste(scriptFileDir, "/plotClassBoxplotByMetricsToPngFiles.R", sep="", collapse=NULL))
-# source(paste(scriptFileDir, "/plotClassDensityByMetricsToPngFiles.R", sep="", collapse=NULL))
-source(paste(scriptFileDir, "/plotClassFreqPolyByMetricsToPngFiles.R", sep="", collapse=NULL))
 
-source(paste(scriptFileDir, "/plotMethodDistributionByMethodAndCommitToPngFiles.R", sep="", collapse=NULL))
-source(paste(scriptFileDir, "/plotMethodBoxplotByMetricsToPngFiles.R", sep="", collapse=NULL))
-# source(paste(scriptFileDir, "/plotMethodDensityByMetricsToPngFiles.R", sep="", collapse=NULL))
-source(paste(scriptFileDir, "/plot3dMethodDistribuitionByCcEcLocNopToHtmlFiles.R", sep="", collapse=NULL))
+source(paste(dirname(getActiveDocumentContext()$path), "/plotClassDistributionByClassAndCommitToPngFiles.R", sep="", collapse=NULL))
+source(paste(dirname(getActiveDocumentContext()$path), "/plotClassBoxplotByMetricsToPngFiles.R", sep="", collapse=NULL))
+source(paste(dirname(getActiveDocumentContext()$path), "/plotClassFreqPolyByMetricsToPngFiles.R", sep="", collapse=NULL))
+# source(paste(dirname(getActiveDocumentContext()$path), "/plotClassDensityByMetricsToPngFiles.R", sep="", collapse=NULL))
+
+source(paste(dirname(getActiveDocumentContext()$path), "/plotMethodDistributionByMethodAndCommitToPngFiles.R", sep="", collapse=NULL))
+source(paste(dirname(getActiveDocumentContext()$path), "/plotMethodBoxplotByMetricsToPngFiles.R", sep="", collapse=NULL))
+source(paste(dirname(getActiveDocumentContext()$path), "/plotMethodFreqPolyByMetricsToPngFiles.R", sep="", collapse=NULL))
+# source(paste(dirname(getActiveDocumentContext()$path), "/plotMethodDensityByMetricsToPngFiles.R", sep="", collapse=NULL))
+source(paste(dirname(getActiveDocumentContext()$path), "/plot3dMethodDistribuitionByCcEcLocNopToHtmlFiles.R", sep="", collapse=NULL))
 
 "Finished!"
 
