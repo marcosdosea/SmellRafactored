@@ -21,6 +21,8 @@ public class OutputClassFilePlotCsv {
 	
 	private CommitRange commitRange;
 	private String baseFileName;
+	private Boolean recordRefactorings;
+	private String technique;
 	
 	private CSVWriter csvFile;
 
@@ -29,9 +31,18 @@ public class OutputClassFilePlotCsv {
 	public OutputClassFilePlotCsv(CommitRange commitRange, String baseFileName) throws IOException {
 		this.commitRange = commitRange;
 		this.baseFileName = baseFileName;
-		
+		this.recordRefactorings = true; 
+				
 		// csvFile = new CSVWriter(new FileWriter(this.baseFileName + "-" + this.commitRange.getInitialCommitId() + "-" + this.commitRange.getFinalCommitId() + "-classes-plot.csv"));
 		csvFile = new CSVWriter(new FileWriter(this.baseFileName + "-classes-plot.csv"));
+	}
+	
+	public void  setTechnique(String technique) {
+		this.technique = technique;
+	}
+	
+	public void  setRecordRefactorings(Boolean recordRefactorings) {
+		this.recordRefactorings = recordRefactorings;
 	}
 	
 	public void writeHeader() {
@@ -44,6 +55,7 @@ public class OutputClassFilePlotCsv {
 		fields.add("cloc");
 		fields.add("recordType");
 		fields.add("entityName");
+		fields.add("technique");
 		fields.add("techniques");
 		csvFile.writeNext(fields.toArray(new String[0]));
 	}
@@ -63,37 +75,44 @@ public class OutputClassFilePlotCsv {
 		fields.add(String.valueOf(classSmell.getLinesOfCode()));
 		fields.add(RECORD_TYPE_SMELL);
 		fields.add(classSmell.getSmell());
+		fields.add(this.technique);
 		fields.add(classSmell.getListaTecnicas() != null ? classSmell.getListaTecnicas().toString() : null);
 		csvFile.writeNext(fields.toArray(new String[0]));
 	}
 	
 	public void writeTruePositiveRefactoring(RefactoringEvent refactoring, ClassDataSmelly classSmell) {
-		ArrayList<String> fields = new ArrayList<String>();
-		fields.add(refactoring.getCommitId());
-		fields.add(this.commitRange.getCommitDateAsString(refactoring.getCommitId()));
-		fields.add(refactoring.getFileNameAfter());
-		fields.add(refactoring.getClassName());
-		fields.add(classSmell.getClassDesignRole());
-		fields.add(String.valueOf(classSmell.getLinesOfCode()));
-		fields.add(RECORD_TYPE_REFACTORING);
-		fields.add(refactoring.getRefactoringType());
-		fields.add("");
-		csvFile.writeNext(fields.toArray(new String[0]));
+		if (this.recordRefactorings) {
+			ArrayList<String> fields = new ArrayList<String>();
+			fields.add(refactoring.getCommitId());
+			fields.add(this.commitRange.getCommitDateAsString(refactoring.getCommitId()));
+			fields.add(refactoring.getFileNameAfter());
+			fields.add(refactoring.getClassName());
+			fields.add(classSmell.getClassDesignRole());
+			fields.add(String.valueOf(classSmell.getLinesOfCode()));
+			fields.add(RECORD_TYPE_REFACTORING);
+			fields.add(refactoring.getRefactoringType());
+			fields.add("");
+			fields.add("");
+			csvFile.writeNext(fields.toArray(new String[0]));
+		}
 	}
 
 	public void writeFalseNegative(RefactoringEvent refactoring, ClassDataSmelly classNotSmell) {
-		ArrayList<String> fields = new ArrayList<String>();
-		// Refactoring
-		fields.add(refactoring.getCommitId());
-		fields.add(this.commitRange.getCommitDateAsString(refactoring.getCommitId()));
-		fields.add(refactoring.getFileNameAfter());
-		fields.add(refactoring.getClassName());
-		fields.add(classNotSmell.getClassDesignRole());
-		fields.add(String.valueOf(classNotSmell.getLinesOfCode()));
-		fields.add(RECORD_TYPE_REFACTORING);
-		fields.add(refactoring.getRefactoringType());
-		fields.add("");
-		csvFile.writeNext(fields.toArray(new String[0]));
+		if (this.recordRefactorings) {
+			ArrayList<String> fields = new ArrayList<String>();
+			// Refactoring
+			fields.add(refactoring.getCommitId());
+			fields.add(this.commitRange.getCommitDateAsString(refactoring.getCommitId()));
+			fields.add(refactoring.getFileNameAfter());
+			fields.add(refactoring.getClassName());
+			fields.add(classNotSmell.getClassDesignRole());
+			fields.add(String.valueOf(classNotSmell.getLinesOfCode()));
+			fields.add(RECORD_TYPE_REFACTORING);
+			fields.add(refactoring.getRefactoringType());
+			fields.add("");
+			fields.add("");
+			csvFile.writeNext(fields.toArray(new String[0]));
+		}
 	}
 	
 	public void writeFalsePositive(ClassDataSmelly classSmell) {
@@ -107,6 +126,7 @@ public class OutputClassFilePlotCsv {
 		fields.add(String.valueOf(classSmell.getLinesOfCode()));
 		fields.add(RECORD_TYPE_SMELL);
 		fields.add(classSmell.getSmell());
+		fields.add(this.technique);
 		fields.add(classSmell.getListaTecnicas() != null ? classSmell.getListaTecnicas().toString() : null);
 		csvFile.writeNext(fields.toArray(new String[0]));
 	}
@@ -122,6 +142,7 @@ public class OutputClassFilePlotCsv {
 		fields.add(String.valueOf(classSmell.getLinesOfCode()));
 		fields.add(RECORD_TYPE_IGNORED_SMELL);
 		fields.add(classSmell.getSmell());
+		fields.add(this.technique);
 		fields.add(classSmell.getListaTecnicas() != null ? classSmell.getListaTecnicas().toString() : null);
 		csvFile.writeNext(fields.toArray(new String[0]));
 	}

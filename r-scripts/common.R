@@ -62,10 +62,10 @@ getRecordTypeFills <- function() {
   return (c("Smell" = "red1", "Ignored Smell" = "grey1", "Refactoring" = "blue1"))
 }
 
-savePlotToPngFile <- function(plotToSave, imgFileName) {
+savePlotToPngFile <- function(plotToSave, imgFileName, imageScale) { # imageScale = 0.3
   print(basename(imgFileName))
   ggsave(imgFileName, plot = plotToSave, "png", path = NULL,
-       scale = 0.3, width = NA, height = NA, units = "mm",
+       scale = imageScale, width = NA, height = NA, units = "mm",
        dpi = 300, limitsize = FALSE)
 }
 

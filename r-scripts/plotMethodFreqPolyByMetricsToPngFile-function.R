@@ -25,7 +25,7 @@ plotMethodFreqPolyByMetricsToPngFile <- function(csvMethodFileName, deepenForDes
   data <- na.omit(data)
   
   data$recordType[data$recordType == "Ignored Smell"] <- "Smell"
-  data <- select(data, commitDateTime, className, designRole, cc, ec, loc, nop, recordType, techniques)
+  data <- select(data, commitDateTime, className, designRole, cc, ec, loc, nop, recordType, technique)
   data <- unique(data)
   
   if (isFileOfHighComplexitySmell(csvMethodFileName)) {

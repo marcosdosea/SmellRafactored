@@ -25,7 +25,7 @@ plotBoxplotByMetricDesignRoleToPngFile <- function(data, projectName, imgFileNam
 }
 
 
-plotBoxplotByMetricToPngFile <- function(data, projectName, csvFileName, metricCode, yLabel, deepenForDesignRole) {
+plotBoxplotByTechniqueMetricToPngFile <- function(data, projectName, imgFileName, metricCode, yLabel, deepenForDesignRole) {
   recordTypes <- data$recordType
   recordTypes <- unique(recordTypes)
   if (length(recordTypes) >= 2) { # (length(data[, 1]) > 0)
@@ -40,8 +40,6 @@ plotBoxplotByMetricToPngFile <- function(data, projectName, csvFileName, metricC
       theme(legend.position="none") +
       scale_colour_manual(getRecordTypeLegend(), values = getRecordTypeColors()) +  
       scale_fill_manual(getRecordTypeLegend(), values = getRecordTypeFills()) 
-    fileSuffix <- paste0("-boxplot-", metricCode, ".png")
-    imgFileName <-sub(".csv", fileSuffix, csvFileName)
     savePlotToPngFile(resultPlot, imgFileName)
     # deepenForDesignRole <- TRUE
     if (deepenForDesignRole) {
@@ -49,4 +47,20 @@ plotBoxplotByMetricToPngFile <- function(data, projectName, csvFileName, metricC
     }
   }
   # return(resultPlot)
+}
+
+
+plotBoxplotByMetricToPngFile <- function(data, projectName, csvFileName, metricCode, yLabel, deepenForDesignRole) {
+  techniqueList <- data$technique
+  techniqueList <- unique(techniqueList)
+  for (tech in techniqueList){
+    if (tech != "") {
+      # dataRefacoring <- filter(data, recordType == "Refactoring")
+      # dataTechnique <- filter(data, technique == tech)
+      dataTechnique <- filter(data, (technique == tech) | (recordType == "Refactoring") ) 
+      fileSuffix <- paste0("-", tech, "-boxplot-", metricCode, ".png")
+      imgFileName <-sub("-plot.csv", fileSuffix, csvFileName)
+      plotBoxplotByTechniqueMetricToPngFile(dataTechnique, projectName, imgFileName, metricCode, yLabel, deepenForDesignRole);
+    }
+  }
 }

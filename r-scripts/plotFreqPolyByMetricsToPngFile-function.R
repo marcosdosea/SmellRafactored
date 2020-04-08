@@ -19,29 +19,41 @@ plotFreqPolyByMetricDesignRoleToPngFile <- function(data, projectName, imgFileNa
       drSuffix <- paste0("-", dr, ".png")
       imgDrFileName <- sub(".png", drSuffix, imgFileName)
       print(imgDrFileName)
-      savePlotToPngFile(resultDrPlot, imgDrFileName)
+      savePlotToPngFile(resultDrPlot, imgDrFileName, 1)
     }
   }
   # return(resultDrPlot)
 }
 
-
-plotFreqPolyByMetricToPngFile <- function(data, projectName, csvFileName, metricCode, xLabel, deepenForDesignRole) {
-  if (length(data$commitDateTime) > 2) {
-    resultPlot <- ggplot(data=data, aes(x=targetMetric, group=recordType)) +
+plotFreqPolyByTechniqueMetricToPngFile <- function(dataTechnique, projectName, imgFileName, metricCode, xLabel, deepenForDesignRole) {
+  if (length(dataTechnique$commitDateTime) > 2) {
+    resultPlot <- ggplot(data=dataTechnique, aes(x=targetMetric, group=recordType)) +
       geom_freqpoly(aes(colour=recordType), alpha=0.3, bins = 30, position = 'identity') + # , fill=recordType
       # theme_ipsum() +
       # ggtitle(projectName) +
       xlab(xLabel) +
       scale_colour_manual(getRecordTypeLegend(), values = getRecordTypeColors()) +  
       scale_fill_manual(getRecordTypeLegend(), values = getRecordTypeFills()) 
-    fileSuffix <- paste0("-freqpoly-", metricCode, ".png")
-    imgFileName <-sub(".csv", fileSuffix, csvFileName)
-    savePlotToPngFile(resultPlot, imgFileName)
+    savePlotToPngFile(resultPlot, imgFileName, 1)
     # deepenForDesignRole <- TRUE
     if (deepenForDesignRole) {
-      plotFreqPolyByMetricDesignRoleToPngFile(data, projectName, imgFileName, metricCode, xLabel)
+      plotFreqPolyByTechniqueMetricToPngFile(dataTechnique, projectName, imgFileName, metricCode, xLabel)
     }
   }
   # return(resultPlot)
+}
+
+plotFreqPolyByMetricToPngFile <- function(data, projectName, csvFileName, metricCode, xLabel, deepenForDesignRole) {
+  techniqueList <- data$technique
+  techniqueList <- unique(techniqueList)
+  for (tech in techniqueList){
+    if (tech != "") {
+      # dataRefacoring <- filter(data, recordType == "Refactoring")
+      # dataTechnique <- filter(data, technique == tech)
+      dataTechnique <- filter(data, (technique == tech) | (recordType == "Refactoring") ) 
+      fileSuffix <- paste0("-", tech, "-freqpoly-", metricCode, ".png")
+      imgFileName <-sub("-plot.csv", fileSuffix, csvFileName)
+      plotFreqPolyByTechniqueMetricToPngFile(dataTechnique, projectName, imgFileName, metricCode, xLabel, deepenForDesignRole);
+    }
+  }
 }

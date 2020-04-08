@@ -10,7 +10,8 @@ library(ggalt)
 
 plotClassDistributionByClassAndCommitToPngFile <- function(csvClassFileName, deepenForDesignRole) {
   
-  # csvClassFileName <- "ice-Class_Longa-A-18-15-22-7-19-23-21-2-9-8-17-classes-plot.csv"
+  # deepenForDesignRole <- FALSE
+  # csvClassFileName <- "openmrs-Class_Longa-ADRVX-18-15-22-7-19-21-2-9-8-17-classes-plot.csv"
   # csvClassFileName <- "ice-Class_Longa-R-CONVERT_ANONYMOUS_CLASS_TO_TYPE-classes-plot.csv"
   fileIsEmpty <- file.info(csvClassFileName)$size == 0
   if (fileIsEmpty) {
@@ -24,7 +25,7 @@ plotClassDistributionByClassAndCommitToPngFile <- function(csvClassFileName, dee
   data[data=="null"] <- NA
   data <- na.omit(data)
 
-  data <- select(data, commitDateTime, className, cloc, recordType, techniques, designRole)
+  data <- select(data, commitDateTime, className, cloc, recordType, technique, designRole)
   data <- unique(data)
   
   #data$commitDate <-as.numeric(as.character(data$commitDate))

@@ -9,8 +9,9 @@ library(stringr)
 library(ggalt)
 
 plotMethodDistributionByMethodAndCommitToPngFile <- function(csvMethodFileName, deepenForDesignRole) {
-
-  # csvMethodFileName <- "aet-Metodo_Longo-A-0-7-21-8-methods-plot.csv"
+  
+  # deepenForDesignRole <- FALSE
+  # csvMethodFileName <- "openmrs-Metodo_Longo-ADRVX-0-7-21-8-methods-plot.csv"
   # csvMethodFileName <- "Weasis-Alto_Acoplamento_Efferent-D-EXTRACT_AND_MOVE_OPERATION-methods-plot.csv"
   fileIsEmpty <- file.info(csvMethodFileName)$size == 0
   if (fileIsEmpty) {
@@ -24,7 +25,7 @@ plotMethodDistributionByMethodAndCommitToPngFile <- function(csvMethodFileName, 
   data[data=="null"] <- NA
   data <- na.omit(data)
   
-  data <- select(data, commitDateTime, className, methodName, loc, recordType, techniques, designRole)
+  data <- select(data, commitDateTime, className, methodName, loc, recordType, technique, designRole)
   data <- unique(data)
   
   # data$commitDate <-as.numeric(as.character(data$commitDate))

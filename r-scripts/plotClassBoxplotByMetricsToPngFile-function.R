@@ -1,5 +1,6 @@
 library(rstudioapi)
 source(paste(dirname(getActiveDocumentContext()$path), "/common.R", sep="", collapse=NULL))
+source(paste(dirname(getActiveDocumentContext()$path), "/common-class.R", sep="", collapse=NULL))
 source(paste(dirname(getActiveDocumentContext()$path), "/plotBoxplotByMetricsToPngFile-function.R", sep="", collapse=NULL))
 
 setupWorkDir()
@@ -12,7 +13,9 @@ library(ggalt)
 
 plotClassBoxplotByMetricsToPngFile <- function(csvClassFileName, deepenForDesignRole) {
   
+  # deepenForDesignRole <- FALSE
   # csvClassFileName <- "aet-Class_Longa-A-18-15-22-7-19-21-2-9-8-17-classes-plot.csv"
+  # csvClassFileName <- "openmrs-Class_Longa-ADRVX-18-15-22-7-19-21-2-9-8-17-classes-plot.csv"
   # csvClassFileName <- "Weasis-Class_Longa-A-18-15-22-7-19-23-21-2-9-8-17-classes-plot.csv"
   fileIsEmpty <- file.info(csvClassFileName)$size == 0
   if (fileIsEmpty) {
@@ -27,7 +30,7 @@ plotClassBoxplotByMetricsToPngFile <- function(csvClassFileName, deepenForDesign
   data <- na.omit(data)
 
   data$recordType[data$recordType == "Ignored Smell"] <- "Smell"
-  data <- select(data, commitDateTime, className, designRole, cloc, recordType, techniques)
+  data <- select(data, commitDateTime, className, designRole, cloc, recordType, technique)
   data <- unique(data)
 
   if (isFileOfLongClassSmell(csvClassFileName)) {

@@ -115,9 +115,9 @@ public class SmellRefactoredClass {
 	private void evaluateSmellChangeClass(ArrayList<String> smellCommitIds, String smellType, HashSet<String> targetTefactoringTypes) throws Exception {
 		ConfusionMatrixPredictors confusionMatrices = new ConfusionMatrixPredictors(smellType + " " + targetTefactoringTypes.toString(), this.commitClassSmell.getTechniquesThresholds().keySet());
 		confusionMatrices.enableValidations(!IGNORE_PREDICTION_FOR_DELAYED_REFACTORINGS);
+		classOutputFiles = new OutputClassFileManager(this.commitRange, smellType, this.commitClassSmell.getTechniquesThresholds().keySet(), targetTefactoringTypes, this.resultFileName);
 		for (String technique: this.commitClassSmell.getTechniquesThresholds().keySet()) {
-			classOutputFiles = new OutputClassFileManager(this.commitRange, smellType, technique, targetTefactoringTypes, this.resultFileName);
-			classOutputFiles.writeHeaders();
+			classOutputFiles.beginTechnique(technique);
 			ConfusionMatrix confusionMatrix = confusionMatrices.get(technique);
 			// TP e FN
 			computeTruePositiveAndFalseNegative(smellType, technique, targetTefactoringTypes, confusionMatrix);
@@ -133,8 +133,9 @@ public class SmellRefactoredClass {
 				computeFalsePositiveBySmellAndTechnique(smellResultForCommitSmellTechnique, technique, smellType, targetTefactoringTypes, confusionMatrix);
 				computeTrueNegativeBySmellAndTechnique(smellResultForCommitSmellTechnique, technique, smellType, targetTefactoringTypes, confusionMatrix);
 			}
-			classOutputFiles.close();
+			classOutputFiles.endTechnique();
 		}
+     	classOutputFiles.close();
 		
 		/* 
 	     * Warning: The validation of the confusion matrix by the total of positive predictions 

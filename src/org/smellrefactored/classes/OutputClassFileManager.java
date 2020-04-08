@@ -1,7 +1,10 @@
 package org.smellrefactored.classes;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.designroleminer.smelldetector.model.ClassDataSmelly;
@@ -16,30 +19,29 @@ public class OutputClassFileManager {
 
 	private CommitRange commitRange;
 	private String typeSmell;
-	private String technique;
 	private HashSet<String> targetTefactoringTypes;
 	private Set<String> techniques;
 	private String baseFileName;
+	private String suffixFileName;
 	
 	// private OutputClassFileClassCsv csvClasses;
 	// private OutputClassFileClassMessageCsv csvClassMessage;
 	// private OutputClassFileMachineLearningCsv csvMachineLearning;
-	private OutputClassFilePlotCsv csvPlot;
-
+	private OutputClassFilePlotCsv csvPlotAllTechniques;
+	/// private OutputClassFilePlotCsv csvPlotTechnique;
+	
 	static private Logger logger = LoggerFactory.getLogger(SmellRefactoredManager.class);
 	
-	public OutputClassFileManager(CommitRange commitRange, String typeSmell, String technique, HashSet<String> targetTefactoringTypes, String baseFileName) throws IOException {
+	public OutputClassFileManager(CommitRange commitRange, String typeSmell, Set<String> techniques, HashSet<String> targetTefactoringTypes, String baseFileName) throws IOException {
 		this.commitRange = commitRange;
 		this.typeSmell = typeSmell;
-		this.technique = technique;
 		this.targetTefactoringTypes = targetTefactoringTypes;
 		this.techniques = techniques;
-		this.baseFileName = baseFileName;
+		this.baseFileName = baseFileName + "-" + typeSmell.replace(" ", "_");
 		
 		// csvClasses = new OutputClassFileClassCsv(this.commitRange, this.techniques, this.baseFileName);
 		// csvClassMessage = new OutputClassFileClassMessageCsv(this.commitRange, this.techniques, this.baseFileName);
 		// csvMachineLearning = new OutputClassFileMachineLearningCsv(this.commitRange, this.techniques, this.baseFileName);
-		
 		
 		String fileNamePart = this.targetTefactoringTypes.toString().replace("[", "").replace("]", "").replace(",", "-").replace(" ", "");
 		if (fileNamePart.length()>40) {
@@ -51,23 +53,36 @@ public class OutputClassFileManager {
 				fileNamePart += String.valueOf(RefactoringType.valueOf(refactoringType).ordinal());
 			}
 		}
-		String baseOutputFileName =this.baseFileName + "-" + typeSmell.replace(" ", "_") + "-" + technique + "-" + fileNamePart;
-		csvPlot = new OutputClassFilePlotCsv(this.commitRange, baseOutputFileName);
-	}
-	
-	public void writeHeaders() {
+		this.suffixFileName = fileNamePart;
+		
+		List<String> techniquelist = new ArrayList<String>(this.techniques); 
+        Collections.sort(techniquelist); 
+		
+		String baseOutputFileName = this.baseFileName  + "-" + techniquelist.toString().replace("[", "").replace("]", "").replace(",", "").replace(" ", "") + "-" + this.suffixFileName;
+		csvPlotAllTechniques = new OutputClassFilePlotCsv(this.commitRange, baseOutputFileName);
+		csvPlotAllTechniques.setRecordRefactorings(true);
+		
 		// csvClassMessage.writeHeader();
 		// csvClasses.writeHeader();
 		// csvMachineLearning.writeHeader();
-		csvPlot.writeHeader();
-		}
+		csvPlotAllTechniques.writeHeader();
+	}
 	
+	public void beginTechnique(String technique) throws IOException {
+		csvPlotAllTechniques.setTechnique(technique);
+		String baseOutputFileName = this.baseFileName  + "-" + technique + "-" + this.suffixFileName;
+		/// csvPlotTechnique = new OutputClassFilePlotCsv(this.commitRange, baseOutputFileName);
+		/// csvPlotTechnique.setTechnique(technique);
+		/// csvPlotTechnique.setRecordRefactorings(true);
+		/// csvPlotTechnique.writeHeader();
+	}
 
 	public void writeTruePositive(RefactoringEvent refactoring, ClassDataSmelly classSmell) {
 		// csvClassMessage.writeTruePositive(refactoring, classSmell);
 		// csvClasses.writeTruePositive(refactoring, classSmell);
 		// csvMachineLearning.writeTruePositive(refactoring, classSmell);
-		csvPlot.writeTruePositive(refactoring, classSmell);
+		/// csvPlotTechnique.writeTruePositive(refactoring, classSmell);
+		csvPlotAllTechniques.writeTruePositive(refactoring, classSmell);
 	}
 
 	public void writeFalseNegative(RefactoringEvent refactoring, ClassDataSmelly classNotSmell) {
@@ -77,7 +92,8 @@ public class OutputClassFileManager {
 			// csvClassMessage.writeFalseNegative(refactoring, classNotSmell);
 			// csvClasses.writeFalseNegative(refactoring, classNotSmell);
 			// csvMachineLearning.writeFalseNegative(refactoring, classNotSmell);
-			csvPlot.writeFalseNegative(refactoring, classNotSmell);
+			/// csvPlotTechnique.writeFalseNegative(refactoring, classNotSmell);
+			csvPlotAllTechniques.writeFalseNegative(refactoring, classNotSmell);
 		}
 	}	
 
@@ -88,7 +104,8 @@ public class OutputClassFileManager {
 			// csvClassMessage.writeFalsePositive(classSmell);
 			// csvClasses.writeFalsePositive(classSmell);
 			// csvMachineLearning.writeFalsePositive(classSmell);
-			csvPlot.writeFalsePositive(classSmell);
+			/// csvPlotTechnique.writeFalsePositive(classSmell);
+			csvPlotAllTechniques.writeFalsePositive(classSmell);
 		}
 	}
 	
@@ -96,7 +113,8 @@ public class OutputClassFileManager {
 		if (classSmell == null) {
 			logger.warn("Null response for querying non-smelling classes.");
 		} else {
-			csvPlot.writeIgnoredFalsePositive(classSmell);
+			/// csvPlotTechnique.writeIgnoredFalsePositive(classSmell);
+			csvPlotAllTechniques.writeIgnoredFalsePositive(classSmell);
 		}
 	}
 		
@@ -104,14 +122,20 @@ public class OutputClassFileManager {
 		// csvClassMessage.writeTrueNegative(classNotSmell);
 		// csvClasses.writeTrueNegative(classNotSmell);
 		// csvMachineLearning.writeTrueNegative(classNotSmell);
-		csvPlot.writeTrueNegative(classNotSmell);
+		/// csvPlotTechnique.writeTrueNegative(classNotSmell);
+		csvPlotAllTechniques.writeTrueNegative(classNotSmell);
+	}
+
+	public void endTechnique() throws IOException {
+		/// csvPlotTechnique.close();
+		csvPlotAllTechniques.setRecordRefactorings(false);
 	}
 	
 	public void close() throws IOException {
 		// csvClassMessage.close();
 		// csvClasses.close();
 		// csvMachineLearning.close();
-		csvPlot.close();
+		csvPlotAllTechniques.close();
 	}
 
 }

@@ -28,19 +28,18 @@ plotDistribuitionByEntityAndCommitDesignRoleToPngFile <- function(data, projectN
         scale_shape_manual(getRecordTypeLegend(), values = getRecordTypeShapes())  
       drSuffix <- paste0("-", dr, ".png")
       imgDrFileName <-sub(".png", drSuffix, imgFileName)
-      savePlotToPngFile(resultDrPlot, imgDrFileName)
+      savePlotToPngFile(resultDrPlot, imgDrFileName, 1)
     }
   }
   # return(resultDrPlot)
 }
 
-
-plotDistribuitionByEntityAndCommitToPngFile <- function(data, projectName, csvFileName, yLabel, deepenForDesignRole) {
-  recordTypes <- data$recordType
+plotDistribuitionByTechniqueToPngFile <- function(dataTechnique, projectName, imgFileName, yLabel, deepenForDesignRole) {
+  recordTypes <- dataTechnique$recordType
   recordTypes <- unique(recordTypes)
-  if (length(data$commitDateTime) > 0) {
+  if (length(dataTechnique$commitDateTime) > 0) {
     resultPlot <- 
-      ggplot(data, aes(x=data$commitDateTime, y=data$entityName)) +
+      ggplot(dataTechnique, aes(x=dataTechnique$commitDateTime, y=dataTechnique$entityName)) +
       geom_point(aes(shape=recordType, colour=recordType, fill=recordType), alpha=0.3) +
       # labs(color = "Type") +
       labs(
@@ -58,13 +57,27 @@ plotDistribuitionByEntityAndCommitToPngFile <- function(data, projectName, csvFi
       scale_colour_manual(getRecordTypeLegend(), values = getRecordTypeColors()) +  
       scale_fill_manual(getRecordTypeLegend(), values = getRecordTypeFills()) +  
       scale_shape_manual(getRecordTypeLegend(), values = getRecordTypeShapes())  
-    fileSuffix <- paste0("-DistribuitionByEntityAndCommit", ".png")
-    imgFileName <-sub(".csv", fileSuffix, csvFileName)
-    savePlotToPngFile(resultPlot, imgFileName)
+    savePlotToPngFile(resultPlot, imgFileName, 1)
     # deepenForDesignRole <- TRUE
     if (deepenForDesignRole) {
-      plotDistribuitionByEntityAndCommitDesignRoleToPngFile(data, projectName, imgFileName, yLabel)
+      plotDistribuitionByEntityAndCommitDesignRoleToPngFile(dataTechnique, projectName, imgFileName, yLabel)
     }
   }
   # return(resultPlot)
+}
+
+
+plotDistribuitionByEntityAndCommitToPngFile <- function(data, projectName, csvFileName, yLabel, deepenForDesignRole) {
+  techniqueList <- data$technique
+  techniqueList <- unique(techniqueList)
+  for (tech in techniqueList){
+    if (tech != "") {
+      # dataRefacoring <- filter(data, recordType == "Refactoring")
+      # dataTechnique <- filter(data, technique == tech)
+      dataTechnique <- filter(data, (technique == tech) | (recordType == "Refactoring") ) 
+      fileSuffix <- paste0("-", tech, "-DistribuitionByEntityAndCommit", ".png")
+      imgFileName <-sub("-plot.csv", fileSuffix, csvFileName)
+      plotDistribuitionByTechniqueToPngFile(dataTechnique, projectName, imgFileName, yLabel, deepenForDesignRole);
+    }
+  }
 }

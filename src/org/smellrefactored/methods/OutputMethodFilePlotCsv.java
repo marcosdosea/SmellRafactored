@@ -21,6 +21,8 @@ public class OutputMethodFilePlotCsv {
 
 	private CommitRange commitRange;
 	private String baseFileName;
+	private Boolean recordRefactorings;
+	private String technique;
 	
 	private CSVWriter csvFile;
 
@@ -29,9 +31,18 @@ public class OutputMethodFilePlotCsv {
 	public OutputMethodFilePlotCsv(CommitRange commitRange, String baseFileName) throws IOException {
 		this.commitRange = commitRange;
 		this.baseFileName = baseFileName;
+		this.recordRefactorings = true; 
 		
 		// csvFile = new CSVWriter(new FileWriter(this.baseFileName + "-" + this.commitRange.getInitialCommitId() + "-" + this.commitRange.getFinalCommitId() + "-methods-plot.csv"));
 		csvFile = new CSVWriter(new FileWriter(this.baseFileName + "-methods-plot.csv"));
+	}
+	
+	public void  setTechnique(String technique) {
+		this.technique = technique;
+	}
+	
+	public void  setRecordRefactorings(Boolean recordRefactorings) {
+		this.recordRefactorings = recordRefactorings;
 	}
 	
 	public void writeHeader() {
@@ -48,6 +59,7 @@ public class OutputMethodFilePlotCsv {
 		fields.add("nop");
 		fields.add("recordType");
 		fields.add("entityName");
+		fields.add("technique");
 		fields.add("techniques");
 		csvFile.writeNext(fields.toArray(new String[0]));
 	}
@@ -71,45 +83,52 @@ public class OutputMethodFilePlotCsv {
 		fields.add(String.valueOf(methodSmell.getNumberOfParameters()));
 		fields.add(RECORD_TYPE_SMELL);
 		fields.add(methodSmell.getSmell());
+		fields.add(this.technique);
 		fields.add(methodSmell.getListaTecnicas() != null ? methodSmell.getListaTecnicas().toString() : null);
 		csvFile.writeNext(fields.toArray(new String[0]));
 	}
 
 	private void writeTruePositiveRefactoring(RefactoringEvent refactoring, MethodDataSmelly methodSmell) {
-		ArrayList<String> fields = new ArrayList<String>();
-		fields.add(refactoring.getCommitId());
-		fields.add(this.commitRange.getCommitDateAsString(refactoring.getCommitId()));
-		fields.add(refactoring.getFileNameAfter());
-		fields.add(methodSmell.getClassDesignRole());
-		fields.add(refactoring.getClassName());
-		fields.add(refactoring.getMethodName());
-		fields.add(String.valueOf(methodSmell.getLinesOfCode()));
-		fields.add(String.valueOf(methodSmell.getComplexity()));
-		fields.add(String.valueOf(methodSmell.getEfferent()));
-		fields.add(String.valueOf(methodSmell.getNumberOfParameters()));
-		fields.add(RECORD_TYPE_REFACTORING);
-		fields.add(refactoring.getRefactoringType());
-		fields.add("");
-		csvFile.writeNext(fields.toArray(new String[0]));
+		if (this.recordRefactorings) {
+			ArrayList<String> fields = new ArrayList<String>();
+			fields.add(refactoring.getCommitId());
+			fields.add(this.commitRange.getCommitDateAsString(refactoring.getCommitId()));
+			fields.add(refactoring.getFileNameAfter());
+			fields.add(methodSmell.getClassDesignRole());
+			fields.add(refactoring.getClassName());
+			fields.add(refactoring.getMethodName());
+			fields.add(String.valueOf(methodSmell.getLinesOfCode()));
+			fields.add(String.valueOf(methodSmell.getComplexity()));
+			fields.add(String.valueOf(methodSmell.getEfferent()));
+			fields.add(String.valueOf(methodSmell.getNumberOfParameters()));
+			fields.add(RECORD_TYPE_REFACTORING);
+			fields.add(refactoring.getRefactoringType());
+			fields.add("");
+			fields.add("");
+			csvFile.writeNext(fields.toArray(new String[0]));
+		}
 	}
 
 	public void writeFalseNegative(RefactoringEvent refactoring, MethodDataSmelly methodNotSmell) {
-		ArrayList<String> fields = new ArrayList<String>();
-		// Refactoring
-		fields.add(refactoring.getCommitId());
-		fields.add(this.commitRange.getCommitDateAsString(refactoring.getCommitId()));
-		fields.add(refactoring.getFileNameAfter());
-		fields.add(methodNotSmell.getClassDesignRole());
-		fields.add(refactoring.getClassName());
-		fields.add(refactoring.getMethodName());
-		fields.add(String.valueOf(methodNotSmell.getLinesOfCode()));
-		fields.add(String.valueOf(methodNotSmell.getComplexity()));
-		fields.add(String.valueOf(methodNotSmell.getEfferent()));
-		fields.add(String.valueOf(methodNotSmell.getNumberOfParameters()));
-		fields.add(RECORD_TYPE_REFACTORING);
-		fields.add(refactoring.getRefactoringType());
-		fields.add("");
-		csvFile.writeNext(fields.toArray(new String[0]));
+		if (this.recordRefactorings) {
+			ArrayList<String> fields = new ArrayList<String>();
+			// Refactoring
+			fields.add(refactoring.getCommitId());
+			fields.add(this.commitRange.getCommitDateAsString(refactoring.getCommitId()));
+			fields.add(refactoring.getFileNameAfter());
+			fields.add(methodNotSmell.getClassDesignRole());
+			fields.add(refactoring.getClassName());
+			fields.add(refactoring.getMethodName());
+			fields.add(String.valueOf(methodNotSmell.getLinesOfCode()));
+			fields.add(String.valueOf(methodNotSmell.getComplexity()));
+			fields.add(String.valueOf(methodNotSmell.getEfferent()));
+			fields.add(String.valueOf(methodNotSmell.getNumberOfParameters()));
+			fields.add(RECORD_TYPE_REFACTORING);
+			fields.add(refactoring.getRefactoringType());
+			fields.add("");
+			fields.add("");
+			csvFile.writeNext(fields.toArray(new String[0]));
+		}
 	}
 
 	public void writeFalsePositive(MethodDataSmelly methodSmell) {
@@ -127,6 +146,7 @@ public class OutputMethodFilePlotCsv {
 		fields.add(String.valueOf(methodSmell.getNumberOfParameters()));
 		fields.add(RECORD_TYPE_SMELL);
 		fields.add(methodSmell.getSmell());
+		fields.add(this.technique);
 		fields.add(methodSmell.getListaTecnicas() != null ? methodSmell.getListaTecnicas().toString() : null);
 		csvFile.writeNext(fields.toArray(new String[0]));
 	}
@@ -146,6 +166,7 @@ public class OutputMethodFilePlotCsv {
 		fields.add(String.valueOf(methodSmell.getNumberOfParameters()));
 		fields.add(RECORD_TYPE_IGNORED_SMELL);
 		fields.add(methodSmell.getSmell());
+		fields.add(this.technique);
 		fields.add(methodSmell.getListaTecnicas() != null ? methodSmell.getListaTecnicas().toString() : null);
 		csvFile.writeNext(fields.toArray(new String[0]));
 	}
