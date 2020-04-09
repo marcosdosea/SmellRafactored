@@ -23,9 +23,9 @@ plotDistribuitionByEntityAndCommitDesignRoleToPngFile <- function(data, projectN
           , axis.text.y = element_blank()
           , legend.position = "bottom"
         ) +
-        scale_colour_manual(getRecordTypeLegend(), values = getRecordTypeColors()) +  
-        scale_fill_manual(getRecordTypeLegend(), values = getRecordTypeFills()) +  
-        scale_shape_manual(getRecordTypeLegend(), values = getRecordTypeShapes())  
+        scale_colour_manual(getGenericLegend(), values = getRecordTypeColors()) +  
+        scale_fill_manual(getGenericLegend(), values = getRecordTypeFills()) +  
+        scale_shape_manual(getGenericLegend(), values = getRecordTypeShapes())  
       drSuffix <- paste0("-", dr, ".png")
       imgDrFileName <-sub(".png", drSuffix, imgFileName)
       savePlotToPngFile(resultDrPlot, imgDrFileName, 1)
@@ -54,9 +54,9 @@ plotDistribuitionByTechniqueToPngFile <- function(dataTechnique, projectName, im
         , axis.text.y = element_blank()
         , legend.position = "bottom"
       ) +
-      scale_colour_manual(getRecordTypeLegend(), values = getRecordTypeColors()) +  
-      scale_fill_manual(getRecordTypeLegend(), values = getRecordTypeFills()) +  
-      scale_shape_manual(getRecordTypeLegend(), values = getRecordTypeShapes())  
+      scale_colour_manual(getGenericLegend(), values = getRecordTypeColors()) +  
+      scale_fill_manual(getGenericLegend(), values = getRecordTypeFills()) +  
+      scale_shape_manual(getGenericLegend(), values = getRecordTypeShapes())  
     savePlotToPngFile(resultPlot, imgFileName, 1)
     # deepenForDesignRole <- TRUE
     if (deepenForDesignRole) {

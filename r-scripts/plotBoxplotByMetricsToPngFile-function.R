@@ -14,11 +14,11 @@ plotBoxplotByMetricDesignRoleToPngFile <- function(data, projectName, imgFileNam
         xlab("") +
         ylab(yLabel) +
         theme(legend.position="none") +
-        scale_colour_manual(getRecordTypeLegend(), values = getRecordTypeColors()) +  
-        scale_fill_manual(getRecordTypeLegend(), values = getRecordTypeFills()) 
+        scale_colour_manual(getGenericLegend(), values = getRecordTypeColors()) +  
+        scale_fill_manual(getGenericLegend(), values = getRecordTypeFills()) 
       drSuffix <- paste0("-", dr, ".png")
       imgDrFileName <-sub(".png", drSuffix, imgFileName)
-      savePlotToPngFile(resultDrPlot, imgDrFileName)
+      savePlotToPngFile(resultDrPlot, imgDrFileName, 1)
     }
   }
   # return(resultDrPlot)
@@ -38,9 +38,9 @@ plotBoxplotByTechniqueMetricToPngFile <- function(data, projectName, imgFileName
       xlab("") +
       ylab(yLabel) +
       theme(legend.position="none") +
-      scale_colour_manual(getRecordTypeLegend(), values = getRecordTypeColors()) +  
-      scale_fill_manual(getRecordTypeLegend(), values = getRecordTypeFills()) 
-    savePlotToPngFile(resultPlot, imgFileName)
+      scale_colour_manual(getGenericLegend(), values = getRecordTypeColors()) +  
+      scale_fill_manual(getGenericLegend(), values = getRecordTypeFills()) 
+    savePlotToPngFile(resultPlot, imgFileName, 1)
     # deepenForDesignRole <- TRUE
     if (deepenForDesignRole) {
       plotBoxplotByMetricDesignRoleToPngFile(data, projectName, imgFileName, metricCode, yLabel)

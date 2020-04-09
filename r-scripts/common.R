@@ -1,20 +1,32 @@
 library(rstudioapi)
 
+getTechniqueKeys <- function() {
+  return (c("A", "X", "D", "R", "V"))
+}
 
-
-getTechniques <- function() {
+getTechniqueValues <- function() {
   return (
     c(
-      "A" = "Alves 2010"
-      , "X" = "Aniche 2016"
-      , "D" = "Dósea 2018"
-      , "R" = "Dósea 2016"
-      , "V" = "Vale 2015"
+      "Alves 2010"
+      , "Aniche 2016"
+      , "Dosea 2018"
+      , "Dosea 2016"
+      , "Vale 2015"
       )
     )
 }
 
-
+getTechniqueLabels <- function() {
+  return (
+    c(
+      "A" = "Alves 2010"
+      , "X" = "Aniche 2016"
+      , "D" = "Dosea 2018"
+      , "R" = "Dosea 2016"
+      , "V" = "Vale 2015"
+      )
+    )
+}
 
 getScriptFileDir <- function() {
   scriptFilePath <- getActiveDocumentContext()$path
@@ -32,7 +44,6 @@ setupWorkDir <- function() {
   setwd(workDir)
 }
 
-
 executeFunctionWithCsvFileAndDeepenForDesignRole <- function(functionName, csvFileName, deepenForDesignRole) {
   tryCatch({
     functionName(csvFileName, deepenForDesignRole)
@@ -46,8 +57,12 @@ executeFunctionWithCsvFileAndDeepenForDesignRole <- function(functionName, csvFi
 }
 
 
-getRecordTypeLegend <- function() {
+getGenericLegend <- function() {
   return ("Legend:")
+}
+
+getRecordTypeLegend <- function() {
+  return ("Record Types:")
 }
   
 getRecordTypeShapes <- function() {
@@ -60,6 +75,18 @@ getRecordTypeColors <- function() {
 
 getRecordTypeFills <- function() {
   return (c("Smell" = "red1", "Ignored Smell" = "grey1", "Refactoring" = "blue1"))
+}
+
+getTechniqueLegend <- function() {
+  return ("Techniques:")
+}
+
+getTechniqueColors <- function() {
+  return (c(" " = "blue", "A" = "red", "X" = "green", "D" = "yellow", "R" = "orange", "V" = "purple"))
+}
+
+getTechniqueFills <- function() {
+  return (getTechniqueColors())
 }
 
 savePlotToPngFile <- function(plotToSave, imgFileName, imageScale) { # imageScale = 0.3

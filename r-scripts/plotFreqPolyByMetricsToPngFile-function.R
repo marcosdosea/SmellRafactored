@@ -14,8 +14,8 @@ plotFreqPolyByMetricDesignRoleToPngFile <- function(data, projectName, imgFileNa
         # theme_ipsum() +
         # ggtitle(projectName) +
         xlab(xLabel) +
-        scale_colour_manual(getRecordTypeLegend(), values = getRecordTypeColors()) +  
-        scale_fill_manual(getRecordTypeLegend(), values = getRecordTypeFills()) 
+        scale_colour_manual(getGenericLegend(), values = getRecordTypeColors()) +  
+        scale_fill_manual(getGenericLegend(), values = getRecordTypeFills()) 
       drSuffix <- paste0("-", dr, ".png")
       imgDrFileName <- sub(".png", drSuffix, imgFileName)
       print(imgDrFileName)
@@ -32,8 +32,8 @@ plotFreqPolyByTechniqueMetricToPngFile <- function(dataTechnique, projectName, i
       # theme_ipsum() +
       # ggtitle(projectName) +
       xlab(xLabel) +
-      scale_colour_manual(getRecordTypeLegend(), values = getRecordTypeColors()) +  
-      scale_fill_manual(getRecordTypeLegend(), values = getRecordTypeFills()) 
+      scale_colour_manual(getGenericLegend(), values = getRecordTypeColors()) +  
+      scale_fill_manual(getGenericLegend(), values = getRecordTypeFills()) 
     savePlotToPngFile(resultPlot, imgFileName, 1)
     # deepenForDesignRole <- TRUE
     if (deepenForDesignRole) {

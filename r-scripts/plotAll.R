@@ -7,6 +7,7 @@ setupWorkDir()
 
 source(paste(dirname(getActiveDocumentContext()$path), "/plotClassDistributionByClassAndCommitToPngFiles.R", sep="", collapse=NULL))
 source(paste(dirname(getActiveDocumentContext()$path), "/plotClassBoxplotByMetricsToPngFiles.R", sep="", collapse=NULL))
+source(paste(dirname(getActiveDocumentContext()$path), "/plotClassBoxplotsByMetricsToPngFiles.R", sep="", collapse=NULL))
 source(paste(dirname(getActiveDocumentContext()$path), "/plotClassFreqPolyByMetricsToPngFiles.R", sep="", collapse=NULL))
 # source(paste(dirname(getActiveDocumentContext()$path), "/plotClassDensityByMetricsToPngFiles.R", sep="", collapse=NULL))
 
