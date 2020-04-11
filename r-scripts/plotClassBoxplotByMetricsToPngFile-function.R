@@ -1,6 +1,7 @@
 library(rstudioapi)
 source(paste(dirname(getActiveDocumentContext()$path), "/common.R", sep="", collapse=NULL))
 source(paste(dirname(getActiveDocumentContext()$path), "/common-class.R", sep="", collapse=NULL))
+source(paste(dirname(getActiveDocumentContext()$path), "/common-recordtype.R", sep="", collapse=NULL))
 source(paste(dirname(getActiveDocumentContext()$path), "/plotBoxplotByMetricsToPngFile-function.R", sep="", collapse=NULL))
 
 setupWorkDir()

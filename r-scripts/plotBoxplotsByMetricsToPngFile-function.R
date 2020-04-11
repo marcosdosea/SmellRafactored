@@ -7,16 +7,22 @@ plotBoxplotsByMetricDesignRoleToPngFile <- function(data, projectName, imgFileNa
     if (length(dataDr$designRole) > 1) {
       print(dr)
       print(length(dataDr$designRole))
-      resultDrPlot <- ggplot(dataDr, aes(x=recordType, y=metricCode, group=technique)) +
+      resultDrPlot <- ggplot(data=dataDr, aes(x=recordType, y=metricCode, group=technique)) +
         geom_boxplot(aes(colour=recordType, fill=technique), alpha=0.3) +
         # theme_ipsum() +
         # ggtitle(projectName) +
         xlab("Event Type") +
         ylab(yLabel) +
         # theme(legend.position="none") +
-        scale_colour_manual(getRecordTypeLegend(), values = getRecordTypeColors(), breaks=getTechniqueKeys(), labels = getTechniqueLabels()) +  
-        scale_fill_manual(getTechniqueLegend(), values = getTechniqueFills(), breaks=getTechniqueKeys(), labels = getTechniqueLabels()) 
-      # scale_shape_manual(getGenericLegend(), values = getRecordTypeShapes(), breaks=getTechniqueKeys(), labels = getTechniqueLabels())  
+
+        scale_colour_manual(getRecordTypeLegend(), values = getRecordTypeColors(), breaks=getTechniqueValues(), labels = getTechniqueValues()) +  
+        scale_fill_manual(getTechniqueLegend(), values = getTechniqueFills(), breaks=getTechniqueValues(), labels = getTechniqueValues()) 
+        # scale_shape_manual(getGenericLegend(), values = getRecordTypeShapes(), breaks=getTechniqueValues(), labels = getTechniqueValues())  
+      
+        # scale_colour_manual(getRecordTypeLegend(), values = getRecordTypeColors(), breaks=getTechniqueKeys(), labels = getTechniqueLabels()) +  
+        # scale_fill_manual(getTechniqueLegend(), values = getTechniqueFills(), breaks=getTechniqueKeys(), labels = getTechniqueLabels()) 
+        # # scale_shape_manual(getGenericLegend(), values = getRecordTypeShapes(), breaks=getTechniqueKeys(), labels = getTechniqueLabels())  
+
       drSuffix <- paste0("-", dr, ".png")
       imgDrFileName <-sub(".png", drSuffix, imgFileName)
       savePlotToPngFile(resultDrPlot, imgDrFileName, 1)
@@ -39,9 +45,15 @@ plotBoxplotsByTechniqueMetricToPngFile <- function(data, projectName, imgFileNam
       xlab("Event Type") +
       ylab(yLabel) +
       # theme(legend.position="none") +
-      scale_colour_manual(getRecordTypeLegend(), values = getRecordTypeColors(), breaks=getTechniqueKeys(), labels = getTechniqueLabels()) +  
-      scale_fill_manual(getTechniqueLegend(), values = getTechniqueFills(), breaks=getTechniqueKeys(), labels = getTechniqueLabels()) 
-      # scale_shape_manual(getGenericLegend(), values = getRecordTypeShapes(), breaks=getTechniqueKeys(), labels = getTechniqueLabels())  
+
+      scale_colour_manual(getRecordTypeLegend(), values = getRecordTypeColors(), breaks=getTechniqueValues(), labels = getTechniqueValues()) +  
+      scale_fill_manual(getTechniqueLegend(), values = getTechniqueFills(), breaks=getTechniqueValues(), labels = getTechniqueValues()) 
+      # scale_shape_manual(getGenericLegend(), values = getRecordTypeShapes(), breaks=getTechniqueValues(), labels = getTechniqueValues())  
+
+      # scale_colour_manual(getRecordTypeLegend(), values = getRecordTypeColors(), breaks=getTechniqueKeys(), labels = getTechniqueLabels()) +  
+      # scale_fill_manual(getTechniqueLegend(), values = getTechniqueFills(), breaks=getTechniqueKeys(), labels = getTechniqueLabels()) 
+      # # scale_shape_manual(getGenericLegend(), values = getRecordTypeShapes(), breaks=getTechniqueKeys(), labels = getTechniqueLabels())  
+    
       savePlotToPngFile(resultPlot, imgFileName, 1)
     # deepenForDesignRole <- TRUE
     if (deepenForDesignRole) {

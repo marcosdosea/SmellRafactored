@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smellrefactored.CommitRange;
 import org.smellrefactored.RefactoringEvent;
+import org.smellrefactored.Technique;
 
 import com.opencsv.CSVWriter;
 
@@ -38,7 +39,7 @@ public class OutputMethodFilePlotCsv {
 	}
 	
 	public void  setTechnique(String technique) {
-		this.technique = technique;
+		this.technique = Technique.getTechnique(technique);
 	}
 	
 	public void  setRecordRefactorings(Boolean recordRefactorings) {
@@ -60,7 +61,7 @@ public class OutputMethodFilePlotCsv {
 		fields.add("recordType");
 		fields.add("entityName");
 		fields.add("technique");
-		fields.add("techniques");
+		// fields.add("techniques");
 		csvFile.writeNext(fields.toArray(new String[0]));
 	}
 	
@@ -84,7 +85,7 @@ public class OutputMethodFilePlotCsv {
 		fields.add(RECORD_TYPE_SMELL);
 		fields.add(methodSmell.getSmell());
 		fields.add(this.technique);
-		fields.add(methodSmell.getListaTecnicas() != null ? methodSmell.getListaTecnicas().toString() : null);
+		// fields.add(methodSmell.getListaTecnicas() != null ? methodSmell.getListaTecnicas().toString() : null);
 		csvFile.writeNext(fields.toArray(new String[0]));
 	}
 
@@ -104,7 +105,7 @@ public class OutputMethodFilePlotCsv {
 			fields.add(RECORD_TYPE_REFACTORING);
 			fields.add(refactoring.getRefactoringType());
 			fields.add("");
-			fields.add("");
+			// fields.add("");
 			csvFile.writeNext(fields.toArray(new String[0]));
 		}
 	}
@@ -126,7 +127,7 @@ public class OutputMethodFilePlotCsv {
 			fields.add(RECORD_TYPE_REFACTORING);
 			fields.add(refactoring.getRefactoringType());
 			fields.add("");
-			fields.add("");
+			// fields.add("");
 			csvFile.writeNext(fields.toArray(new String[0]));
 		}
 	}
@@ -147,7 +148,7 @@ public class OutputMethodFilePlotCsv {
 		fields.add(RECORD_TYPE_SMELL);
 		fields.add(methodSmell.getSmell());
 		fields.add(this.technique);
-		fields.add(methodSmell.getListaTecnicas() != null ? methodSmell.getListaTecnicas().toString() : null);
+		// fields.add(methodSmell.getListaTecnicas() != null ? methodSmell.getListaTecnicas().toString() : null);
 		csvFile.writeNext(fields.toArray(new String[0]));
 	}
 	
@@ -167,7 +168,7 @@ public class OutputMethodFilePlotCsv {
 		fields.add(RECORD_TYPE_IGNORED_SMELL);
 		fields.add(methodSmell.getSmell());
 		fields.add(this.technique);
-		fields.add(methodSmell.getListaTecnicas() != null ? methodSmell.getListaTecnicas().toString() : null);
+		// fields.add(methodSmell.getListaTecnicas() != null ? methodSmell.getListaTecnicas().toString() : null);
 		csvFile.writeNext(fields.toArray(new String[0]));
 	}
 	
