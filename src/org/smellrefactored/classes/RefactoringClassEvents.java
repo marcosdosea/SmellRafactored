@@ -129,4 +129,13 @@ public class RefactoringClassEvents {
 		}
 	}
 
+	static public String getCommitClassKey(RefactoringEvent event) {
+		return (
+				event.getCommitId()
+				+ "|" + event.getFileNameBefore()
+				+ "|" + event.getClassName()
+				);
+	}
+
+	
 }

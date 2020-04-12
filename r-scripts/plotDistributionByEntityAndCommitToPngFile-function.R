@@ -72,9 +72,9 @@ plotDistribuitionByEntityAndCommitToPngFile <- function(data, projectName, csvFi
   techniqueList <- unique(techniqueList)
   for (tech in techniqueList){
     if (tech != "") {
-      # dataRefacoring <- filter(data, recordType == "Refactoring")
+      # dataRefacoring <- filter(data, recordType == getRecordTypeRefactoredKey())
       # dataTechnique <- filter(data, technique == tech)
-      dataTechnique <- filter(data, (technique == tech) | (recordType == "Refactoring") ) 
+      dataTechnique <- filter(data, (technique == tech) | (recordType == getRecordTypeRefactoredKey()) ) 
       fileSuffix <- paste0("-", tech, "-DistribuitionByEntityAndCommit", ".png")
       imgFileName <-sub("-plot.csv", fileSuffix, csvFileName)
       plotDistribuitionByTechniqueToPngFile(dataTechnique, projectName, imgFileName, yLabel, deepenForDesignRole);

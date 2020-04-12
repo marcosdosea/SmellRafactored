@@ -48,9 +48,9 @@ plotFreqPolyByMetricToPngFile <- function(data, projectName, csvFileName, metric
   techniqueList <- unique(techniqueList)
   for (tech in techniqueList){
     if (tech != "") {
-      # dataRefacoring <- filter(data, recordType == "Refactoring")
+      # dataRefacoring <- filter(data, recordType == getRecordTypeRefactoredKey())
       # dataTechnique <- filter(data, technique == tech)
-      dataTechnique <- filter(data, (technique == tech) | (recordType == "Refactoring") ) 
+      dataTechnique <- filter(data, (technique == tech) | (recordType == getRecordTypeRefactoredKey()) ) 
       fileSuffix <- paste0("-", tech, "-freqpoly-", metricCode, ".png")
       imgFileName <-sub("-plot.csv", fileSuffix, csvFileName)
       plotFreqPolyByTechniqueMetricToPngFile(dataTechnique, projectName, imgFileName, metricCode, xLabel, deepenForDesignRole);

@@ -88,6 +88,7 @@ public class OutputClassFileManager {
 	public void writeFalseNegative(RefactoringEvent refactoring, ClassDataSmelly classNotSmell) {
 		if (classNotSmell == null) {
 			logger.warn("Null response for querying non-smelling classes.");
+			csvPlotAllTechniques.writeFalseNegative(refactoring, new ClassDataSmelly());
 		} else {
 			// csvClassMessage.writeFalseNegative(refactoring, classNotSmell);
 			// csvClasses.writeFalseNegative(refactoring, classNotSmell);

@@ -16,7 +16,7 @@ import com.opencsv.CSVWriter;
 
 public class OutputClassFilePlotCsv {
 
-	final String RECORD_TYPE_REFACTORING   = "Refactoring";
+	final String RECORD_TYPE_REFACTORED    = "Refactored";
 	final String RECORD_TYPE_SMELL         = "Smell";
 	final String RECORD_TYPE_IGNORED_SMELL = "Ignored Smell";
 	
@@ -55,7 +55,7 @@ public class OutputClassFilePlotCsv {
 		fields.add("designRole");
 		fields.add("cloc");
 		fields.add("recordType");
-		fields.add("entityName");
+		// fields.add("eventName");
 		fields.add("technique");
 		// fields.add("techniques");
 		csvFile.writeNext(fields.toArray(new String[0]));
@@ -75,7 +75,7 @@ public class OutputClassFilePlotCsv {
 		fields.add(classSmell.getClassDesignRole());
 		fields.add(String.valueOf(classSmell.getLinesOfCode()));
 		fields.add(RECORD_TYPE_SMELL);
-		fields.add(classSmell.getSmell());
+		// fields.add(classSmell.getSmell());
 		fields.add(this.technique);
 		// fields.add(classSmell.getListaTecnicas() != null ? classSmell.getListaTecnicas().toString() : null);
 		csvFile.writeNext(fields.toArray(new String[0]));
@@ -90,8 +90,8 @@ public class OutputClassFilePlotCsv {
 			fields.add(refactoring.getClassName());
 			fields.add(classSmell.getClassDesignRole());
 			fields.add(String.valueOf(classSmell.getLinesOfCode()));
-			fields.add(RECORD_TYPE_REFACTORING);
-			fields.add(refactoring.getRefactoringType());
+			fields.add(RECORD_TYPE_REFACTORED);
+			// fields.add(""/*refactoring.getRefactoringType()*/);
 			fields.add("");
 			// fields.add("");
 			csvFile.writeNext(fields.toArray(new String[0]));
@@ -108,8 +108,8 @@ public class OutputClassFilePlotCsv {
 			fields.add(refactoring.getClassName());
 			fields.add(classNotSmell.getClassDesignRole());
 			fields.add(String.valueOf(classNotSmell.getLinesOfCode()));
-			fields.add(RECORD_TYPE_REFACTORING);
-			fields.add(refactoring.getRefactoringType());
+			fields.add(RECORD_TYPE_REFACTORED);
+			// fields.add(""/*refactoring.getRefactoringType()*/);
 			fields.add("");
 			// fields.add("");
 			csvFile.writeNext(fields.toArray(new String[0]));
@@ -126,7 +126,7 @@ public class OutputClassFilePlotCsv {
 		fields.add(classSmell.getClassDesignRole());
 		fields.add(String.valueOf(classSmell.getLinesOfCode()));
 		fields.add(RECORD_TYPE_SMELL);
-		fields.add(classSmell.getSmell());
+		// fields.add(classSmell.getSmell());
 		fields.add(this.technique);
 		// fields.add(classSmell.getListaTecnicas() != null ? classSmell.getListaTecnicas().toString() : null);
 		csvFile.writeNext(fields.toArray(new String[0]));
@@ -142,7 +142,7 @@ public class OutputClassFilePlotCsv {
 		fields.add(classSmell.getClassDesignRole());
 		fields.add(String.valueOf(classSmell.getLinesOfCode()));
 		fields.add(RECORD_TYPE_IGNORED_SMELL);
-		fields.add(classSmell.getSmell());
+		// fields.add(classSmell.getSmell());
 		fields.add(this.technique);
 		// fields.add(classSmell.getListaTecnicas() != null ? classSmell.getListaTecnicas().toString() : null);
 		csvFile.writeNext(fields.toArray(new String[0]));

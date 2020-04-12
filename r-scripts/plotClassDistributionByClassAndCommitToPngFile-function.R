@@ -23,11 +23,11 @@ plotClassDistributionByClassAndCommitToPngFile <- function(csvClassFileName, dee
   projectName <- basename(csvClassFileName)
   
   data <- read.csv(csvClassFileName, stringsAsFactors = TRUE)
-  data[data=="null"] <- NA
-  data <- na.omit(data)
+  # data[data=="null"] <- NA
+  # data <- na.omit(data)
 
   data <- select(data, commitDateTime, className, cloc, recordType, technique, designRole)
-  data <- unique(data)
+  # data <- unique(data)
   
   #data$commitDate <-as.numeric(as.character(data$commitDate))
   data$entityName <- data$className

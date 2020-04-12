@@ -28,12 +28,15 @@ plotMethodBoxplotsByMetricsToPngFile <- function(csvMethodFileName, deepenForDes
   projectName <- basename(csvMethodFileName)
 
   data <- read.csv(csvMethodFileName)
-  data[data=="null"] <- NA
-  data <- na.omit(data)
-
-  data$recordType[data$recordType == "Ignored Smell"] <- "Smell"
-  data <- select(data, commitDateTime, className, methodName, cc, ec, loc, nop, recordType, technique)
+  # data[data=="null"] <- NA
+  # data <- na.omit(data)
   data <- unique(data)
+  
+  # data$recordType[data$recordType == getRecordTypeIgnoredSmellKey()] <- getRecordTypeSmellKey()
+  data$recordType[data$recordType == getRecordTypeIgnoredSmellKey()] <- NA
+  data <- na.omit(data)
+  data <- select(data, commitDateTime, className, methodName, cc, ec, loc, nop, recordType, technique)
+  # data <- unique(data)
   
   data$technique <- factor(data$technique)
   # techniqueKeys <- getTechniqueKeys();

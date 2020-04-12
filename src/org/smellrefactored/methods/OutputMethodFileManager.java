@@ -91,6 +91,7 @@ public class OutputMethodFileManager {
 	public void writeFalseNegative(RefactoringEvent refactoring, MethodDataSmelly methodNotSmell) {
 		if (methodNotSmell == null) {
 			logger.warn("Null response for querying non-smelling methods.");
+			csvPlotAllTechniques.writeFalseNegative(refactoring, new MethodDataSmelly());
 		} else {
 			// csvMethodMessage.writeFalseNegative(refactoring, methodNotSmell);
 			// csvMethod.writeFalseNegative(refactoring, methodNotSmell);

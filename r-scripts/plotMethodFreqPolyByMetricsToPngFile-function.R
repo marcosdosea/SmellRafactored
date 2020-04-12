@@ -22,12 +22,15 @@ plotMethodFreqPolyByMetricsToPngFile <- function(csvMethodFileName, deepenForDes
   projectName <- basename(csvMethodFileName)
   
   data <- read.csv(csvMethodFileName)
-  data[data=="null"] <- NA
-  data <- na.omit(data)
-  
-  data$recordType[data$recordType == "Ignored Smell"] <- "Smell"
-  data <- select(data, commitDateTime, className, designRole, cc, ec, loc, nop, recordType, technique)
+  # data[data=="null"] <- NA
+  # data <- na.omit(data)
   data <- unique(data)
+  
+  # data$recordType[data$recordType == getRecordTypeIgnoredSmellKey()] <- getRecordTypeSmellKey()
+  data$recordType[data$recordType == getRecordTypeIgnoredSmellKey()] <- NA
+  data <- na.omit(data)
+  data <- select(data, commitDateTime, className, designRole, cc, ec, loc, nop, recordType, technique)
+  # data <- unique(data)
   
   if (isFileOfHighComplexitySmell(csvMethodFileName)) {
     data$targetMetric <-as.numeric(as.character(data$cc))

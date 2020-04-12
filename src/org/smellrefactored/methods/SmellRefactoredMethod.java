@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 
 import org.designroleminer.smelldetector.model.FilterSmellResult;
 import org.designroleminer.smelldetector.model.MethodDataSmelly;
@@ -170,12 +171,30 @@ public class SmellRefactoredMethod {
 	private void evaluateSmellChangeOperation(ArrayList<String> smellCommitIds, String smellType, HashSet<String> targetTefactoringTypes) throws Exception {
 		ConfusionMatrixPredictors confusionMatrices = new ConfusionMatrixPredictors(smellType + " " + targetTefactoringTypes.toString(), this.commitMethodSmell.getTechniquesThresholds().keySet());
 		confusionMatrices.enableValidations(!IGNORE_PREDICTION_FOR_DELAYED_REFACTORINGS);
+
+		LinkedHashMap<String, ArrayList<RefactoringEvent>> methodRefactoringsByCommits = new LinkedHashMap<String, ArrayList<RefactoringEvent>>();
+		for (RefactoringEvent refactoring : refactoringEvents.getAllMergedIntoMaster()) {
+			if (!targetTefactoringTypes.contains(refactoring.getRefactoringType())) {
+				continue;
+			}
+			String key = RefactoringMethodEvents.getCommitMethodKey(refactoring);
+			ArrayList<RefactoringEvent> refactoringList;
+			if (!methodRefactoringsByCommits.containsKey(key)) {
+				refactoringList = new ArrayList<RefactoringEvent>();
+				refactoringList.add(refactoring);
+				methodRefactoringsByCommits.put(key, refactoringList);
+			} else {
+				refactoringList = methodRefactoringsByCommits.get(key);
+				refactoringList.add(refactoring);
+			}
+		}
+		
 		methodOutputFiles = new OutputMethodFileManager(this.commitRange, smellType, this.commitMethodSmell.getTechniquesThresholds().keySet(), targetTefactoringTypes, this.resultFileName);
 		for (String technique: this.commitMethodSmell.getTechniquesThresholds().keySet()) {
 			methodOutputFiles.beginTechnique(technique);
 			ConfusionMatrix confusionMatrix = confusionMatrices.get(technique);
 			// TP and FN
-			computeTruePositiveAndFalseNegative(smellType, technique, targetTefactoringTypes, confusionMatrix);
+			computeTruePositiveAndFalseNegative(smellType, technique, methodRefactoringsByCommits, confusionMatrix);
 			for (String smellCommitId: smellCommitIds) {
 				FilterSmellResult smellResultForCommitSmellTechnique = this.commitMethodSmell.getSmellsFromCommitSmellTypeTechnique(smellCommitId, smellType, technique);
 				if (smellCommitId.equals(smellCommitIds.get(0)) ) {
@@ -205,12 +224,27 @@ public class SmellRefactoredMethod {
 		*/
 		pmResultEvaluation.write("");
 		confusionMatrices.addField("Total number of refactorings", this.refactoringEvents.countTypes(targetTefactoringTypes));
+		confusionMatrices.addField("Total number of refactored methods", methodRefactoringsByCommits.size());
 		confusionMatrices.writeToCsvFile(pmResultEvaluation);
 		// confusionMatrices.saveToCsvFile(this.resultFileName + "-confusionMatrices-method-" + typeSmell + "-" + targetTefactoringTypes.toString() + ".csv");
 	}
 	
 	private void computeTruePositiveAndFalseNegative(String smellType, String technique,
-			HashSet<String> targetTefactoringTypes, ConfusionMatrix confusionMatrix) throws Exception {
+			LinkedHashMap<String, ArrayList<RefactoringEvent>> methodRefactoringsByCommits, ConfusionMatrix confusionMatrix) throws Exception {
+		for (String commitMethodKey : methodRefactoringsByCommits.keySet()) {
+			ArrayList<RefactoringEvent> refactorings = methodRefactoringsByCommits.get(commitMethodKey);
+			RefactoringEvent refactoring = refactorings.get(0);
+			CommitData previousCommit = this.commitRange.getPreviousCommit(refactoring.getCommitId());
+			MethodDataSmelly methodSmellOrNotSmell = this.commitMethodSmell.getSmellOrNotSmellCommitForMethod(previousCommit.getId(), refactoring.getFileNameBefore(), refactoring.getClassName(), refactoring.getMethodName(), smellType, technique); 
+			if ( (methodSmellOrNotSmell != null) && (methodSmellOrNotSmell.getSmell() != null) && (!methodSmellOrNotSmell.getSmell().isEmpty()) && (methodSmellOrNotSmell.getSmell().contains(smellType)) ) {
+				confusionMatrix.incTruePositive();
+				methodOutputFiles.writeTruePositive(refactoring, methodSmellOrNotSmell);
+			} else {
+				confusionMatrix.incFalseNegative();
+				methodOutputFiles.writeFalseNegative(refactoring, methodSmellOrNotSmell);
+			}
+		}
+		/*
 		for (RefactoringEvent refactoring : refactoringEvents.getAllMergedIntoMaster()) {
 			if (!targetTefactoringTypes.contains(refactoring.getRefactoringType())) {
 				continue;
@@ -225,6 +259,7 @@ public class SmellRefactoredMethod {
 				methodOutputFiles.writeFalseNegative(refactoring, methodSmellOrNotSmell);
 			}
 		}
+		*/
 	}
 	
 	private void computeFalsePositiveBySmellAndTechnique(FilterSmellResult smellResultForCommitSmellTechnique, String technique, String smellType, HashSet<String> targetTefactoringTypes, ConfusionMatrix confusionMtrix) throws Exception {

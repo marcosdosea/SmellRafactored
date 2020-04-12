@@ -30,7 +30,7 @@ plotBoxplotByTechniqueMetricToPngFile <- function(data, projectName, imgFileName
   recordTypes <- unique(recordTypes)
   if (length(recordTypes) >= 2) { # (length(data[, 1]) > 0)
     resultPlot <- ggplot(data=data, aes(x=recordType, y=targetMetric, group=recordType)) +
-      geom_boxplot(aes(colour=recordType, fill=recordType), alpha=0.3) +
+      geom_boxplot(varwidth = TRUE, aes(colour=recordType, fill=recordType), alpha=0.3) +
       # geom_boxplot(aes(colour=recordType, fill=recordType), alpha=0.3, outlier.shape = NA) + 
       # scale_y_continuous(limits = quantile(data$targetMetric, c(0.1, 0.9))) +
       # theme_ipsum() +
@@ -55,9 +55,9 @@ plotBoxplotByMetricToPngFile <- function(data, projectName, csvFileName, metricC
   techniqueList <- unique(techniqueList)
   for (tech in techniqueList){
     if (tech != "") {
-      # dataRefacoring <- filter(data, recordType == "Refactoring")
+      # dataRefacoring <- filter(data, recordType == getRecordTypeRefactoredKey())
       # dataTechnique <- filter(data, technique == tech)
-      dataTechnique <- filter(data, (technique == tech) | (recordType == "Refactoring") ) 
+      dataTechnique <- filter(data, (technique == tech) | (recordType == getRecordTypeRefactoredKey()) ) 
       fileSuffix <- paste0("-", tech, "-boxplot-", metricCode, ".png")
       imgFileName <-sub("-plot.csv", fileSuffix, csvFileName)
       plotBoxplotByTechniqueMetricToPngFile(dataTechnique, projectName, imgFileName, metricCode, yLabel, deepenForDesignRole);
