@@ -947,7 +947,7 @@ public class SmellRefactoredAllManagerOld {
 					report.getSystemLOC());
 		}
 		logger.info("Gerando smells com a lista de problemas de design encontrados...");
-		FilterSmellResult smellsCommitInitial = FilterSmells.filtrar(report.all(), listaLimiarTecnica, commit);
+		FilterSmellResult smellsCommitInitial = FilterSmells.filtrar(report, listaLimiarTecnica, commit);
 		FilterSmells.gravarMetodosSmell(smellsCommitInitial.getMetodosSmell(),
 				resultFileName + "-smells-commit-initial.csv");
 		return smellsCommitInitial;

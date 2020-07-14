@@ -904,7 +904,7 @@ public class SmellRefactoredAllManager {
 		pmResultEvaluation.write("True Negative (R) = ", trueNegativeR.size());
 		pmResultEvaluation.write("True Negative (D) = ", trueNegativeD.size());
 
-		pmResultEvaluation.write("False Negative (non-smelly): " + falseNegativeNonSmelly);
+		pmResultEvaluation.write("False Negative (non-smelly): ", falseNegativeNonSmelly);
 		pmResultEvaluation.write("False Negative (A) = ", falseNegativeA.size());
 		pmResultEvaluation.write("False Negative (V) = ", falseNegativeV.size());
 		pmResultEvaluation.write("False Negative (X) = ", falseNegativeX.size());
@@ -961,7 +961,7 @@ public class SmellRefactoredAllManager {
 					report.getSystemLOC());
 		}
 		logger.info("Gerando smells com a lista de problemas de design encontrados...");
-		FilterSmellResult smellsCommit = FilterSmells.filtrar(report.all(), listaLimiarTecnica, commit);
+		FilterSmellResult smellsCommit = FilterSmells.filtrar(report, listaLimiarTecnica, commit);
 		// FilterSmells.gravarMetodosSmell(smellsCommitInitial.getMetodosSmell(),
 		// resultFileName + "-smells-commit-initial.csv");
 		return smellsCommit;
