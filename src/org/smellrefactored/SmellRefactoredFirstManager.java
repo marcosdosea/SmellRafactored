@@ -1,6 +1,5 @@
 package org.smellrefactored;
 
-
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
@@ -16,7 +15,6 @@ import org.designroleminer.smelldetector.model.ClassDataSmelly;
 import org.designroleminer.smelldetector.model.FilterSmellResult;
 import org.designroleminer.smelldetector.model.LimiarTecnica;
 import org.designroleminer.smelldetector.model.MethodDataSmelly;
-import org.designroleminer.threshold.TechniqueExecutor;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
@@ -32,10 +30,14 @@ import org.repodriller.persistence.PersistenceMechanism;
 import org.repodriller.persistence.csv.CSVFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.threshold.TechniqueExecutor;
 
 import com.opencsv.CSVReader;
+
 /**
- * Identify the smells from the first version and check if they have been refactored throughout evolution.
+ * Identify the smells from the first version and check if they have been
+ * refactored throughout evolution.
+ * 
  * @author Marcos Dósea
  *
  */
@@ -57,15 +59,15 @@ public class SmellRefactoredFirstManager {
 	PersistenceMechanism pmResultEvaluationClasses;
 	PersistenceMechanism pmResultSmellRefactoredMethods;
 	PersistenceMechanism pmResultSmellRefactoredMethodsMessage;
-	
+
 	PersistenceMechanism pmResultSmellRefactoredClasses;
 	PersistenceMechanism pmResultSmellRefactoredClassesMessage;
-	
+
 	PersistenceMechanism pmResultSmellRefactoredCommit;
 	HashSet<String> listCommitEvaluated = new HashSet<String>();
 
-	public SmellRefactoredFirstManager(String urlRepository, String localFolder, String initialCommit, String finalCommit,
-			List<LimiarTecnica> listaLimiarTecnica, String resultFileName) {
+	public SmellRefactoredFirstManager(String urlRepository, String localFolder, String initialCommit,
+			String finalCommit, List<LimiarTecnica> listaLimiarTecnica, String resultFileName) {
 		this.urlRepository = urlRepository;
 		this.localFolder = localFolder;
 		this.initialCommit = initialCommit;
@@ -81,7 +83,8 @@ public class SmellRefactoredFirstManager {
 
 		pmResultEvaluationClasses = new CSVFile(resultFileName + "-evaluation-classes.csv", false);
 		pmResultSmellRefactoredClasses = new CSVFile(resultFileName + "-smellRefactored-classes.csv", false);
-		pmResultSmellRefactoredClassesMessage = new CSVFile(resultFileName + "-smellRefactored-classes-message.csv", false);
+		pmResultSmellRefactoredClassesMessage = new CSVFile(resultFileName + "-smellRefactored-classes-message.csv",
+				false);
 	}
 
 	public void getSmellRefactoredMethods() {
@@ -222,10 +225,10 @@ public class SmellRefactoredFirstManager {
 			pmResultEvaluation.write("Numero Metodos NOT Smell Commit Inicial:",
 					smellsCommitInitial.getMetodosNotSmelly().size());
 
-			pmResultSmellRefactoredMethodsMessage.write("Class", "Method", "Smell", "LOC", "CC", "EC", "NOP", "Tecnicas",
-					"Commit", "Refactoring", "Left Side", "Right Side", "Full Message");
-			pmResultSmellRefactoredMethods.write("Class", "Method", "Smell", "LOC", "CC", "EC", "NOP", "Tecnicas", "Commit",
-					"Refactoring", "Left Side", "Right Side");
+			pmResultSmellRefactoredMethodsMessage.write("Class", "Method", "Smell", "LOC", "CC", "EC", "NOP",
+					"Tecnicas", "Commit", "Refactoring", "Left Side", "Right Side", "Full Message");
+			pmResultSmellRefactoredMethods.write("Class", "Method", "Smell", "LOC", "CC", "EC", "NOP", "Tecnicas",
+					"Commit", "Refactoring", "Left Side", "Right Side");
 
 			evaluateSmellChangeOperation(smellsCommitInitial, listRefactoringMergedIntoMaster, repo,
 					MethodDataSmelly.LONG_METHOD);
@@ -585,10 +588,10 @@ public class SmellRefactoredFirstManager {
 										if (isSameClassMethod) {
 											falseNegative++;
 											refactoredMethod = true;
-											pmResultSmellRefactoredMethodsMessage.write(methodRefactored.getNomeClasse(),
-													methodRefactored.getNomeMetodo(), methodRefactored.getSmell(),
-													methodNotSmell.getLinesOfCode(), methodNotSmell.getComplexity(),
-													methodNotSmell.getEfferent(),
+											pmResultSmellRefactoredMethodsMessage.write(
+													methodRefactored.getNomeClasse(), methodRefactored.getNomeMetodo(),
+													methodRefactored.getSmell(), methodNotSmell.getLinesOfCode(),
+													methodNotSmell.getComplexity(), methodNotSmell.getEfferent(),
 													methodNotSmell.getNumberOfParameters(),
 													methodRefactored.getListaTecnicas(), methodRefactored.getCommit(),
 													methodRefactored.getRefactoringType(),
@@ -712,7 +715,8 @@ public class SmellRefactoredFirstManager {
 													truePositiveD++;
 													refactoredMethodD = true;
 												}
-												pmResultSmellRefactoredMethodsMessage.write(methodRefactored.getNomeClasse(),
+												pmResultSmellRefactoredMethodsMessage.write(
+														methodRefactored.getNomeClasse(),
 														methodRefactored.getNomeMetodo(), methodRefactored.getSmell(),
 														methodSmell.getLinesOfCode(), methodSmell.getComplexity(),
 														methodSmell.getEfferent(), methodSmell.getNumberOfParameters(),
@@ -841,8 +845,7 @@ public class SmellRefactoredFirstManager {
 
 		pmResultEvaluation.write("");
 	}
-	
-	
+
 	public void getSmellRefactoredClasses() {
 
 		GitHistoryRefactoringMiner miner = new GitHistoryRefactoringMinerImpl();
@@ -976,10 +979,10 @@ public class SmellRefactoredFirstManager {
 			pmResultEvaluationClasses.write("Numero Classes NOT Smell Commit Inicial:",
 					smellsCommitInitial.getClassesNotSmelly().size());
 
-			pmResultSmellRefactoredMethodsMessage.write("Class", "Smell", "CLOC", "Tecnicas",
-					"Commit", "Refactoring", "Left Side", "Right Side", "Full Message");
-			pmResultSmellRefactoredMethods.write("Class", "Smell", "CLOC", "Tecnicas", "Commit",
-					"Refactoring", "Left Side", "Right Side");
+			pmResultSmellRefactoredMethodsMessage.write("Class", "Smell", "CLOC", "Tecnicas", "Commit", "Refactoring",
+					"Left Side", "Right Side", "Full Message");
+			pmResultSmellRefactoredMethods.write("Class", "Smell", "CLOC", "Tecnicas", "Commit", "Refactoring",
+					"Left Side", "Right Side");
 
 			evaluateSmellChangeClass(smellsCommitInitial, listRefactoringMergedIntoMaster, repo,
 					ClassDataSmelly.LONG_CLASS);
@@ -988,8 +991,8 @@ public class SmellRefactoredFirstManager {
 		}
 	}
 
-	private void evaluateSmellChangeClass(FilterSmellResult commitInitial,
-			ArrayList<RefactoringData> listRefactoring, Repository repo, String typeSmell) throws Exception {
+	private void evaluateSmellChangeClass(FilterSmellResult commitInitial, ArrayList<RefactoringData> listRefactoring,
+			Repository repo, String typeSmell) throws Exception {
 
 		float falseNegative = 0;
 		float trueNegative = 0;
@@ -1030,13 +1033,13 @@ public class SmellRefactoredFirstManager {
 									falseNegative++;
 									refactoredClass = true;
 									pmResultSmellRefactoredClassesMessage.write(refactoring.getNomeClasse(),
-											refactoring.getSmell(), classNotSmell.getLinesOfCode(), 
+											refactoring.getSmell(), classNotSmell.getLinesOfCode(),
 											refactoring.getListaTecnicas(), refactoring.getCommit(),
 											refactoring.getRefactoringType(), refactoring.getLeftSide(),
 											refactoring.getRightSide(), refactoring.getFullMessage());
 
 									pmResultSmellRefactoredClasses.write(refactoring.getNomeClasse(),
-											refactoring.getSmell(), classNotSmell.getLinesOfCode(), 
+											refactoring.getSmell(), classNotSmell.getLinesOfCode(),
 											refactoring.getListaTecnicas(), refactoring.getCommit(),
 											refactoring.getRefactoringType(), refactoring.getLeftSide(),
 											refactoring.getRightSide());
@@ -1054,12 +1057,13 @@ public class SmellRefactoredFirstManager {
 			} while (renamedClass && !refactoredClass);
 			if (!refactoredClass) {
 				trueNegative++;
-				pmResultSmellRefactoredClassesMessage.write(classBuscar.getNomeClasse(), 
-						classBuscar.getSmell(), classBuscar.getLinesOfCode(), 
-						classBuscar.getListaTecnicas(), classBuscar.getCommit(), "", "", "", "");
+				pmResultSmellRefactoredClassesMessage.write(classBuscar.getNomeClasse(), classBuscar.getSmell(),
+						classBuscar.getLinesOfCode(), classBuscar.getListaTecnicas(), classBuscar.getCommit(), "", "",
+						"", "");
 
-				pmResultSmellRefactoredClasses.write(classBuscar.getNomeClasse(), classBuscar.getSmell(), 
-						classBuscar.getLinesOfCode(), classBuscar.getListaTecnicas(), classBuscar.getCommit(), "", "", "");
+				pmResultSmellRefactoredClasses.write(classBuscar.getNomeClasse(), classBuscar.getSmell(),
+						classBuscar.getLinesOfCode(), classBuscar.getListaTecnicas(), classBuscar.getCommit(), "", "",
+						"");
 			}
 		}
 
@@ -1092,8 +1096,7 @@ public class SmellRefactoredFirstManager {
 					for (RefactoringData refactoring : listRefactoring) {
 						boolean isClassInvolved = refactoring.getInvolvedClassesBefore()
 								.contains(classSmellyBuscar.getNomeClasse())
-								|| refactoring.getInvolvedClassesAfter()
-										.contains(classSmellyBuscar.getNomeClasse());
+								|| refactoring.getInvolvedClassesAfter().contains(classSmellyBuscar.getNomeClasse());
 						boolean isClassRefactored = refactoring.getLeftSide()
 								.contains(classSmellyBuscar.getNomeClasse())
 								|| refactoring.getRightSide().contains(classSmellyBuscar.getNomeClasse());
@@ -1137,12 +1140,12 @@ public class SmellRefactoredFirstManager {
 											refactoredMethodD = true;
 										}
 										pmResultSmellRefactoredClassesMessage.write(refactoring.getNomeClasse(),
-												refactoring.getSmell(),	classSmell.getLinesOfCode(), 
+												refactoring.getSmell(), classSmell.getLinesOfCode(),
 												refactoring.getListaTecnicas(), refactoring.getCommit(),
 												refactoring.getRefactoringType(), refactoring.getLeftSide(),
 												refactoring.getRightSide(), refactoring.getFullMessage());
 										pmResultSmellRefactoredClasses.write(refactoring.getNomeClasse(),
-												refactoring.getSmell(),	classSmell.getLinesOfCode(), 
+												refactoring.getSmell(), classSmell.getLinesOfCode(),
 												refactoring.getListaTecnicas(), refactoring.getCommit(),
 												refactoring.getRefactoringType(), refactoring.getLeftSide(),
 												refactoring.getRightSide());
@@ -1170,11 +1173,11 @@ public class SmellRefactoredFirstManager {
 				if (!refactoredMethodA || !refactoredMethodD || !refactoredMethodR || !refactoredMethodV
 						|| !refactoredMethodX) {
 					pmResultSmellRefactoredClassesMessage.write(classSmellyBuscar.getNomeClasse(),
-							classSmellyBuscar.getSmell(), classSmellyBuscar.getLinesOfCode(), 
+							classSmellyBuscar.getSmell(), classSmellyBuscar.getLinesOfCode(),
 							classSmellyBuscar.getListaTecnicas(), classSmellyBuscar.getCommit(), "", "", "", "");
 
 					pmResultSmellRefactoredClasses.write(classSmellyBuscar.getNomeClasse(),
-							classSmellyBuscar.getSmell(), classSmellyBuscar.getLinesOfCode(), 
+							classSmellyBuscar.getSmell(), classSmellyBuscar.getLinesOfCode(),
 							classSmellyBuscar.getListaTecnicas(), classSmellyBuscar.getCommit(), "", "", "");
 				}
 
@@ -1251,9 +1254,6 @@ public class SmellRefactoredFirstManager {
 
 		pmResultEvaluationClasses.write("");
 	}
-
-	
-	
 
 	private int countParameters(String metodo) {
 		int countParams = 0;

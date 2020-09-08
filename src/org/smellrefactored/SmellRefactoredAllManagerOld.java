@@ -16,7 +16,6 @@ import org.designroleminer.smelldetector.FilterSmells;
 import org.designroleminer.smelldetector.model.FilterSmellResult;
 import org.designroleminer.smelldetector.model.LimiarTecnica;
 import org.designroleminer.smelldetector.model.MethodDataSmelly;
-import org.designroleminer.threshold.TechniqueExecutor;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
@@ -32,13 +31,14 @@ import org.repodriller.persistence.PersistenceMechanism;
 import org.repodriller.persistence.csv.CSVFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.threshold.TechniqueExecutor;
 
 import com.opencsv.CSVReader;
 
 /**
- * Identifies all commits that have refactorings and checks,
- * based on the previous commit, which refactorings were performed 
- * in smelly methods.
+ * Identifies all commits that have refactorings and checks, based on the
+ * previous commit, which refactorings were performed in smelly methods.
+ * 
  * @author Marcos Dósea
  *
  */
@@ -66,8 +66,8 @@ public class SmellRefactoredAllManagerOld {
 	PersistenceMechanism pmResultSmellRefactoredCommit;
 	HashSet<String> listCommitEvaluated = new HashSet<String>();
 
-	public SmellRefactoredAllManagerOld(String urlRepository, String localFolder, String initialCommit, String finalCommit,
-			List<LimiarTecnica> listaLimiarTecnica, String resultFileName) {
+	public SmellRefactoredAllManagerOld(String urlRepository, String localFolder, String initialCommit,
+			String finalCommit, List<LimiarTecnica> listaLimiarTecnica, String resultFileName) {
 		this.urlRepository = urlRepository;
 		this.localFolder = localFolder;
 		this.initialCommit = initialCommit;
@@ -203,7 +203,7 @@ public class SmellRefactoredAllManagerOld {
 								&& refactoring.getRefactoringType().contains("EXTRACT")) {
 							listRefactoringRelatedOperation.add(refactoring);
 							listCommitAnalisados.put(commit.getId(), commit);
-						} 
+						}
 						if (refactoring.getRefactoringType().equals("RENAME_METHOD")) {
 							listRefactoringRelatedRenaming.add(refactoring);
 							listCommitAnalisados.put(commit.getId(), commit);
@@ -237,10 +237,10 @@ public class SmellRefactoredAllManagerOld {
 					MethodDataSmelly.MANY_PARAMETERS);
 			pmResultEvaluation.write("DADOS COMMITS");
 			pmResultEvaluation.write("ID", "Data", "Short Message");
-			for(CommitData commit : listCommitAnalisados.values()) {
+			for (CommitData commit : listCommitAnalisados.values()) {
 				pmResultEvaluation.write(commit.getId(), commit.getDate(), commit.getShortMessage());
 			}
-			
+
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}

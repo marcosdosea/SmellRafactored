@@ -16,7 +16,6 @@ import org.designroleminer.smelldetector.FilterSmells;
 import org.designroleminer.smelldetector.model.FilterSmellResult;
 import org.designroleminer.smelldetector.model.LimiarTecnica;
 import org.designroleminer.smelldetector.model.MethodDataSmelly;
-import org.designroleminer.threshold.TechniqueExecutor;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
@@ -32,6 +31,7 @@ import org.repodriller.persistence.PersistenceMechanism;
 import org.repodriller.persistence.csv.CSVFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.threshold.TechniqueExecutor;
 
 import com.opencsv.CSVReader;
 
@@ -142,7 +142,7 @@ public class SmellRefactoredAllManager {
 			Iterable<RevCommit> log = git.log().call();
 			Iterator<RevCommit> logIterator = log.iterator();
 			RevWalk revWalk = new RevWalk(repo, 3);
-			RevCommit masterHead = revWalk.parseCommit(repo.resolve("refs/heads/master"));
+			RevCommit masterHead = revWalk.parseCommit(repo.resolve("HEAD"));
 			while (logIterator.hasNext()) {
 				RevCommit currentCommit = logIterator.next();
 				CommitData commitData = new CommitData();
@@ -254,7 +254,7 @@ public class SmellRefactoredAllManager {
 		int truePositiveX = 0;
 		int truePositiveR = 0;
 		int truePositiveD = 0;
-		
+
 		int falseNegativeNonSmelly = 0;
 
 		HashSet<String> setTruePositiveA = new HashSet<String>();
@@ -611,7 +611,7 @@ public class SmellRefactoredAllManager {
 		int truePositiveX = 0;
 		int truePositiveR = 0;
 		int truePositiveD = 0;
-		
+
 		int falseNegativeNonSmelly = 0;
 
 		HashSet<String> setTruePositiveA = new HashSet<String>();
@@ -896,7 +896,7 @@ public class SmellRefactoredAllManager {
 				? (float) (truePositiveD + trueNegativeD.size())
 						/ (falsePositiveD.size() + truePositiveD + falseNegativeD.size() + trueNegativeD.size())
 				: 0;
-						
+
 		pmResultEvaluation.write(typeSmell.toUpperCase());
 		pmResultEvaluation.write("True Negative (A) = ", trueNegativeA.size());
 		pmResultEvaluation.write("True Negative (V) = ", trueNegativeV.size());
