@@ -56,13 +56,10 @@ public class SmellRefactoredAllManager {
 
 	private String resultFileName;
 	PersistenceMechanism pmResultEvaluation;
-	// PersistenceMechanism pmResultEvaluationClasses;
 	PersistenceMechanism pmResultSmellRefactoredMethods;
 	PersistenceMechanism pmResultSmellRefactoredMethodsMessage;
-
-	// PersistenceMechanism pmResultSmellRefactoredClasses;
-	// PersistenceMechanism pmResultSmellRefactoredClassesMessage;
-
+	PersistenceMechanism pmResultNotSmellyRefactoredMessage;
+	
 	PersistenceMechanism pmResultSmellRefactoredCommit;
 	HashSet<String> listCommitEvaluated = new HashSet<String>();
 
@@ -78,6 +75,7 @@ public class SmellRefactoredAllManager {
 		pmResultEvaluation = new CSVFile(resultFileName + "-evaluations.csv", false);
 		pmResultSmellRefactoredMethods = new CSVFile(resultFileName + "-smellRefactored.csv", false);
 		pmResultSmellRefactoredMethodsMessage = new CSVFile(resultFileName + "-smellRefactored-message.csv", false);
+		pmResultNotSmellyRefactoredMessage = new CSVFile(resultFileName + "-notSmellyRefactored-message.csv", false);
 		pmResultSmellRefactoredCommit = new CSVFile(resultFileName + "-smellRefactored-commit.csv", false);
 	}
 
@@ -223,10 +221,12 @@ public class SmellRefactoredAllManager {
 			pmResultSmellRefactoredCommit.write("Commit", "NumberOfClasses", "NumberOfMethods", "SystemLOC");
 
 			pmResultSmellRefactoredMethodsMessage.write("Class", "Method", "Smell", "DR", "LOC", "CC", "EC", "NOP",
-					"Tecnicas", "Commit", "Refactoring", "Left Side", "Right Side", "Full Message");
+					"Tecnicas", "Commit", "Refactoring", "Left Side", "Right Side", "Short Message", "Full Message");
 			pmResultSmellRefactoredMethods.write("Class", "Method", "Smell", "DR", "LOC", "CC", "EC", "NOP", "Tecnicas",
 					"Commit", "Refactoring", "Left Side", "Right Side");
-
+			pmResultNotSmellyRefactoredMessage.write("Class", "Method", "Smell", "DR", "LOC", "CC", "EC", "NOP",
+				"Tecnicas", "Commit", "Refactoring", "Left Side", "Right Side", "Short Message", "Full Message");
+			
 			evaluateSmellChangeOperation(commitsWithRefactoringMergedIntoMaster, listRefactoringRelatedOperation, repo,
 					MethodDataSmelly.LONG_METHOD);
 			evaluateSmellChangeOperation(commitsWithRefactoringMergedIntoMaster, listRefactoringRelatedOperation, repo,
@@ -236,9 +236,9 @@ public class SmellRefactoredAllManager {
 			evaluateSmellChangeParameters(commitsWithRefactoringMergedIntoMaster, listRefactoringRelatedRenaming, repo,
 					MethodDataSmelly.MANY_PARAMETERS);
 			pmResultEvaluation.write("DADOS COMMITS");
-			pmResultEvaluation.write("ID", "Data", "Short Message");
+			pmResultEvaluation.write("ID", "Data", "Short Message", "Full Message");
 			for (CommitData commit : listCommitAnalisados.values()) {
-				pmResultEvaluation.write(commit.getId(), commit.getDate(), commit.getShortMessage());
+				pmResultEvaluation.write(commit.getId(), commit.getDate(), commit.getShortMessage(), commit.getFullMessage());
 			}
 
 		} catch (Exception e) {
@@ -343,6 +343,7 @@ public class SmellRefactoredAllManager {
 									methodSmelly.getNumberOfParameters(), methodSmelly.getListaTecnicas(),
 									refactoring.getCommit(), refactoring.getRefactoringType(),
 									refactoring.getLeftSide(), refactoring.getRightSide(),
+									refactoring.getShortMessage(),
 									refactoring.getFullMessage());
 
 							pmResultSmellRefactoredMethods.write(methodSmelly.getNomeClasse(),
@@ -378,6 +379,15 @@ public class SmellRefactoredAllManager {
 							falseNegativeV.add(methodNotSmelly.getNomeClasse() + methodNotSmelly.getNomeMetodo());
 							falseNegativeR.add(methodNotSmelly.getNomeClasse() + methodNotSmelly.getNomeMetodo());
 							falseNegativeD.add(methodNotSmelly.getNomeClasse() + methodNotSmelly.getNomeMetodo());
+						
+							pmResultNotSmellyRefactoredMessage.write(methodNotSmelly.getNomeClasse(),
+									methodNotSmelly.getNomeMetodo(), "", methodNotSmelly.getClassDesignRole(),
+									methodNotSmelly.getLinesOfCode(), methodNotSmelly.getComplexity(),
+									methodNotSmelly.getEfferent(), methodNotSmelly.getNumberOfParameters(), "",
+									refactoring.getCommit(), refactoring.getRefactoringType(),
+									refactoring.getLeftSide(), refactoring.getRightSide(),
+									refactoring.getShortMessage(),
+									refactoring.getFullMessage());
 						}
 					}
 				}
@@ -441,7 +451,7 @@ public class SmellRefactoredAllManager {
 									methodSmelly.getClassDesignRole(), methodSmelly.getLinesOfCode(),
 									methodSmelly.getComplexity(), methodSmelly.getEfferent(),
 									methodSmelly.getNumberOfParameters(), methodSmelly.getListaTecnicas(),
-									methodSmelly.getCommit(), "", "", "", "");
+									methodSmelly.getCommit(), "", "", "", "", "");
 
 							pmResultSmellRefactoredMethods.write(methodSmelly.getNomeClasse(),
 									methodSmelly.getNomeMetodo(), methodSmelly.getSmell(),
@@ -480,7 +490,7 @@ public class SmellRefactoredAllManager {
 								methodNotSmelly.getNomeMetodo(), "", methodNotSmelly.getClassDesignRole(),
 								methodNotSmelly.getLinesOfCode(), methodNotSmelly.getComplexity(),
 								methodNotSmelly.getEfferent(), methodNotSmelly.getNumberOfParameters(), "",
-								methodNotSmelly.getCommit(), "", "", "", "");
+								methodNotSmelly.getCommit(), "", "", "", "", "");
 
 						pmResultSmellRefactoredMethods.write(methodNotSmelly.getNomeClasse(),
 								methodNotSmelly.getNomeMetodo(), "", methodNotSmelly.getClassDesignRole(),
@@ -701,6 +711,7 @@ public class SmellRefactoredAllManager {
 									methodSmelly.getNumberOfParameters(), methodSmelly.getListaTecnicas(),
 									refactoring.getCommit(), refactoring.getRefactoringType(),
 									refactoring.getLeftSide(), refactoring.getRightSide(),
+									refactoring.getShortMessage(),
 									refactoring.getFullMessage());
 
 							pmResultSmellRefactoredMethods.write(methodSmelly.getNomeClasse(),
@@ -734,6 +745,15 @@ public class SmellRefactoredAllManager {
 							falseNegativeV.add(methodNotSmelly.getNomeClasse() + methodNotSmelly.getNomeMetodo());
 							falseNegativeR.add(methodNotSmelly.getNomeClasse() + methodNotSmelly.getNomeMetodo());
 							falseNegativeD.add(methodNotSmelly.getNomeClasse() + methodNotSmelly.getNomeMetodo());
+							
+							pmResultNotSmellyRefactoredMessage.write(methodNotSmelly.getNomeClasse(),
+									methodNotSmelly.getNomeMetodo(), "", methodNotSmelly.getClassDesignRole(),
+									methodNotSmelly.getLinesOfCode(), methodNotSmelly.getComplexity(),
+									methodNotSmelly.getEfferent(), methodNotSmelly.getNumberOfParameters(), "",
+									refactoring.getCommit(), refactoring.getRefactoringType(),
+									refactoring.getLeftSide(), refactoring.getRightSide(),
+									refactoring.getShortMessage(),
+									refactoring.getFullMessage());
 						}
 					}
 				}
@@ -786,7 +806,7 @@ public class SmellRefactoredAllManager {
 									methodSmelly.getClassDesignRole(), methodSmelly.getLinesOfCode(),
 									methodSmelly.getComplexity(), methodSmelly.getEfferent(),
 									methodSmelly.getNumberOfParameters(), methodSmelly.getListaTecnicas(),
-									methodSmelly.getCommit(), "", "", "", "");
+									methodSmelly.getCommit(), "", "", "", "", "");
 
 							pmResultSmellRefactoredMethods.write(methodSmelly.getNomeClasse(),
 									methodSmelly.getNomeMetodo(), methodSmelly.getSmell(),
@@ -825,7 +845,7 @@ public class SmellRefactoredAllManager {
 								methodNotSmelly.getNomeMetodo(), "", methodNotSmelly.getClassDesignRole(),
 								methodNotSmelly.getLinesOfCode(), methodNotSmelly.getComplexity(),
 								methodNotSmelly.getEfferent(), methodNotSmelly.getNumberOfParameters(), "",
-								methodNotSmelly.getCommit(), "", "", "", "");
+								methodNotSmelly.getCommit(), "", "", "", "", "");
 
 						pmResultSmellRefactoredMethods.write(methodNotSmelly.getNomeClasse(),
 								methodNotSmelly.getNomeMetodo(), "", methodNotSmelly.getClassDesignRole(),
