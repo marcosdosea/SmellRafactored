@@ -17,6 +17,6 @@
 	<classpathentry kind="lib" path="lib/refactoringminer.jar"/>
 	<classpathentry kind="lib" path="lib/SystemSimilarity.jar"/>
 	<classpathentry kind="lib" path="lib/ThresholdTool.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-11"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
