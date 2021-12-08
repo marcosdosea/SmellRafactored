@@ -9,12 +9,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.contextsmell.ClassDataSmelly;
+import org.contextsmell.FilterSmellResult;
+import org.contextsmell.FilterSmells;
+import org.contextsmell.LimiarTecnica;
+import org.contextsmell.MethodDataSmelly;
 import org.designroleminer.MetricReport;
-import org.designroleminer.smelldetector.FilterSmells;
-import org.designroleminer.smelldetector.model.ClassDataSmelly;
-import org.designroleminer.smelldetector.model.FilterSmellResult;
-import org.designroleminer.smelldetector.model.LimiarTecnica;
-import org.designroleminer.smelldetector.model.MethodDataSmelly;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
@@ -269,7 +269,7 @@ public class SmellRefactoredFirstManager {
 		float falseNegative = 0;
 		float trueNegative = 0;
 
-		for (MethodDataSmelly methodNotSmelly : commitInitial.getMetodosNotSmelly()) {
+		for (org.contextsmell.MethodDataSmelly methodNotSmelly : commitInitial.getMetodosNotSmelly()) {
 			MethodDataSmelly methodBuscar = methodNotSmelly;
 			boolean renamedMethod = false;
 			boolean refactoredMethod = false;

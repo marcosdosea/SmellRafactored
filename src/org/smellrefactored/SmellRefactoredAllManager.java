@@ -11,11 +11,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.contextsmell.FilterSmellResult;
+import org.contextsmell.FilterSmells;
+import org.contextsmell.LimiarTecnica;
+import org.contextsmell.MethodDataSmelly;
 import org.designroleminer.MetricReport;
-import org.designroleminer.smelldetector.FilterSmells;
-import org.designroleminer.smelldetector.model.FilterSmellResult;
-import org.designroleminer.smelldetector.model.LimiarTecnica;
-import org.designroleminer.smelldetector.model.MethodDataSmelly;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
@@ -224,8 +224,8 @@ public class SmellRefactoredAllManager {
 					"Tecnicas", "Commit", "Refactoring", "Left Side", "Right Side", "Short Message", "Full Message");
 			pmResultSmellRefactoredMethods.write("Class", "Method", "Smell", "DR", "LOC", "CC", "EC", "NOP", "Tecnicas",
 					"Commit", "Refactoring", "Left Side", "Right Side");
-			pmResultRefactoredMessage.write("Class", "Method", "Smell", "DR", "LOC", "CC", "EC", "NOP",
-					"Tecnicas", "Commit", "Refactoring", "Left Side", "Right Side", "Short Message", "Full Message");
+			pmResultRefactoredMessage.write("Class", "Method", "Smell", "DR", "LOC", "CC", "EC", "NOP", "Tecnicas",
+					"Commit", "Refactoring", "Left Side", "Right Side", "Short Message", "Full Message");
 
 			evaluateSmellChangeOperation(commitsWithRefactoringMergedIntoMaster, listRefactoringRelatedOperation, repo,
 					MethodDataSmelly.LONG_METHOD);
@@ -353,15 +353,15 @@ public class SmellRefactoredAllManager {
 									methodSmelly.getNumberOfParameters(), methodSmelly.getListaTecnicas(),
 									refactoring.getCommit(), refactoring.getRefactoringType(),
 									refactoring.getLeftSide(), refactoring.getRightSide());
-							
-							pmResultRefactoredMessage.write(methodSmelly.getNomeClasse(),
-									methodSmelly.getNomeMetodo(), methodSmelly.getSmell(),
-									methodSmelly.getClassDesignRole(), methodSmelly.getLinesOfCode(),
-									methodSmelly.getComplexity(), methodSmelly.getEfferent(),
-									methodSmelly.getNumberOfParameters(), methodSmelly.getListaTecnicas(),
-									refactoring.getCommit(), refactoring.getRefactoringType(),
-									refactoring.getLeftSide(), refactoring.getRightSide(),
-									refactoring.getShortMessage(), refactoring.getFullMessage());
+
+							pmResultRefactoredMessage.write(methodSmelly.getNomeClasse(), methodSmelly.getNomeMetodo(),
+									methodSmelly.getSmell(), methodSmelly.getClassDesignRole(),
+									methodSmelly.getLinesOfCode(), methodSmelly.getComplexity(),
+									methodSmelly.getEfferent(), methodSmelly.getNumberOfParameters(),
+									methodSmelly.getListaTecnicas(), refactoring.getCommit(),
+									refactoring.getRefactoringType(), refactoring.getLeftSide(),
+									refactoring.getRightSide(), refactoring.getShortMessage(),
+									refactoring.getFullMessage());
 							// break;
 						}
 					}
@@ -388,16 +388,17 @@ public class SmellRefactoredAllManager {
 							falseNegativeV.add(methodNotSmelly.getNomeClasse() + methodNotSmelly.getNomeMetodo());
 							falseNegativeR.add(methodNotSmelly.getNomeClasse() + methodNotSmelly.getNomeMetodo());
 							falseNegativeD.add(methodNotSmelly.getNomeClasse() + methodNotSmelly.getNomeMetodo());
-							
-							// imprime as refatorações associadas a métodos apenas para long methods para não repetir
+
+							// imprime as refatorações associadas a métodos apenas para long methods para
+							// não repetir
 							if (typeSmell.equals(MethodDataSmelly.LONG_METHOD)) {
 								pmResultRefactoredMessage.write(methodNotSmelly.getNomeClasse(),
-									methodNotSmelly.getNomeMetodo(), "", methodNotSmelly.getClassDesignRole(),
-									methodNotSmelly.getLinesOfCode(), methodNotSmelly.getComplexity(),
-									methodNotSmelly.getEfferent(), methodNotSmelly.getNumberOfParameters(), "",
-									refactoring.getCommit(), refactoring.getRefactoringType(),
-									refactoring.getLeftSide(), refactoring.getRightSide(),
-									refactoring.getShortMessage(), refactoring.getFullMessage());
+										methodNotSmelly.getNomeMetodo(), "", methodNotSmelly.getClassDesignRole(),
+										methodNotSmelly.getLinesOfCode(), methodNotSmelly.getComplexity(),
+										methodNotSmelly.getEfferent(), methodNotSmelly.getNumberOfParameters(), "",
+										refactoring.getCommit(), refactoring.getRefactoringType(),
+										refactoring.getLeftSide(), refactoring.getRightSide(),
+										refactoring.getShortMessage(), refactoring.getFullMessage());
 							}
 						}
 					}
@@ -731,15 +732,15 @@ public class SmellRefactoredAllManager {
 									methodSmelly.getNumberOfParameters(), methodSmelly.getListaTecnicas(),
 									refactoring.getCommit(), refactoring.getRefactoringType(),
 									refactoring.getLeftSide(), refactoring.getRightSide());
-							
-							pmResultRefactoredMessage.write(methodSmelly.getNomeClasse(),
-									methodSmelly.getNomeMetodo(), methodSmelly.getSmell(),
-									methodSmelly.getClassDesignRole(), methodSmelly.getLinesOfCode(),
-									methodSmelly.getComplexity(), methodSmelly.getEfferent(),
-									methodSmelly.getNumberOfParameters(), methodSmelly.getListaTecnicas(),
-									refactoring.getCommit(), refactoring.getRefactoringType(),
-									refactoring.getLeftSide(), refactoring.getRightSide(),
-									refactoring.getShortMessage(), refactoring.getFullMessage());
+
+							pmResultRefactoredMessage.write(methodSmelly.getNomeClasse(), methodSmelly.getNomeMetodo(),
+									methodSmelly.getSmell(), methodSmelly.getClassDesignRole(),
+									methodSmelly.getLinesOfCode(), methodSmelly.getComplexity(),
+									methodSmelly.getEfferent(), methodSmelly.getNumberOfParameters(),
+									methodSmelly.getListaTecnicas(), refactoring.getCommit(),
+									refactoring.getRefactoringType(), refactoring.getLeftSide(),
+									refactoring.getRightSide(), refactoring.getShortMessage(),
+									refactoring.getFullMessage());
 							// break;
 						}
 					}

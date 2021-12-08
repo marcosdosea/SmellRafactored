@@ -1,22 +1,13 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>SmellRafactored</groupId>
-	<artifactId>SmellRafactored</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<build>
-		<sourceDirectory>src</sourceDirectory>
-		<plugins>
-			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.6.1</version>
-				<configuration>
-					<source />
-					<target />
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+	<groupId>org.smellrefactored</groupId>
+	<packaging>jar</packaging>
+	<version>1.0-SNAPSHOT</version>
+	<name>SmellRefactored</name>
+	<url>http://maven.apache.org</url>
+
 	<dependencies>
 		<dependency>
 			<groupId>commons-io</groupId>
@@ -48,6 +39,13 @@
 			<artifactId>commons-lang3</artifactId>
 			<version>3.4</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.github.tsantalis/refactoring-miner -->
+		<dependency>
+			<groupId>com.github.tsantalis</groupId>
+			<artifactId>refactoring-miner</artifactId>
+			<version>2.1.0</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.repodriller</groupId>
 			<artifactId>repodriller</artifactId>
@@ -64,4 +62,5 @@
 			<version>4.1</version>
 		</dependency>
 	</dependencies>
+	<artifactId>SmellRefactored</artifactId>
 </project>
